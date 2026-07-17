@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>BRCSGO — Painel de Partidas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --black:#0A0A0C;
+    --panel:#131316;
+    --panel2:#1B1B1F;
+    --line: rgba(255,255,255,0.09);
+    --white:#F5F5F3;
+    --muted:#8D9096;
+    --orange:#FF7A29;
+    --blue:#2F80ED;
+    --red:#EB4B4B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--black);
+    color: var(--white);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3, .display{
+    font-family:'Rajdhani', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin:0;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes popIn{ from{opacity:0; transform:scale(.7);} to{opacity:1; transform:scale(1);} }
+  @keyframes pulseGlow{ 0%,100%{ box-shadow:0 0 0 rgba(255,122,41,0.35);} 50%{ box-shadow:0 0 14px rgba(255,122,41,0.55);} }
+  @keyframes pillPulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.12);} }
+  @keyframes slideUp{ from{opacity:0; transform:translate(-50%,10px);} to{opacity:1; transform:translate(-50%,0);} }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .app{ max-width:1160px; margin:0 auto; padding:22px 18px 60px; }
+
+  .storage-warning{
+    background: rgba(235,75,75,0.12); border:1px solid var(--red); color:var(--white);
+    padding:12px 16px; font-size:13px; margin-bottom:14px; line-height:1.5;
+  }
+
+  .header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
+    padding:20px 22px;
+    background: var(--panel);
+    border:1px solid var(--line);
+    margin-bottom:16px;
+  }
+  .brand{ display:flex; align-items:center; gap:13px; }
+  .brand-mark{
+    width:40px; height:40px;
+    background: var(--orange);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    flex-shrink:0;
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  .brand h1{ font-size:23px; color:var(--white); }
+  .brand p{ margin:2px 0 0; font-size:11.5px; color:var(--muted); letter-spacing:0.09em; text-transform:uppercase; }
+
+  .header-controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  select, input, button{
+    font-family:'Inter', sans-serif;
+    background: var(--panel2);
+    color: var(--white);
+    border:1px solid var(--line);
+    padding:9px 12px;
+    font-size:14px;
+    border-radius:2px;
+    transition: border-color .18s ease, transform .12s ease;
+  }
+  select{ min-width:150px; }
+  input:focus, select:focus{ outline:none; border-color: var(--orange); }
+  button{
+    cursor:pointer;
+    background: var(--orange);
+    color:#0A0A0C;
+    font-weight:700;
+    border:none;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    font-size:13px;
+  }
+  button:hover:not(:disabled){ transform: translateY(-1px); filter:brightness(1.08); }
+  button:active:not(:disabled){ transform: translateY(0); }
+  button:disabled{ opacity:0.55; cursor:wait; }
+  button:focus-visible{ outline:2px solid var(--white); outline-offset:2px; }
+  button.secondary{ background: transparent; color: var(--white); border:1px solid var(--line); }
+  button.danger{ background:var(--red); color:#fff; }
+  button.ok{ background:var(--blue); color:#fff; }
+  button.small{ padding:5px 10px; font-size:11px; }
+
+  .mode-chips{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .mode-chip{
+    background: var(--panel); color:var(--muted); border:1px solid var(--line);
+    padding:7px 13px; font-size:12px; font-family:'Rajdhani',sans-serif; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.04em; cursor:pointer;
+  }
+  .mode-chip.active{ background: var(--orange); color:#0A0A0C; border-color:var(--orange); }
+
+  .tabs{ display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+  .tab-btn{
+    position:relative;
+    display:flex; align-items:center; gap:7px;
+    background: transparent;
+    color: var(--muted);
+    border:none;
+    padding:12px 16px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    font-size:13.5px;
+  }
+  .tab-btn::after{
+    content:''; position:absolute; left:16px; right:16px; bottom:-1px; height:2px;
+    background: var(--orange); transform: scaleX(0); transform-origin:left;
+    transition: transform .22s ease;
+  }
+  .tab-btn:hover{ color: var(--white); }
+  .tab-btn:hover::after{ transform: scaleX(0.4); }
+  .tab-btn svg{ width:15px; height:15px; opacity:0.75; }
+  .tab-btn.active{ color: var(--orange); }
+  .tab-btn.active::after{ transform: scaleX(1); }
+  .tab-btn.active svg{ opacity:1; }
+  .tab-btn .pill{ background:var(--red); color:#fff; font-size:10px; padding:1px 6px; border-radius:8px; font-family:'Inter'; margin-left:2px; animation: pillPulse 1.6s ease-in-out infinite; }
+
+  .panel{
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-top:2px solid var(--orange);
+    padding:22px;
+    margin-bottom:16px;
+    animation: fadeIn .3s ease;
+  }
+  .panel.accent-blue{ border-top-color: var(--blue); }
+  .panel.accent-red{ border-top-color: var(--red); }
+  .panel.accent-muted{ border-top-color: var(--line); }
+  .panel h2{ font-size:18px; color:var(--white); margin-bottom:14px; }
+  .panel h2 .sub{ color:var(--muted); font-size:12px; text-transform:none; letter-spacing:0; margin-left:8px; font-family:'Inter',sans-serif; }
+
+  .hero-stats{ display:grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap:1px; margin-bottom:18px; background:var(--line); }
+  .hero-card{ background: var(--panel); padding:16px; animation: fadeIn .35s ease both; }
+  .hero-card:nth-child(1){ animation-delay:.02s; } .hero-card:nth-child(2){ animation-delay:.08s; }
+  .hero-card:nth-child(3){ animation-delay:.14s; } .hero-card:nth-child(4){ animation-delay:.2s; }
+  .hero-card .val{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600; color:var(--orange); }
+  .hero-card .lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+  .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+  .field label{ display:block; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+  .field select, .field input{ width:100%; }
+  .empty-note{ color:var(--muted); font-size:13px; padding:6px 0; }
+  .helper-note{ color:var(--muted); font-size:12.5px; line-height:1.5; margin-top:14px; padding:12px 14px; background:var(--panel2); border-left:2px solid var(--orange); }
+  .helper-note.blue{ border-left-color: var(--blue); }
+
+  .rank-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .badge{
+    width:64px; height:64px;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani', sans-serif; font-weight:700; font-size:20px;
+    color:#0A0A0C; flex-shrink:0;
+    animation: popIn .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .rank-info .rank-name{ font-size:20px; }
+  .rank-info .elo{ color:var(--muted); font-size:13px; margin-top:2px; }
+  .progress-bar{ height:7px; background:var(--panel2); margin-top:10px; width:100%; max-width:340px; overflow:hidden; }
+  .progress-fill{ height:100%; width:0; background: var(--orange); transition: width 1s cubic-bezier(.2,.7,.2,1); }
+  .progress-label{ font-size:11px; color:var(--muted); margin-top:5px; }
+
+  .calib-dots{ display:flex; gap:6px; margin-top:8px; }
+  .calib-dot{ width:15px; height:15px; border-radius:50%; background:var(--panel2); border:1px solid var(--line); transition: background .3s ease, transform .3s ease; }
+  .calib-dot.filled{ background: var(--blue); transform: scale(1.1); }
+
+  .stat-cards{ display:grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap:1px; margin-top:18px; background:var(--line); }
+  .stat-card{ background:var(--panel2); padding:13px; text-align:center; animation: fadeIn .3s ease both; transition: transform .15s ease; }
+  .stat-card:hover{ transform: translateY(-2px); }
+  .stat-card .val{ font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; }
+  .stat-card .lbl{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{ text-align:left; color:var(--muted); text-transform:uppercase; font-size:10px; letter-spacing:0.06em; padding:8px; border-bottom:1px solid var(--line); }
+  td{ padding:9px 8px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono', monospace; font-size:13px; }
+  tbody tr{ transition: background .15s ease; }
+  tbody tr:hover{ background: var(--panel2); }
+  tr:last-child td{ border-bottom:none; }
+  .win{ color:var(--blue); }
+  .loss{ color:var(--red); }
+  .draw{ color:var(--muted); }
+  .stars{ color:var(--orange); letter-spacing:1px; }
+  .pos{ width:28px; text-align:center; font-weight:600; color:var(--muted); }
+  .name-cell{ font-family:'Inter',sans-serif; font-weight:600; }
+  .mini-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; font-size:10px; font-weight:700; color:#0A0A0C;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    margin-right:6px;
+  }
+  .status-badge{ font-family:'Inter',sans-serif; font-size:11px; padding:3px 8px; text-transform:uppercase; letter-spacing:0.03em; font-weight:600; }
+  .status-pendente{ background: rgba(255,122,41,0.15); color:var(--orange); }
+  .status-aprovada{ background: rgba(47,128,237,0.15); color:var(--blue); }
+  .status-rejeitada{ background: rgba(235,75,75,0.15); color:var(--red); }
+  .mode-tag{ font-size:10px; color:var(--muted); background:var(--panel2); padding:2px 7px; margin-left:6px; text-transform:uppercase; letter-spacing:.04em; }
+  .ai-tag{ font-size:10px; color:var(--muted); margin-left:6px; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%;
+    background:var(--panel2); border:1px solid var(--orange); padding:12px 20px;
+    font-family:'Rajdhani',sans-serif; font-weight:600; letter-spacing:0.03em;
+    z-index:50; animation: slideUp .3s ease;
+  }
+  .row-actions{ text-align:right; white-space:nowrap; }
+  .mod-card{ display:flex; gap:14px; background:var(--panel2); border:1px solid var(--line); padding:14px; margin-bottom:12px; flex-wrap:wrap; animation: fadeIn .3s ease both; }
+  .mod-proof{ width:130px; height:90px; object-fit:cover; background:var(--black); flex-shrink:0; border:1px solid var(--line); }
+  .mod-body{ flex:1; min-width:200px; }
+  .mod-flags{ color:var(--red); font-size:12px; margin-top:6px; }
+  .mod-ai{ font-size:12px; margin-top:6px; color:var(--blue); }
+  .mod-actions{ display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+  .download-link{ font-size:11px; color:var(--muted); text-decoration:underline; }
+
+  .spinner{ display:inline-block; width:13px; height:13px; border:2px solid rgba(0,0,0,0.3); border-top-color:#0A0A0C; border-radius:50%; animation: spin .7s linear infinite; margin-right:6px; vertical-align:-2px; }
+
+  @media (max-width:640px){
+    .header{ flex-direction:column; align-items:flex-start; }
+    th:nth-child(3), td:nth-child(3){ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="empty-note">Carregando painel...</div>
+</div>
+
+<script>
+const MOD_PIN = "brcsgo2026";
+let storageAvailable = true;
+
+// ====== CONFIGURAÇÃO DO FIREBASE (BANCO DE DADOS REAL) ======
+// 1. Crie um projeto grátis em https://console.firebase.google.com
+// 2. Ative o "Firestore Database" (modo de teste é suficiente pra começar)
+// 3. Em Configurações do projeto > Seus apps > ícone "</>" (Web), registre um app
+// 4. Copie o objeto de configuração gerado e cole abaixo, substituindo os valores de exemplo
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDDjZ3LmKiaNGqg7VKFM_ahzFjx677f4oE",
+  authDomain: "brcsgo.firebaseapp.com",
+  projectId: "brcsgo",
+  storageBucket: "brcsgo.firebasestorage.app",
+  messagingSenderId: "1012584089836",
+  appId: "1:1012584089836:web:d30596c7101c2762133dc9"
+};
+
+let db = null;
+try{
+  if(typeof firebase !== 'undefined' && FIREBASE_CONFIG.apiKey !== "COLE_AQUI"){
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+  }
+}catch(e){ console.error('Erro ao iniciar Firebase', e); }
+
+const MODES = {
+  competitivo: { label:'Competitivo',  fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:true,  rankBy:'elo' },
+  casual:      { label:'Casual',       fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:false, rankBy:'winRate' },
+  matamata:    { label:'Mata-Mata',    fields:['kills','deaths','pontos'],                  hasResultado:false, hasPatente:false, rankBy:'kills' },
+  gungame:     { label:'Gun Game',     fields:['kills','deaths','pontos'],                  hasResultado:false, hasPatente:false, rankBy:'kills' },
+  fourfun:     { label:'4Fun',         fields:['kills','deaths','assists','pontos'],        hasResultado:false, hasPatente:false, rankBy:null }
+};
+const MODE_KEYS = Object.keys(MODES);
+
+const TIERS = [
+  {name:"Prata I", min:0, color:"#8D9096"},
+  {name:"Prata II", min:166, color:"#9AA0A6"},
+  {name:"Prata III", min:332, color:"#A9B0B6"},
+  {name:"Prata IV", min:498, color:"#B9C0C6"},
+  {name:"Prata Elite", min:664, color:"#C9D0D6"},
+  {name:"Prata Elite Mestre", min:830, color:"#DCE2E6"},
+  {name:"Nova Ouro I", min:996, color:"#E8B45A"},
+  {name:"Nova Ouro II", min:1162, color:"#EFBF63"},
+  {name:"Nova Ouro III", min:1328, color:"#F5CB6D"},
+  {name:"Nova Ouro Mestre", min:1494, color:"#FBD777"},
+  {name:"Guardião Mestre I", min:1660, color:"#4A8FEE"},
+  {name:"Guardião Mestre II", min:1826, color:"#2F80ED"},
+  {name:"Guardião Mestre Elite", min:1992, color:"#1F6FE0"},
+  {name:"Guardião Mestre Distinto", min:2158, color:"#1660CC"},
+  {name:"Águia Lendária", min:2324, color:"#FF9757"},
+  {name:"Águia Lendária Mestre", min:2490, color:"#FF8740"},
+  {name:"Supremo Mestre 1ª Classe", min:2656, color:"#FF7A29"},
+  {name:"Elite Global", min:2822, color:"#EB4B4B"}
+];
+const MAPS = ["Dust II","Mirage","Inferno","Nuke","Overpass","Ancient","Anubis","Vertigo","Train"];
+
+const ICONS = {
+  registrar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>',
+  perfil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>',
+  historico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  ranking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 5h12v5a6 6 0 0 1-12 0V5z"/><path d="M9 21h6M12 16v5"/></svg>',
+  moderacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>'
+};
+const FIELD_LABELS = { kills:'Kills', deaths:'Deaths', assists:'Assists', pontos:'Pontos', mvps:'Estrelas MVP' };
+
+let players = [];
+let matches = [];
+let currentPlayerId = null;
+let viewMode = 'competitivo';
+let activeTab = 'registrar';
+let modAuthed = false;
+let toastTimer = null;
+
+function getTier(elo){
+  let idx = 0;
+  for(let i=0;i<TIERS.length;i++){ if(elo >= TIERS[i].min) idx = i; }
+  return {...TIERS[idx], index: idx};
+}
+
+function computeEloDelta(m){
+  const perf = ((m.pontos||0)*0.5) + ((m.mvps||0)*3) - (m.deaths*1.0) + ((m.assists||0)*0.3);
+  let base = m.result === 'vitoria' ? 18 : (m.result === 'empate' ? 2 : -14);
+  let perfAdj = (perf - 18) * 0.6;
+  let delta = Math.round(base + perfAdj);
+  return Math.max(-40, Math.min(45, delta));
+}
+
+function flagsFor(m){
+  const flags = [];
+  const kd = m.deaths > 0 ? m.kills/m.deaths : m.kills;
+  if(m.kills > 40) flags.push('Kills muito acima do normal');
+  if(kd > 6) flags.push('K/D extremo');
+  if(m.deaths === 0 && m.kills > 15) flags.push('Zero mortes com muitos kills');
+  if((m.mvps||0) > 16) flags.push('MVPs muito acima do normal');
+  if((m.pontos||0) > 0 && m.pontos < m.kills) flags.push('Pontuação incoerente com os kills informados');
+  return flags;
+}
+
+function computeModeStats(playerId, mode){
+  const cfg = MODES[mode];
+  const pm = matches.filter(m => m.playerId === playerId && m.status === 'aprovada' && (m.mode || 'competitivo') === mode)
+    .sort((a,b) => a.createdAt - b.createdAt);
+  const total = pm.length;
+  const kills = pm.reduce((s,m) => s + m.kills, 0);
+  const deaths = pm.reduce((s,m) => s + m.deaths, 0);
+  const assists = pm.reduce((s,m) => s + (m.assists||0), 0);
+  const pontos = pm.reduce((s,m) => s + (m.pontos||0), 0);
+  const mvps = pm.reduce((s,m) => s + (m.mvps||0), 0);
+  const wins = pm.filter(m => m.result === 'vitoria').length;
+  const losses = pm.filter(m => m.result === 'derrota').length;
+  const winRate = total > 0 ? (wins/total*100) : 0;
+  const kd = deaths > 0 ? (kills/deaths) : kills;
+
+  let elo = 0, historyMap = {};
+  if(cfg.hasPatente){
+    let e = 0; const hist = [];
+    pm.forEach(m => {
+      const delta = computeEloDelta(m);
+      const before = e; e = Math.max(0, e+delta);
+      hist.push({...m, eloBefore:before, eloAfter:e, eloDelta:delta});
+    });
+    elo = e;
+    historyMap = Object.fromEntries(hist.map(h => [h.id, h]));
+  }
+  return {
+    playerId, mode, total, kills, deaths, assists, pontos, mvps, wins, losses, winRate, kd,
+    elo, calibrating: cfg.hasPatente && total < 10, historyMap
+  };
+}
+
+function getModeRanking(mode){
+  const cfg = MODES[mode];
+  if(!cfg.rankBy) return [];
+  return players.map(p => ({p, s: computeModeStats(p.id, mode)}))
+    .filter(r => r.s.total > 0)
+    .sort((a,b) => {
+      if(cfg.rankBy === 'elo') return b.s.elo - a.s.elo;
+      if(cfg.rankBy === 'winRate') return b.s.winRate - a.s.winRate;
+      if(cfg.rankBy === 'kills') return b.s.kills - a.s.kills;
+      return 0;
+    });
+}
+
+async function getDoc(key){
+  if(!db) return null;
+  try{
+    const doc = await db.collection('brcsgo').doc(key).get();
+    return doc.exists ? doc.data().value : null;
+  }catch(e){ console.error('Erro ao ler', key, e); return null; }
+}
+async function setDoc(key, rawValue){
+  if(!db){ storageAvailable = false; return; }
+  try{ await db.collection('brcsgo').doc(key).set({ value: rawValue }); }
+  catch(e){ storageAvailable = false; console.error('Erro ao salvar', key, e); }
+}
+async function deleteDoc(key){
+  if(!db) return;
+  try{ await db.collection('brcsgo').doc(key).delete(); }catch(e){}
+}
+
+async function loadShared(key){
+  const v = await getDoc(key);
+  return v ? JSON.parse(v) : [];
+}
+async function saveShared(key, val){
+  await setDoc(key, JSON.stringify(val));
+}
+async function loadLocal(key){
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+async function saveLocal(key, val){
+  try{ localStorage.setItem(key, val); }catch(e){}
+}
+
+function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 960;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function extractJSON(text){
+  try{ return JSON.parse(text); }catch(e){}
+  const m = text.match(/\{[\s\S]*\}/);
+  if(m){ try{ return JSON.parse(m[0]); }catch(e){} }
+  return null;
+}
+
+async function analyzeProof(dataUrl, playerName, modeKey){
+  try{
+    const base64 = dataUrl.split(',')[1];
+    const hasMvps = MODES[modeKey].fields.includes('mvps');
+    const prompt = 'Você está analisando um print de tela de fim de partida do jogo Counter-Strike, jogado OFFLINE contra bots. '
+      + 'Convenção importante: jogadores controlados por bot aparecem no placar com o prefixo "BOT" antes do nome (ex: "BOT Sabrina", "BOT Buhi"). '
+      + 'O jogador humano é o ÚNICO nome da lista que NÃO tem o prefixo "BOT" — é a linha dele que você deve ler, mesmo que o nick não seja idêntico a "' + playerName + '". '
+      + 'Esse placar do CS NÃO tem coluna de headshots — ignore completamente esse conceito. Em vez disso, leia a coluna de Pontuação/Score (pontos da partida). '
+      + 'Extraia da linha do jogador humano: kills (abates), deaths (mortes), assists (assistências, se houver essa coluna), pontos (pontuação/score, se houver essa coluna)'
+      + (hasMvps ? ', e mvps (quantidade de estrelas de MVP ao lado do nome, se houver).' : '. Este modo de jogo não tem estrelas de MVP, então retorne mvps como null.')
+      + ' Responda ESTRITAMENTE em JSON válido, sem markdown, sem texto antes ou depois, neste formato exato: '
+      + '{"legivel": true ou false, "kills": numero ou null, "deaths": numero ou null, "assists": numero ou null, "pontos": numero ou null, "mvps": numero ou null, "observacao": "breve nota em portugues"}. '
+      + 'Só retorne "legivel": false se a imagem estiver realmente borrada, cortada, ou não for um placar de CS. Se conseguir ler ao menos kills e deaths com clareza, considere "legivel": true mesmo que outras colunas não existam nesse modo (nesse caso retorne null só nas colunas que não existem).';
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 500,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } },
+            { type: "text", text: prompt }
+          ]
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = (data.content || []).map(b => b.text || '').join('').trim();
+    return extractJSON(text);
+  }catch(e){
+    console.error('Erro na análise de IA', e);
+    return null;
+  }
+}
+
+function findOrCreatePlayer(name){
+  const clean = name.trim();
+  let p = players.find(p => p.name.toLowerCase() === clean.toLowerCase());
+  if(!p){
+    p = {id: 'p_' + Date.now() + '_' + Math.floor(Math.random()*1000), name: clean};
+    players.push(p);
+  }
+  return p;
+}
+
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(t) t.remove();
+  t = document.createElement('div');
+  t.id = 'toast'; t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.remove(), 3600);
+}
+
+function starString(n){
+  const shown = Math.min(n, 10);
+  return '★'.repeat(shown) + (n > 10 ? ' +' + (n-10) : '');
+}
+
+function playerOptionsHTML(selectedId){
+  const sorted = players.slice().sort((a,b) => a.name.localeCompare(b.name));
+  return sorted.map(p => `<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.name}</option>`).join('');
+}
+
+function modeOptionsHTML(selected){
+  return MODE_KEYS.map(k => `<option value="${k}" ${k===selected?'selected':''}>${MODES[k].label}</option>`).join('');
+}
+
+function tierBadgeHTML(tier){
+  return `<div class="badge" style="background:${tier.color}">${tier.index+1}</div>`;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const pendingCount = matches.filter(m => m.status === 'pendente').length;
+  app.innerHTML = `
+    ${!storageAvailable ? `<div class="storage-warning">⚠ O banco de dados (Firebase) ainda não está configurado ou não conseguiu conectar. Procure "FIREBASE_CONFIG" no código-fonte e cole a configuração do seu projeto Firebase — sem isso, os dados não vão persistir entre recarregamentos.</div>` : ''}
+    <div class="header">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <h1>BRCSGO</h1>
+          <p>Painel de Partidas &amp; Ranking</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <select id="playerSelect">
+          <option value="">— Selecionar jogador —</option>
+          ${playerOptionsHTML(currentPlayerId)}
+        </select>
+        <button class="secondary" id="newPlayerBtn" type="button">+ Novo</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn ${activeTab==='registrar'?'active':''}" data-tab="registrar">${ICONS.registrar}Registrar</button>
+      <button class="tab-btn ${activeTab==='perfil'?'active':''}" data-tab="perfil">${ICONS.perfil}Meu Perfil</button>
+      <button class="tab-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}Histórico</button>
+      <button class="tab-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}Ranking</button>
+      <button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>
+    </div>
+
+    ${activeTab==='perfil'||activeTab==='historico'||activeTab==='ranking' ? `
+      <div class="mode-chips">
+        ${MODE_KEYS.map(k => `<div class="mode-chip ${viewMode===k?'active':''}" data-mode="${k}">${MODES[k].label}</div>`).join('')}
+      </div>
+    ` : ''}
+
+    <div id="tabContent"></div>
+  `;
+
+  document.getElementById('playerSelect').addEventListener('change', async (e) => {
+    currentPlayerId = e.target.value || null;
+    await saveLocal('brcsgo:lastPlayer', currentPlayerId || '');
+    renderTab();
+  });
+  document.getElementById('newPlayerBtn').addEventListener('click', () => {
+    const name = prompt('Nome / nick do jogador:');
+    if(name && name.trim()){
+      const p = findOrCreatePlayer(name);
+      currentPlayerId = p.id;
+      saveShared('brcsgo:players', players);
+      saveLocal('brcsgo:lastPlayer', p.id);
+      render();
+    }
+  });
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => { activeTab = btn.dataset.tab; render(); });
+  });
+  document.querySelectorAll('.mode-chip').forEach(chip => {
+    chip.addEventListener('click', () => { viewMode = chip.dataset.mode; render(); });
+  });
+
+  renderTab();
+}
+
+function renderTab(){
+  const el = document.getElementById('tabContent');
+  if(activeTab === 'registrar') el.innerHTML = registrarHTML();
+  else if(activeTab === 'perfil') el.innerHTML = perfilHTML();
+  else if(activeTab === 'historico') el.innerHTML = historicoHTML();
+  else if(activeTab === 'ranking') el.innerHTML = rankingHTML();
+  else if(activeTab === 'moderacao') el.innerHTML = moderacaoHTML();
+  attachTabEvents();
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.progress-fill').forEach(bar => {
+      const target = bar.dataset.target;
+      if(target !== undefined) bar.style.width = target + '%';
+    });
+  });
+
+  if(activeTab === 'moderacao' && modAuthed){
+    loadProofImages(matches.filter(m => m.status === 'pendente'));
+  }
+  if(activeTab === 'registrar'){
+    const modeSelect = document.getElementById('f_mode');
+    if(modeSelect) updateFormForMode(modeSelect.value);
+  }
+}
+
+function registrarHTML(){
+  const current = players.find(p => p.id === currentPlayerId);
+  return `
+    <div class="panel">
+      <h2>Registrar Partida <span class="sub">Preencha o resultado da sua partida</span></h2>
+      <form id="matchForm">
+        <div class="grid">
+          <div class="field">
+            <label>Modo de Jogo</label>
+            <select id="f_mode">${modeOptionsHTML('competitivo')}</select>
+          </div>
+          <div class="field">
+            <label>Jogador</label>
+            <input type="text" id="f_name" placeholder="Seu nick" value="${current ? current.name : ''}" required>
+          </div>
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="f_date" value="${new Date().toISOString().slice(0,10)}" required>
+          </div>
+          <div class="field">
+            <label>Mapa</label>
+            <select id="f_map">${MAPS.map(m => `<option>${m}</option>`).join('')}</select>
+          </div>
+          <div class="field" data-field="resultado">
+            <label>Resultado</label>
+            <select id="f_result">
+              <option value="vitoria">Vitória</option>
+              <option value="derrota">Derrota</option>
+              <option value="empate">Empate</option>
+            </select>
+          </div>
+          <div class="field" data-field="kills">
+            <label>Kills</label>
+            <input type="number" id="f_kills" min="0" value="0" required>
+          </div>
+          <div class="field" data-field="deaths">
+            <label>Deaths</label>
+            <input type="number" id="f_deaths" min="0" value="0" required>
+          </div>
+          <div class="field" data-field="assists">
+            <label>Assists</label>
+            <input type="number" id="f_assists" min="0" value="0">
+          </div>
+          <div class="field" data-field="pontos">
+            <label>Pontos</label>
+            <input type="number" id="f_pontos" min="0" value="0">
+          </div>
+          <div class="field" data-field="mvps">
+            <label>Estrelas MVP</label>
+            <input type="number" id="f_mvps" min="0" value="0">
+          </div>
+          <div class="field">
+            <label>Print do placar final</label>
+            <input type="file" id="f_proof" accept="image/*" required>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <button type="submit" id="submitBtn">Enviar para Análise</button>
+        </div>
+      </form>
+      <div class="helper-note blue">
+        Uma IA tenta ler o print automaticamente e conferir se os números batem com o que você digitou. Se bater tudo, a partida já é aprovada na hora. Se algo não bater, ela corrige o valor e a partida segue pra um moderador humano confirmar. Se a leitura por IA não estiver disponível neste site (ela depende de uma conexão que só funciona dentro do ambiente do Claude), a partida cai direto na fila de moderação manual — nada quebra, só exige revisão humana. Só Competitivo tem patente — os outros modos entram direto no ranking (quando o modo tiver um) sem passar por calibragem.
+      </div>
+    </div>
+  `;
+}
+
+function updateFormForMode(modeKey){
+  const cfg = MODES[modeKey];
+  document.querySelectorAll('#matchForm [data-field]').forEach(w => {
+    const f = w.dataset.field;
+    const show = f === 'resultado' ? cfg.hasResultado : cfg.fields.includes(f);
+    w.style.display = show ? '' : 'none';
+  });
+}
+
+function perfilHTML(){
+  const p = players.find(p => p.id === currentPlayerId);
+  if(!p) return `<div class="panel accent-muted"><p class="empty-note">Selecione ou crie um jogador acima para ver o perfil.</p></div>`;
+  const cfg = MODES[viewMode];
+  const s = computeModeStats(p.id, viewMode);
+  const pendingOwn = matches.filter(m => m.playerId === p.id && m.status === 'pendente' && (m.mode||'competitivo') === viewMode).length;
+
+  let rankBlock = '';
+  if(cfg.hasPatente){
+    if(s.calibrating){
+      let dots = '';
+      for(let i=0;i<10;i++) dots += `<div class="calib-dot ${i < s.total ? 'filled' : ''}"></div>`;
+      rankBlock = `
+        <div class="rank-row">
+          <div class="badge" style="background:var(--panel2); border:1px dashed var(--line); color:var(--muted);">?</div>
+          <div class="rank-info">
+            <div class="rank-name">Em calibragem — MD10</div>
+            <div class="elo">${s.total} de 10 partidas aprovadas</div>
+            <div class="calib-dots">${dots}</div>
+          </div>
+        </div>`;
+    } else {
+      const tier = getTier(s.elo);
+      const next = TIERS[tier.index+1];
+      const pct = next ? Math.min(100, ((s.elo - tier.min) / (next.min - tier.min)) * 100) : 100;
+      rankBlock = `
+        <div class="rank-row">
+          ${tierBadgeHTML(tier)}
+          <div class="rank-info">
+            <div class="rank-name">${tier.name}</div>
+            <div class="elo mono">${s.elo} ELO</div>
+            <div class="progress-bar"><div class="progress-fill" data-target="${pct}"></div></div>
+            <div class="progress-label">${next ? `${Math.round(pct)}% até ${next.name}` : 'Patente máxima alcançada'}</div>
+          </div>
+        </div>`;
+    }
+  } else if(cfg.rankBy){
+    const ranking = getModeRanking(viewMode);
+    const pos = ranking.findIndex(r => r.p.id === p.id);
+    rankBlock = `
+      <div class="helper-note">
+        ${MODES[viewMode].label} não possui patente. ${pos >= 0 ? `Você está em <b>${pos+1}º lugar</b> no ranking (${cfg.rankBy === 'winRate' ? 'por taxa de vitória' : 'por kills'}).` : 'Registre partidas aprovadas neste modo para entrar no ranking.'}
+      </div>`;
+  } else {
+    rankBlock = `<div class="helper-note">${MODES[viewMode].label} é só para diversão — sem ranking oficial.</div>`;
+  }
+
+  const cards = [];
+  cards.push(`<div class="stat-card"><div class="val">${s.total}</div><div class="lbl">Partidas</div></div>`);
+  if(cfg.hasResultado){
+    cards.push(`<div class="stat-card"><div class="val win">${s.wins}</div><div class="lbl">Vitórias</div></div>`);
+    cards.push(`<div class="stat-card"><div class="val loss">${s.losses}</div><div class="lbl">Derrotas</div></div>`);
+    cards.push(`<div class="stat-card"><div class="val">${s.winRate.toFixed(0)}%</div><div class="lbl">Taxa Vitória</div></div>`);
+  }
+  cards.push(`<div class="stat-card"><div class="val">${s.kd.toFixed(2)}</div><div class="lbl">K/D</div></div>`);
+  cards.push(`<div class="stat-card"><div class="val">${s.kills}</div><div class="lbl">Kills Totais</div></div>`);
+  cards.push(`<div class="stat-card"><div class="val">${s.pontos}</div><div class="lbl">Pontos Totais</div></div>`);
+  if(cfg.fields.includes('mvps')) cards.push(`<div class="stat-card"><div class="val">${s.mvps}</div><div class="lbl">MVPs</div></div>`);
+
+  return `
+    <div class="panel accent-blue">
+      <h2>Meu Perfil <span class="sub">${p.name} · ${MODES[viewMode].label}</span></h2>
+      ${rankBlock}
+      ${pendingOwn > 0 ? `<div class="helper-note">Você tem ${pendingOwn} partida(s) de ${MODES[viewMode].label} aguardando aprovação.</div>` : ''}
+      <div class="stat-cards">${cards.join('')}</div>
+    </div>
+  `;
+}
+
+function historicoHTML(){
+  const p = players.find(p => p.id === currentPlayerId);
+  if(!p) return `<div class="panel accent-muted"><p class="empty-note">Selecione um jogador para ver o histórico.</p></div>`;
+  const cfg = MODES[viewMode];
+  const s = computeModeStats(p.id, viewMode);
+  const all = matches.filter(m => m.playerId === p.id && (m.mode||'competitivo') === viewMode).sort((a,b) => b.createdAt - a.createdAt);
+  if(all.length === 0) return `<div class="panel accent-muted"><h2>Histórico <span class="sub">${p.name} · ${cfg.label}</span></h2><p class="empty-note">Nenhuma partida registrada neste modo ainda.</p></div>`;
+
+  const rows = all.map(m => {
+    const approved = s.historyMap[m.id];
+    const deltaCell = cfg.hasPatente
+      ? (approved ? `<span class="${approved.eloDelta>=0?'win':'loss'}">${approved.eloDelta>=0?'+':''}${approved.eloDelta}</span>` : `<span class="status-badge status-${m.status}">${m.status}</span>`)
+      : `<span class="status-badge status-${m.status}">${m.status}</span>`;
+    return `
+      <tr>
+        <td>${m.date}</td>
+        <td>${m.map}</td>
+        ${cfg.hasResultado ? `<td class="${m.result==='vitoria'?'win':m.result==='derrota'?'loss':'draw'}">${m.result==='vitoria'?'Vitória':m.result==='derrota'?'Derrota':'Empate'}</td>` : ''}
+        <td>${m.kills}/${m.deaths}${cfg.fields.includes('assists') ? '/'+(m.assists||0) : ''}</td>
+        <td>${m.pontos||0}</td>
+        ${cfg.fields.includes('mvps') ? `<td class="stars">${starString(m.mvps||0)}</td>` : ''}
+        <td>${deltaCell}${m.correctedByAI ? '<span class="ai-tag">🤖 ajustado</span>' : ''}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="panel accent-muted">
+      <h2>Histórico <span class="sub">${p.name} · ${cfg.label}</span></h2>
+      <table>
+        <thead><tr>
+          <th>Data</th><th>Mapa</th>
+          ${cfg.hasResultado ? '<th>Resultado</th>' : ''}
+          <th>K/D${cfg.fields.includes('assists')?'/A':''}</th><th>Pontos</th>
+          ${cfg.fields.includes('mvps') ? '<th>MVPs</th>' : ''}
+          <th>Status / Δ Elo</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function rankingHTML(){
+  const cfg = MODES[viewMode];
+  const approvedCount = matches.filter(m => m.status === 'aprovada' && (m.mode||'competitivo') === viewMode).length;
+  const pendingCount = matches.filter(m => m.status === 'pendente' && (m.mode||'competitivo') === viewMode).length;
+
+  if(!cfg.rankBy){
+    return `<div class="panel"><h2>Ranking <span class="sub">${cfg.label}</span></h2><p class="empty-note">${cfg.label} é um modo livre, sem ranking oficial — as partidas ficam registradas só no histórico de cada jogador.</p></div>`;
+  }
+
+  const ranked = getModeRanking(viewMode);
+  const leader = ranked[0];
+
+  const hero = `
+    <div class="hero-stats">
+      <div class="hero-card"><div class="val">${ranked.length}</div><div class="lbl">Jogadores Ranqueados</div></div>
+      <div class="hero-card"><div class="val">${approvedCount}</div><div class="lbl">Partidas Aprovadas</div></div>
+      <div class="hero-card"><div class="val">${pendingCount}</div><div class="lbl">Em Análise</div></div>
+      <div class="hero-card"><div class="val" style="font-size:16px;">${leader ? leader.p.name : '—'}</div><div class="lbl">Líder Atual</div></div>
+    </div>
+  `;
+
+  if(ranked.length === 0) return `<div class="panel"><h2>Ranking <span class="sub">${cfg.label}</span></h2>${hero}<p class="empty-note">Nenhum jogador com partidas aprovadas neste modo ainda.</p></div>`;
+
+  const rows = ranked.map((r, i) => {
+    let metricCols;
+    if(cfg.rankBy === 'elo'){
+      const badge = r.s.calibrating
+        ? `<span class="mini-badge" style="background:var(--panel2); color:var(--muted); border:1px dashed var(--line);">?</span>`
+        : (() => { const t = getTier(r.s.elo); return `<span class="mini-badge" style="background:${t.color}">${t.index+1}</span>`; })();
+      const tierName = r.s.calibrating ? `Calibrando (${r.s.total}/10)` : getTier(r.s.elo).name;
+      metricCols = `<td class="name-cell">${badge}${r.p.name}</td><td>${tierName}</td><td>${r.s.elo}</td><td>${r.s.total}</td><td>${r.s.winRate.toFixed(0)}%</td>`;
+    } else if(cfg.rankBy === 'winRate'){
+      metricCols = `<td class="name-cell">${r.p.name}</td><td>${r.s.winRate.toFixed(0)}%</td><td>${r.s.total}</td><td>${r.s.kills}</td><td>${r.s.pontos}</td>`;
+    } else {
+      metricCols = `<td class="name-cell">${r.p.name}</td><td>${r.s.kills}</td><td>${r.s.total}</td><td>${r.s.kd.toFixed(2)}</td><td>${r.s.pontos}</td>`;
+    }
+    return `<tr><td class="pos">${i+1}</td>${metricCols}</tr>`;
+  }).join('');
+
+  let headCols;
+  if(cfg.rankBy === 'elo') headCols = '<th>Jogador</th><th>Patente</th><th>Elo</th><th>Partidas</th><th>Vitória %</th>';
+  else if(cfg.rankBy === 'winRate') headCols = '<th>Jogador</th><th>Vitória %</th><th>Partidas</th><th>Kills</th><th>Pontos</th>';
+  else headCols = '<th>Jogador</th><th>Kills Totais</th><th>Partidas</th><th>K/D</th><th>Pontos</th>';
+
+  return `
+    <div class="panel">
+      <h2>Ranking <span class="sub">${cfg.label} · Comunidade BRCSGO</span></h2>
+      ${hero}
+      <table>
+        <thead><tr><th>#</th>${headCols}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function moderacaoHTML(){
+  if(!modAuthed){
+    return `
+      <div class="panel accent-red">
+        <h2>Moderação <span class="sub">Acesso restrito à equipe do BRCSGO</span></h2>
+        <div class="grid" style="max-width:280px;">
+          <div class="field"><label>PIN de moderador</label><input type="password" id="modPin"></div>
+        </div>
+        <button id="modLoginBtn" style="margin-top:12px;">Entrar</button>
+      </div>
+    `;
+  }
+  const pending = matches.filter(m => m.status === 'pendente').sort((a,b) => a.createdAt - b.createdAt);
+  if(pending.length === 0) return `<div class="panel accent-red"><h2>Moderação</h2><p class="empty-note">Nenhuma partida aguardando análise.</p></div>`;
+
+  const cards = pending.map(m => {
+    const player = players.find(p => p.id === m.playerId);
+    const flags = flagsFor(m);
+    const cfg = MODES[m.mode || 'competitivo'];
+    return `
+      <div class="mod-card">
+        <img class="mod-proof" id="proof-${m.id}" alt="print do placar">
+        <div class="mod-body">
+          <div class="name-cell">${player ? player.name : '—'} <span class="mode-tag">${cfg.label}</span> <span class="mono" style="color:var(--muted); font-weight:400;">· ${m.map} · ${m.date}</span></div>
+          <div style="margin-top:4px;">
+            ${cfg.hasResultado ? `Resultado: <b class="${m.result==='vitoria'?'win':m.result==='derrota'?'loss':'draw'}">${m.result}</b> — ` : ''}
+            K/D${cfg.fields.includes('assists')?'/A':''} ${m.kills}/${m.deaths}${cfg.fields.includes('assists') ? '/'+(m.assists||0) : ''} — Pontos ${m.pontos||0}${cfg.fields.includes('mvps') ? ' — MVPs '+(m.mvps||0) : ''}
+          </div>
+          ${m.aiNote ? `<div class="mod-ai">🤖 ${m.aiNote}</div>` : ''}
+          ${flags.length ? `<div class="mod-flags">⚠ ${flags.join(' · ')}</div>` : ''}
+        </div>
+        <div class="mod-actions">
+          <button class="ok small" data-approve="${m.id}">Aprovar</button>
+          <button class="danger small" data-reject="${m.id}">Rejeitar</button>
+          <a class="download-link" id="dl-${m.id}" href="#" download="brcsgo-print-${m.id}.jpg">Baixar imagem</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="panel accent-red">
+      <h2>Moderação <span class="sub">${pending.length} partida(s) aguardando análise</span></h2>
+      ${cards}
+    </div>
+  `;
+}
+
+async function loadProofImages(list){
+  for(const m of list){
+    const img = document.getElementById('proof-' + m.id);
+    const dl = document.getElementById('dl-' + m.id);
+    if(!img) continue;
+    try{
+      const val = await getDoc('brcsgo:proof:' + m.id);
+      if(val){ img.src = val; if(dl) dl.href = val; }
+    }catch(e){ /* sem imagem disponível */ }
+  }
+}
+
+function attachTabEvents(){
+  const modeSelect = document.getElementById('f_mode');
+  if(modeSelect){
+    modeSelect.addEventListener('change', () => updateFormForMode(modeSelect.value));
+  }
+
+  const form = document.getElementById('matchForm');
+  if(form){
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('f_name').value;
+      if(!name.trim()) return;
+      const file = document.getElementById('f_proof').files[0];
+      if(!file){ alert('Anexe um print do placar final da partida.'); return; }
+
+      const modeKey = document.getElementById('f_mode').value;
+      const cfg = MODES[modeKey];
+      const kills = parseInt(document.getElementById('f_kills').value) || 0;
+      const deaths = parseInt(document.getElementById('f_deaths').value) || 0;
+      const assists = cfg.fields.includes('assists') ? (parseInt(document.getElementById('f_assists').value) || 0) : 0;
+      const pontos = cfg.fields.includes('pontos') ? (parseInt(document.getElementById('f_pontos').value) || 0) : 0;
+      const mvps = cfg.fields.includes('mvps') ? (parseInt(document.getElementById('f_mvps').value) || 0) : 0;
+      const result = cfg.hasResultado ? document.getElementById('f_result').value : null;
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span>Analisando print com IA...';
+
+      const p = findOrCreatePlayer(name);
+      const match = {
+        id: 'm_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        playerId: p.id,
+        mode: modeKey,
+        date: document.getElementById('f_date').value,
+        map: document.getElementById('f_map').value,
+        result, kills, deaths, assists, pontos, mvps,
+        status: 'pendente',
+        correctedByAI: false,
+        aiNote: '',
+        createdAt: Date.now()
+      };
+
+      let proofData = null;
+      try{ proofData = await compressImage(file); }catch(err){ console.error(err); }
+      if(proofData){
+        try{ await setDoc('brcsgo:proof:' + match.id, proofData); }catch(err){}
+      }
+
+      let toastMsg = 'Partida enviada — aguardando aprovação da moderação';
+      if(proofData){
+        const ai = await analyzeProof(proofData, name, modeKey);
+        if(!ai || ai.legivel === false){
+          match.aiNote = 'A IA não conseguiu confirmar os dados no print — revisão manual necessária.' + (ai && ai.observacao ? ' (' + ai.observacao + ')' : '');
+          toastMsg = 'Partida enviada — a IA não conseguiu ler o print, um moderador vai revisar manualmente';
+        } else {
+          const diffs = [];
+          ['kills','deaths','assists','pontos','mvps'].forEach(f => {
+            if(!cfg.fields.includes(f)) return;
+            if(ai[f] !== null && ai[f] !== undefined && Number(ai[f]) !== match[f]){
+              diffs.push({field:f, from:match[f], to:Number(ai[f])});
+            }
+          });
+          if(diffs.length === 0){
+            match.status = 'aprovada';
+            match.aiNote = 'IA confirmou todas as estatísticas do print.';
+            toastMsg = 'Aprovada automaticamente — a IA confirmou seu print';
+            deleteDoc('brcsgo:proof:' + match.id);
+          } else {
+            diffs.forEach(d => { match[d.field] = d.to; });
+            match.correctedByAI = true;
+            match.aiNote = 'IA ajustou valores divergentes do print: ' + diffs.map(d => FIELD_LABELS[d.field] + ' ' + d.from + ' → ' + d.to).join(', ');
+            toastMsg = 'Em análise — a IA corrigiu alguns valores, moderação vai confirmar';
+          }
+        }
+      }
+
+      matches.push(match);
+      await saveShared('brcsgo:matches', matches);
+      await saveShared('brcsgo:players', players);
+      currentPlayerId = p.id;
+      viewMode = modeKey;
+      await saveLocal('brcsgo:lastPlayer', p.id);
+
+      showToast(toastMsg);
+      activeTab = 'perfil';
+      render();
+    });
+  }
+
+  const modLoginBtn = document.getElementById('modLoginBtn');
+  if(modLoginBtn){
+    modLoginBtn.addEventListener('click', () => {
+      const val = document.getElementById('modPin').value;
+      if(val === MOD_PIN){ modAuthed = true; renderTab(); }
+      else alert('PIN incorreto.');
+    });
+  }
+
+  document.querySelectorAll('[data-approve]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.approve;
+      const m = matches.find(m => m.id === id);
+      if(m) m.status = 'aprovada';
+      await saveShared('brcsgo:matches', matches);
+      deleteDoc('brcsgo:proof:' + id);
+      renderTab();
+    });
+  });
+  document.querySelectorAll('[data-reject]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Rejeitar esta partida?')) return;
+      const id = btn.dataset.reject;
+      const m = matches.find(m => m.id === id);
+      if(m) m.status = 'rejeitada';
+      await saveShared('brcsgo:matches', matches);
+      deleteDoc('brcsgo:proof:' + id);
+      renderTab();
+    });
+  });
+}
+
+async function init(){
+  if(!db){
+    storageAvailable = false;
+  }
+  players = await loadShared('brcsgo:players');
+  matches = await loadShared('brcsgo:matches');
+  matches.forEach(m => {
+    if(!m.status) m.status = 'aprovada';
+    if(!m.mode) m.mode = 'competitivo';
+    if(m.pontos === undefined) m.pontos = (m.kills||0) * 2;
+  });
+  const lastId = await loadLocal('brcsgo:lastPlayer');
+  if(lastId && players.find(p => p.id === lastId)) currentPlayerId = lastId;
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
