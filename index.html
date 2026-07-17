@@ -273,7 +273,7 @@ try{
 // Cole aqui a URL do seu Worker (ex: "https://brcsgo-ia.seunome.workers.dev")
 // Enquanto estiver "COLE_AQUI_URL_DO_WORKER", a verificação por IA fica desativada
 // e toda partida cai direto na fila de moderação manual (nada quebra).
-const AI_PROXY_URL = "COLE_AQUI_URL_DO_WORKER";
+const AI_PROXY_URL = "brcsgoia.ttyfit518.workers.dev";
 
 const MODES = {
   competitivo: { label:'Competitivo',  fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:true,  rankBy:'elo' },
@@ -313,7 +313,7 @@ const ICONS = {
   ranking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 5h12v5a6 6 0 0 1-12 0V5z"/><path d="M9 21h6M12 16v5"/></svg>',
   moderacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>'
 };
-const FIELD_LABELS = { kills:'Kills', deaths:'Deaths', assists:'Assists', pontos:'Pontos', mvps:'Estrelas MVP' };
+const FIELD_LABELS = { kills:'Kills', deaths:'Deaths', assists:'Assists', pontos:'Pontos', mvps:'Estrelas MVP', result:'Resultado', map:'Mapa' };
 
 let players = [];
 let matches = [];
@@ -454,34 +454,53 @@ function extractJSON(text){
   return null;
 }
 
+function normalizeText(s){
+  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+function normalizeResultado(s){
+  const n = normalizeText(s);
+  if(n.includes('vitor')) return 'vitoria';
+  if(n.includes('derrot')) return 'derrota';
+  if(n.includes('empat')) return 'empate';
+  return null;
+}
+function matchMap(s){
+  const n = normalizeText(s);
+  if(!n) return null;
+  return MAPS.find(m => { const nm = normalizeText(m); return nm === n || n.includes(nm) || nm.includes(n); }) || null;
+}
+function matchMode(s){
+  const n = normalizeText(s);
+  if(!n) return null;
+  for(const k of MODE_KEYS){
+    const nl = normalizeText(MODES[k].label);
+    if(nl === n || n.includes(nl)) return k;
+  }
+  return null;
+}
+
 async function analyzeProof(dataUrl, playerName, modeKey){
+  if(AI_PROXY_URL === "COLE_AQUI_URL_DO_WORKER") return null;
   try{
     const base64 = dataUrl.split(',')[1];
     const hasMvps = MODES[modeKey].fields.includes('mvps');
-    const prompt = 'Você está analisando um print de tela de fim de partida do jogo Counter-Strike, jogado OFFLINE contra bots. '
-      + 'Convenção importante: jogadores controlados por bot aparecem no placar com o prefixo "BOT" antes do nome (ex: "BOT Sabrina", "BOT Buhi"). '
-      + 'O jogador humano é o ÚNICO nome da lista que NÃO tem o prefixo "BOT" — é a linha dele que você deve ler, mesmo que o nick não seja idêntico a "' + playerName + '". '
-      + 'Esse placar do CS NÃO tem coluna de headshots — ignore completamente esse conceito. Em vez disso, leia a coluna de Pontuação/Score (pontos da partida). '
-      + 'Extraia da linha do jogador humano: kills (abates), deaths (mortes), assists (assistências, se houver essa coluna), pontos (pontuação/score, se houver essa coluna)'
-      + (hasMvps ? ', e mvps (quantidade de estrelas de MVP ao lado do nome, se houver).' : '. Este modo de jogo não tem estrelas de MVP, então retorne mvps como null.')
-      + ' Responda ESTRITAMENTE em JSON válido, sem markdown, sem texto antes ou depois, neste formato exato: '
-      + '{"legivel": true ou false, "kills": numero ou null, "deaths": numero ou null, "assists": numero ou null, "pontos": numero ou null, "mvps": numero ou null, "observacao": "breve nota em portugues"}. '
-      + 'Só retorne "legivel": false se a imagem estiver realmente borrada, cortada, ou não for um placar de CS. Se conseguir ler ao menos kills e deaths com clareza, considere "legivel": true mesmo que outras colunas não existam nesse modo (nesse caso retorne null só nas colunas que não existem).';
+    const prompt = 'Você está analisando um print de tela de fim de partida do jogo Counter-Strike, jogado OFFLINE contra bots. O layout típico é este: '
+      + 'um texto GRANDE no topo/centro da tela dizendo "VITÓRIA", "DERROTA" ou "EMPATE" — pode ter o nome de um time logo abaixo dessa palavra grande, IGNORE esse nome de time, considere só a palavra grande em si. '
+      + 'No canto superior esquerdo aparece o modo de jogo e o mapa juntos, separados por uma barra "|", no formato "MODO | MAPA" (ex: "COMPETITIVO | TRAIN"). '
+      + 'Na lista de jogadores, cada linha tem (da esquerda pra direita): nível/ranking, ícone, nome do jogador, e depois colunas: "V" (vítimas = kills/abates), "A" (assistências), "M" (mortes/deaths), um ícone de estrela com um número ao lado (quantidade de MVPs) e por fim "PONTOS" (pontuação da partida). '
+      + 'Jogadores controlados por bot aparecem com o prefixo "BOT" antes do nome — o jogador humano é o único nome sem esse prefixo. '
+      + 'O nome do jogador humano pode vir precedido de uma tag de clã/time (ex: "KGN NOTZ", onde "KGN" é a tag do clã e "NOTZ" é o nome de fato) — IGNORE a tag de clã, o que importa é o restante do nome, que deve se parecer com "' + playerName + '". '
+      + 'Extraia da linha do jogador humano: kills (coluna "V"), assists (coluna "A"), deaths (coluna "M")'
+      + (hasMvps ? ', mvps (número ao lado do ícone de estrela)' : ' (mvps: este modo não tem estrelas MVP, retorne null)')
+      + ', e pontos (coluna "PONTOS"). Extraia também: resultado (a palavra grande do topo: "vitoria", "derrota" ou "empate"), modo (texto antes da barra "|" no canto superior esquerdo), e mapa (texto depois da barra "|"). '
+      + 'Responda ESTRITAMENTE em JSON válido, sem markdown, sem texto antes ou depois, neste formato exato: '
+      + '{"legivel": true ou false, "resultado": "vitoria"/"derrota"/"empate"/null, "modo": "texto ou null", "mapa": "texto ou null", "kills": numero ou null, "deaths": numero ou null, "assists": numero ou null, "pontos": numero ou null, "mvps": numero ou null, "observacao": "breve nota em portugues"}. '
+      + 'Só retorne "legivel": false se a imagem estiver realmente ilegível, cortada demais, ou não for um placar de CS.';
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch(AI_PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 500,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } },
-            { type: "text", text: prompt }
-          ]
-        }]
-      })
+      body: JSON.stringify({ image: base64, prompt })
     });
     const data = await response.json();
     const text = (data.content || []).map(b => b.text || '').join('').trim();
@@ -985,16 +1004,35 @@ function attachTabEvents(){
               diffs.push({field:f, from:match[f], to:Number(ai[f])});
             }
           });
-          if(diffs.length === 0){
+          if(cfg.hasResultado && ai.resultado){
+            const aiResult = normalizeResultado(ai.resultado);
+            if(aiResult && aiResult !== match.result) diffs.push({field:'result', from:match.result, to:aiResult});
+          }
+          if(ai.mapa){
+            const aiMap = matchMap(ai.mapa);
+            if(aiMap && aiMap !== match.map) diffs.push({field:'map', from:match.map, to:aiMap});
+          }
+          let modeWarning = '';
+          if(ai.modo){
+            const aiMode = matchMode(ai.modo);
+            if(aiMode && aiMode !== modeKey){
+              modeWarning = 'O print parece ser de ' + MODES[aiMode].label + ', mas a partida foi registrada como ' + MODES[modeKey].label + ' — confira antes de aprovar.';
+            }
+          }
+
+          if(diffs.length === 0 && !modeWarning){
             match.status = 'aprovada';
             match.aiNote = 'IA confirmou todas as estatísticas do print.';
             toastMsg = 'Aprovada automaticamente — a IA confirmou seu print';
             deleteDoc('brcsgo:proof:' + match.id);
           } else {
             diffs.forEach(d => { match[d.field] = d.to; });
-            match.correctedByAI = true;
-            match.aiNote = 'IA ajustou valores divergentes do print: ' + diffs.map(d => FIELD_LABELS[d.field] + ' ' + d.from + ' → ' + d.to).join(', ');
-            toastMsg = 'Em análise — a IA corrigiu alguns valores, moderação vai confirmar';
+            match.correctedByAI = diffs.length > 0;
+            const notes = [];
+            if(diffs.length) notes.push('IA ajustou valores divergentes do print: ' + diffs.map(d => FIELD_LABELS[d.field] + ' ' + d.from + ' → ' + d.to).join(', '));
+            if(modeWarning) notes.push('⚠ ' + modeWarning);
+            match.aiNote = notes.join(' ');
+            toastMsg = 'Em análise — a IA encontrou divergências, moderação vai confirmar';
           }
         }
       }
