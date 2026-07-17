@@ -257,7 +257,8 @@ const FIREBASE_CONFIG = {
   projectId: "brcsgo",
   storageBucket: "brcsgo.firebasestorage.app",
   messagingSenderId: "1012584089836",
-  appId: "1:1012584089836:web:d30596c7101c2762133dc9"
+  appId: "1:1012584089836:web:d30596c7101c2762133dc9",
+  measurementId: "G-JY1WFF0GFH"
 };
 
 let db = null;
@@ -267,6 +268,12 @@ try{
     db = firebase.firestore();
   }
 }catch(e){ console.error('Erro ao iniciar Firebase', e); }
+
+// ====== CONEXÃO SEGURA COM A IA (via Cloudflare Worker) ======
+// Cole aqui a URL do seu Worker (ex: "https://brcsgo-ia.seunome.workers.dev")
+// Enquanto estiver "COLE_AQUI_URL_DO_WORKER", a verificação por IA fica desativada
+// e toda partida cai direto na fila de moderação manual (nada quebra).
+const AI_PROXY_URL = "COLE_AQUI_URL_DO_WORKER";
 
 const MODES = {
   competitivo: { label:'Competitivo',  fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:true,  rankBy:'elo' },
