@@ -1244,6 +1244,23 @@ function perfilHTML(){
   cards.push(`<div class="stat-card"><div class="val">${s.pontos}</div><div class="lbl">Pontos Totais</div></div>`);
   if(cfg.fields.includes('mvps')) cards.push(`<div class="stat-card"><div class="val">${s.mvps}</div><div class="lbl">MVPs</div></div>`);
 
+  const orphans = players.filter(op => !op.ownerUid && op.id !== currentPlayerId);
+  const claimBlock = orphans.length > 0 ? `
+    <div class="panel accent-red" style="margin-top:16px;">
+      <h2>Reivindicar Jogador Antigo <span class="sub">de antes do sistema de login</span></h2>
+      <p class="empty-note">Se você jogava aqui antes de existir conta, escolha seu nick antigo abaixo pra transferir todo o histórico dele pra essa conta.</p>
+      <div class="grid" style="max-width:400px;">
+        <div class="field">
+          <label>Jogador antigo</label>
+          <select id="claimSelect">
+            ${orphans.map(op => `<option value="${op.id}">${op.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="danger" id="claimBtn" type="button" style="margin-top:10px;">Transferir histórico pra minha conta</button>
+    </div>
+  ` : '';
+
   return `
     <div class="panel accent-blue">
       <h2>Meu Perfil <span class="sub">${p.name} · ${MODES[viewMode].label}</span></h2>
@@ -1251,6 +1268,7 @@ function perfilHTML(){
       ${pendingOwn > 0 ? `<div class="helper-note">Você tem ${pendingOwn} partida(s) de ${MODES[viewMode].label} aguardando aprovação.</div>` : ''}
       <div class="stat-cards">${cards.join('')}</div>
     </div>
+    ${claimBlock}
   `;
 }
 
@@ -1406,6 +1424,23 @@ async function loadProofImages(list){
 }
 
 function attachTabEvents(){
+  const claimBtn = document.getElementById('claimBtn');
+  if(claimBtn){
+    claimBtn.addEventListener('click', async () => {
+      const oldId = document.getElementById('claimSelect').value;
+      const oldPlayer = players.find(p => p.id === oldId);
+      if(!oldPlayer) return;
+      if(!confirm(`Isso vai transferir TODO o histórico de "${oldPlayer.name}" pra sua conta atual, e não pode ser desfeito. Continuar?`)) return;
+      claimBtn.disabled = true;
+      matches.forEach(m => { if(m.playerId === oldId) m.playerId = currentPlayerId; });
+      players = players.filter(p => p.id !== oldId);
+      await saveShared('brcsgo:matches', matches);
+      await saveShared('brcsgo:players', players);
+      showToast('Histórico antigo transferido com sucesso!');
+      renderTab();
+    });
+  }
+
   const modeSelect = document.getElementById('f_mode');
   if(modeSelect){
     modeSelect.addEventListener('change', () => updateFormForMode(modeSelect.value));
