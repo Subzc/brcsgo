@@ -273,10 +273,11 @@ try{
 // Cole aqui a URL do seu Worker (ex: "https://brcsgo-ia.seunome.workers.dev")
 // Enquanto estiver "COLE_AQUI_URL_DO_WORKER", a verificação por IA fica desativada
 // e toda partida cai direto na fila de moderação manual (nada quebra).
-const AI_PROXY_URL = "https://brcsgoia.ttyfit518.workers.dev";
+const AI_PROXY_URL = "COLE_AQUI_URL_DO_WORKER";
 
 const MODES = {
   competitivo: { label:'Competitivo',  fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:true,  rankBy:'elo' },
+  '1v5':       { label:'1v5',          fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:true,  rankBy:'elo' },
   casual:      { label:'Casual',       fields:['kills','deaths','assists','pontos','mvps'], hasResultado:true,  hasPatente:false, rankBy:'winRate' },
   matamata:    { label:'Mata-Mata',    fields:['kills','deaths','pontos'],                  hasResultado:false, hasPatente:false, rankBy:'kills' },
   gungame:     { label:'Gun Game',     fields:['kills','deaths','pontos'],                  hasResultado:false, hasPatente:false, rankBy:'kills' },
@@ -319,6 +320,8 @@ let players = [];
 let matches = [];
 let currentPlayerId = null;
 let viewMode = 'competitivo';
+let lastUsedMode = 'competitivo';
+let lastUsedMap = MAPS[0];
 let activeTab = 'registrar';
 let modAuthed = false;
 let toastTimer = null;
@@ -330,6 +333,14 @@ function getTier(elo){
 }
 
 function computeEloDelta(m){
+  if(m.mode === '1v5'){
+    // No 1v5, é normal ter muitos kills contra 5 bots sozinho — o que difere skill de sorte
+    // é sobreviver (poucas mortes) e, principalmente, VENCER. Kills contam pouco aqui de propósito.
+    const perf = ((m.pontos||0)*0.3) + ((m.mvps||0)*2) - (m.deaths*2.0) + ((m.assists||0)*0.3);
+    let base = m.result === 'vitoria' ? 35 : (m.result === 'empate' ? 5 : -8);
+    let delta = Math.round(base + (perf*0.4));
+    return Math.max(-25, Math.min(50, delta));
+  }
   const perf = ((m.pontos||0)*0.5) + ((m.mvps||0)*3) - (m.deaths*1.0) + ((m.assists||0)*0.3);
   let base = m.result === 'vitoria' ? 18 : (m.result === 'empate' ? 2 : -14);
   let perfAdj = (perf - 18) * 0.6;
@@ -339,6 +350,12 @@ function computeEloDelta(m){
 
 function flagsFor(m){
   const flags = [];
+  if(m.mode === '1v5'){
+    if(m.deaths > 16) flags.push('Mais mortes do que rodadas possíveis numa partida');
+    if((m.mvps||0) > 16) flags.push('MVPs muito acima do normal');
+    if((m.pontos||0) > 0 && m.pontos < m.kills) flags.push('Pontuação incoerente com os kills informados');
+    return flags;
+  }
   const kd = m.deaths > 0 ? m.kills/m.deaths : m.kills;
   if(m.kills > 40) flags.push('Kills muito acima do normal');
   if(kd > 6) flags.push('K/D extremo');
@@ -480,7 +497,7 @@ function matchMode(s){
 }
 
 async function analyzeProof(dataUrl, playerName, modeKey){
-  if(AI_PROXY_URL === "https://brcsgoia.ttyfit518.workers.dev") return null;
+  if(AI_PROXY_URL === "COLE_AQUI_URL_DO_WORKER") return null;
   try{
     const base64 = dataUrl.split(',')[1];
     const hasMvps = MODES[modeKey].fields.includes('mvps');
@@ -647,7 +664,7 @@ function registrarHTML(){
         <div class="grid">
           <div class="field">
             <label>Modo de Jogo</label>
-            <select id="f_mode">${modeOptionsHTML('competitivo')}</select>
+            <select id="f_mode">${modeOptionsHTML(lastUsedMode)}</select>
           </div>
           <div class="field">
             <label>Jogador</label>
@@ -659,7 +676,7 @@ function registrarHTML(){
           </div>
           <div class="field">
             <label>Mapa</label>
-            <select id="f_map">${MAPS.map(m => `<option>${m}</option>`).join('')}</select>
+            <select id="f_map">${MAPS.map(m => `<option ${m===lastUsedMap?'selected':''}>${m}</option>`).join('')}</select>
           </div>
           <div class="field" data-field="resultado">
             <label>Resultado</label>
@@ -699,7 +716,7 @@ function registrarHTML(){
         </div>
       </form>
       <div class="helper-note blue">
-        Uma IA tenta ler o print automaticamente e conferir se os números batem com o que você digitou. Se bater tudo, a partida já é aprovada na hora. Se algo não bater, ela corrige o valor e a partida segue pra um moderador humano confirmar. Se a leitura por IA não estiver disponível neste site (ela depende de uma conexão que só funciona dentro do ambiente do Claude), a partida cai direto na fila de moderação manual — nada quebra, só exige revisão humana. Só Competitivo tem patente — os outros modos entram direto no ranking (quando o modo tiver um) sem passar por calibragem.
+        Sua partida é registrada na hora — não precisa esperar nada. A conferência por IA roda em segundo plano depois, e atualiza sozinha quando terminar (aprova direto se bater tudo, ou avisa a moderação se algo divergir do print). Só Competitivo e 1v5 têm patente (MD10 + Elo) — os outros modos entram direto no ranking (quando o modo tiver um) sem calibragem.
       </div>
     </div>
   `;
@@ -948,6 +965,8 @@ function attachTabEvents(){
     modeSelect.addEventListener('change', () => updateFormForMode(modeSelect.value));
   }
 
+  attachModAndActionEvents();
+
   const form = document.getElementById('matchForm');
   if(form){
     form.addEventListener('submit', async (e) => {
@@ -966,10 +985,6 @@ function attachTabEvents(){
       const mvps = cfg.fields.includes('mvps') ? (parseInt(document.getElementById('f_mvps').value) || 0) : 0;
       const result = cfg.hasResultado ? document.getElementById('f_result').value : null;
 
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner"></span>Analisando print com IA...';
-
       const p = findOrCreatePlayer(name);
       const match = {
         id: 'm_' + Date.now() + '_' + Math.floor(Math.random()*1000),
@@ -984,72 +999,93 @@ function attachTabEvents(){
         createdAt: Date.now()
       };
 
-      let proofData = null;
-      try{ proofData = await compressImage(file); }catch(err){ console.error(err); }
-      if(proofData){
-        try{ await setDoc('brcsgo:proof:' + match.id, proofData); }catch(err){}
-      }
-
-      let toastMsg = 'Partida enviada — aguardando aprovação da moderação';
-      if(proofData){
-        const ai = await analyzeProof(proofData, name, modeKey);
-        if(!ai || ai.legivel === false){
-          match.aiNote = 'A IA não conseguiu confirmar os dados no print — revisão manual necessária.' + (ai && ai.observacao ? ' (' + ai.observacao + ')' : '');
-          toastMsg = 'Partida enviada — a IA não conseguiu ler o print, um moderador vai revisar manualmente';
-        } else {
-          const diffs = [];
-          ['kills','deaths','assists','pontos','mvps'].forEach(f => {
-            if(!cfg.fields.includes(f)) return;
-            if(ai[f] !== null && ai[f] !== undefined && Number(ai[f]) !== match[f]){
-              diffs.push({field:f, from:match[f], to:Number(ai[f])});
-            }
-          });
-          if(cfg.hasResultado && ai.resultado){
-            const aiResult = normalizeResultado(ai.resultado);
-            if(aiResult && aiResult !== match.result) diffs.push({field:'result', from:match.result, to:aiResult});
-          }
-          if(ai.mapa){
-            const aiMap = matchMap(ai.mapa);
-            if(aiMap && aiMap !== match.map) diffs.push({field:'map', from:match.map, to:aiMap});
-          }
-          let modeWarning = '';
-          if(ai.modo){
-            const aiMode = matchMode(ai.modo);
-            if(aiMode && aiMode !== modeKey){
-              modeWarning = 'O print parece ser de ' + MODES[aiMode].label + ', mas a partida foi registrada como ' + MODES[modeKey].label + ' — confira antes de aprovar.';
-            }
-          }
-
-          if(diffs.length === 0 && !modeWarning){
-            match.status = 'aprovada';
-            match.aiNote = 'IA confirmou todas as estatísticas do print.';
-            toastMsg = 'Aprovada automaticamente — a IA confirmou seu print';
-            deleteDoc('brcsgo:proof:' + match.id);
-          } else {
-            diffs.forEach(d => { match[d.field] = d.to; });
-            match.correctedByAI = diffs.length > 0;
-            const notes = [];
-            if(diffs.length) notes.push('IA ajustou valores divergentes do print: ' + diffs.map(d => FIELD_LABELS[d.field] + ' ' + d.from + ' → ' + d.to).join(', '));
-            if(modeWarning) notes.push('⚠ ' + modeWarning);
-            match.aiNote = notes.join(' ');
-            toastMsg = 'Em análise — a IA encontrou divergências, moderação vai confirmar';
-          }
-        }
-      }
-
+      // Salva e libera o jogador NA HORA — a verificação por IA roda depois, em segundo plano
       matches.push(match);
       await saveShared('brcsgo:matches', matches);
       await saveShared('brcsgo:players', players);
       currentPlayerId = p.id;
       viewMode = modeKey;
+      lastUsedMode = modeKey;
+      lastUsedMap = match.map;
       await saveLocal('brcsgo:lastPlayer', p.id);
+      await saveLocal('brcsgo:lastMode', modeKey);
+      await saveLocal('brcsgo:lastMap', match.map);
 
-      showToast(toastMsg);
+      showToast('Partida enviada! Verificando em segundo plano...');
       activeTab = 'perfil';
       render();
+
+      verifyMatchInBackground(match.id, name, modeKey, file);
     });
   }
+}
 
+async function verifyMatchInBackground(matchId, playerName, modeKey, file){
+  const cfg = MODES[modeKey];
+  let proofData = null;
+  try{ proofData = await compressImage(file); }catch(err){ console.error(err); }
+  if(proofData){
+    try{ await setDoc('brcsgo:proof:' + matchId, proofData); }catch(err){}
+  }
+  if(!proofData) { renderTab(); return; }
+
+  const ai = await analyzeProof(proofData, playerName, modeKey);
+
+  // recarrega o estado mais recente do banco, pra não sobrescrever uma decisão
+  // que um moderador já possa ter tomado manualmente enquanto a IA processava
+  const freshMatches = await loadShared('brcsgo:matches');
+  const idx = freshMatches.findIndex(m => m.id === matchId);
+  if(idx === -1) return;
+  const match = freshMatches[idx];
+  if(match.status !== 'pendente') return;
+
+  if(!ai || ai.legivel === false){
+    match.aiNote = 'A IA não conseguiu confirmar os dados no print — revisão manual necessária.' + (ai && ai.observacao ? ' (' + ai.observacao + ')' : '');
+  } else {
+    const diffs = [];
+    ['kills','deaths','assists','pontos','mvps'].forEach(f => {
+      if(!cfg.fields.includes(f)) return;
+      if(ai[f] !== null && ai[f] !== undefined && Number(ai[f]) !== match[f]){
+        diffs.push({field:f, from:match[f], to:Number(ai[f])});
+      }
+    });
+    if(cfg.hasResultado && ai.resultado){
+      const aiResult = normalizeResultado(ai.resultado);
+      if(aiResult && aiResult !== match.result) diffs.push({field:'result', from:match.result, to:aiResult});
+    }
+    if(ai.mapa){
+      const aiMap = matchMap(ai.mapa);
+      if(aiMap && aiMap !== match.map) diffs.push({field:'map', from:match.map, to:aiMap});
+    }
+    let modeWarning = '';
+    if(ai.modo){
+      const aiMode = matchMode(ai.modo);
+      if(aiMode && aiMode !== modeKey){
+        modeWarning = 'O print parece ser de ' + MODES[aiMode].label + ', mas a partida foi registrada como ' + MODES[modeKey].label + ' — confira antes de aprovar.';
+      }
+    }
+
+    if(diffs.length === 0 && !modeWarning){
+      match.status = 'aprovada';
+      match.aiNote = 'IA confirmou todas as estatísticas do print.';
+      deleteDoc('brcsgo:proof:' + matchId);
+    } else {
+      diffs.forEach(d => { match[d.field] = d.to; });
+      match.correctedByAI = diffs.length > 0;
+      const notes = [];
+      if(diffs.length) notes.push('IA ajustou valores divergentes do print: ' + diffs.map(d => FIELD_LABELS[d.field] + ' ' + d.from + ' → ' + d.to).join(', '));
+      if(modeWarning) notes.push('⚠ ' + modeWarning);
+      match.aiNote = notes.join(' ');
+    }
+  }
+
+  freshMatches[idx] = match;
+  await saveShared('brcsgo:matches', freshMatches);
+  matches = freshMatches;
+  renderTab();
+}
+
+function attachModAndActionEvents(){
   const modLoginBtn = document.getElementById('modLoginBtn');
   if(modLoginBtn){
     modLoginBtn.addEventListener('click', () => {
@@ -1095,6 +1131,10 @@ async function init(){
   });
   const lastId = await loadLocal('brcsgo:lastPlayer');
   if(lastId && players.find(p => p.id === lastId)) currentPlayerId = lastId;
+  const lastMode = await loadLocal('brcsgo:lastMode');
+  if(lastMode && MODES[lastMode]) lastUsedMode = lastMode;
+  const lastMap = await loadLocal('brcsgo:lastMap');
+  if(lastMap && MAPS.includes(lastMap)) lastUsedMap = lastMap;
   render();
 }
 
