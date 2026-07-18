@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
   :root{
     --black:#05060C;
@@ -507,7 +508,13 @@
 
 <script>
 const MOD_PIN = "brcsgo2026";
+const MOD_SIGNUP_CODE = "brcsgo-staff-2026"; // troque por um código secreto seu — quem digitar isso ao criar conta vira moderador
 let storageAvailable = true;
+let authUser = null;
+let userProfile = null;
+let users = [];
+let authView = 'login';
+let authError = '';
 
 // ====== CONFIGURAÇÃO DO FIREBASE (BANCO DE DADOS REAL) ======
 // 1. Crie um projeto grátis em https://console.firebase.google.com
@@ -531,6 +538,80 @@ try{
     db = firebase.firestore();
   }
 }catch(e){ console.error('Erro ao iniciar Firebase', e); }
+
+function traduzErroAuth(e){
+  const code = e && e.code || '';
+  const map = {
+    'auth/email-already-in-use': 'Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.',
+    'auth/invalid-email': 'E-mail inválido.',
+    'auth/weak-password': 'Senha muito curta — use pelo menos 6 caracteres.',
+    'auth/wrong-password': 'Senha incorreta.',
+    'auth/user-not-found': 'Não existe conta com esse e-mail.',
+    'auth/invalid-credential': 'E-mail ou senha incorretos.',
+    'auth/too-many-requests': 'Muitas tentativas seguidas — espere um pouco e tente de novo.'
+  };
+  return map[code] || 'Não foi possível concluir. Tente novamente.';
+}
+
+function renderAuthGate(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="header" style="justify-content:center;">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div><h1>BRCSGO</h1><p>Painel de Partidas &amp; Ranking</p></div>
+      </div>
+    </div>
+    <div class="panel" style="max-width:420px;margin:0 auto;">
+      <h2>${authView === 'login' ? 'Entrar' : 'Criar Conta'}</h2>
+      ${authView === 'signup' ? `
+        <div class="field"><label>Seu nick (nome de jogador)</label><input type="text" id="auth_nick" placeholder="Ex: NOTZ"></div>
+      ` : ''}
+      <div class="field"><label>Email</label><input type="email" id="auth_email"></div>
+      <div class="field"><label>Senha</label><input type="password" id="auth_pass"></div>
+      ${authView === 'signup' ? `
+        <div class="field"><label>Código de moderador (opcional)</label><input type="text" id="auth_modcode" placeholder="Deixe em branco se não for staff"></div>
+      ` : ''}
+      ${authError ? `<div class="helper-note" style="border-left-color:var(--red); color:var(--red);">${authError}</div>` : ''}
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="authSubmitBtn" type="button">${authView === 'login' ? 'Entrar' : 'Criar conta'}</button>
+        <button class="secondary" id="authSwitchBtn" type="button">${authView === 'login' ? 'Criar uma conta' : 'Já tenho conta'}</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('authSwitchBtn').addEventListener('click', () => {
+    authView = authView === 'login' ? 'signup' : 'login';
+    authError = '';
+    renderAuthGate();
+  });
+  document.getElementById('authSubmitBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('authSubmitBtn');
+    const email = document.getElementById('auth_email').value.trim();
+    const pass = document.getElementById('auth_pass').value;
+    authError = '';
+    btn.disabled = true;
+    try{
+      if(authView === 'signup'){
+        const nick = document.getElementById('auth_nick').value.trim();
+        if(!nick){ authError = 'Digite um nick.'; btn.disabled = false; renderAuthGate(); return; }
+        const modCode = document.getElementById('auth_modcode').value.trim();
+        const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+        const uid = cred.user.uid;
+        const role = (modCode && modCode === MOD_SIGNUP_CODE) ? 'moderator' : 'member';
+        users.push({uid, playerName: nick, role});
+        await saveShared('brcsgo:users', users);
+        players.push({id: uid, name: nick, ownerUid: uid});
+        await saveShared('brcsgo:players', players);
+      } else {
+        await firebase.auth().signInWithEmailAndPassword(email, pass);
+      }
+    }catch(e){
+      authError = traduzErroAuth(e);
+      btn.disabled = false;
+      renderAuthGate();
+    }
+  });
+}
 
 // ====== CONEXÃO SEGURA COM A IA (via Cloudflare Worker) ======
 // Cole aqui a URL do seu Worker (ex: "https://brcsgo-ia.seunome.workers.dev")
@@ -898,7 +979,9 @@ function tierBadgeHTML(tier){
 }
 
 function render(){
+  if(!authUser || !userProfile){ renderAuthGate(); return; }
   const app = document.getElementById('app');
+  const isMod = userProfile.role === 'moderator';
   const pendingCount = matches.filter(m => m.status === 'pendente').length;
   app.innerHTML = `
     ${!storageAvailable ? `<div class="storage-warning">⚠ O banco de dados (Firebase) ainda não está configurado ou não conseguiu conectar. Procure "FIREBASE_CONFIG" no código-fonte e cole a configuração do seu projeto Firebase — sem isso, os dados não vão persistir entre recarregamentos.</div>` : ''}
@@ -911,11 +994,10 @@ function render(){
         </div>
       </div>
       <div class="header-controls">
-        <select id="playerSelect">
-          <option value="">— Selecionar jogador —</option>
-          ${playerOptionsHTML(currentPlayerId)}
-        </select>
-        <button class="secondary" id="newPlayerBtn" type="button">+ Novo</button>
+        <span class="mono" style="color:var(--white); font-size:13px; display:flex; align-items:center; gap:8px;">
+          ${userProfile.playerName}${isMod ? '<span class="status-badge status-aprovada">STAFF</span>' : ''}
+        </span>
+        <button class="secondary" id="logoutBtn" type="button">Sair</button>
       </div>
     </div>
 
@@ -924,7 +1006,7 @@ function render(){
       <button class="tab-btn ${activeTab==='perfil'?'active':''}" data-tab="perfil">${ICONS.perfil}Meu Perfil</button>
       <button class="tab-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}Histórico</button>
       <button class="tab-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}Ranking</button>
-      <button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>
+      ${isMod ? `<button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>` : ''}
     </div>
 
     ${activeTab==='perfil'||activeTab==='historico'||activeTab==='ranking' ? `
@@ -936,20 +1018,8 @@ function render(){
     <div id="tabContent"></div>
   `;
 
-  document.getElementById('playerSelect').addEventListener('change', async (e) => {
-    currentPlayerId = e.target.value || null;
-    await saveLocal('brcsgo:lastPlayer', currentPlayerId || '');
-    renderTab();
-  });
-  document.getElementById('newPlayerBtn').addEventListener('click', () => {
-    const name = prompt('Nome / nick do jogador:');
-    if(name && name.trim()){
-      const p = findOrCreatePlayer(name);
-      currentPlayerId = p.id;
-      saveShared('brcsgo:players', players);
-      saveLocal('brcsgo:lastPlayer', p.id);
-      render();
-    }
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    firebase.auth().signOut();
   });
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => { activeTab = btn.dataset.tab; render(); });
@@ -962,6 +1032,7 @@ function render(){
 }
 
 function renderTab(){
+  if(activeTab === 'moderacao' && (!userProfile || userProfile.role !== 'moderator')) activeTab = 'ranking';
   const el = document.getElementById('tabContent');
   if(activeTab === 'registrar') el.innerHTML = registrarHTML();
   else if(activeTab === 'perfil') el.innerHTML = perfilHTML();
@@ -977,7 +1048,7 @@ function renderTab(){
     });
   });
 
-  if(activeTab === 'moderacao' && modAuthed){
+  if(activeTab === 'moderacao'){
     loadProofImages(matches.filter(m => m.status === 'pendente'));
   }
   if(activeTab === 'registrar'){
@@ -987,19 +1058,14 @@ function renderTab(){
 }
 
 function registrarHTML(){
-  const current = players.find(p => p.id === currentPlayerId);
   return `
     <div class="panel">
-      <h2>Registrar Partida <span class="sub">Preencha o resultado da sua partida</span></h2>
+      <h2>Registrar Partida <span class="sub">${userProfile.playerName} — preencha o resultado da sua partida</span></h2>
       <form id="matchForm">
         <div class="grid">
           <div class="field">
             <label>Modo de Jogo</label>
             <select id="f_mode">${modeOptionsHTML(lastUsedMode)}</select>
-          </div>
-          <div class="field">
-            <label>Jogador</label>
-            <input type="text" id="f_name" placeholder="Seu nick" value="${current ? current.name : ''}" required>
           </div>
           <div class="field">
             <label>Data</label>
@@ -1231,16 +1297,8 @@ function rankingHTML(){
 }
 
 function moderacaoHTML(){
-  if(!modAuthed){
-    return `
-      <div class="panel accent-red">
-        <h2>Moderação <span class="sub">Acesso restrito à equipe do BRCSGO</span></h2>
-        <div class="grid" style="max-width:280px;">
-          <div class="field"><label>PIN de moderador</label><input type="password" id="modPin"></div>
-        </div>
-        <button id="modLoginBtn" style="margin-top:12px;">Entrar</button>
-      </div>
-    `;
+  if(!userProfile || userProfile.role !== 'moderator'){
+    return `<div class="panel accent-red"><h2>Moderação</h2><p class="empty-note">Acesso restrito à equipe do BRCSGO.</p></div>`;
   }
   const pending = matches.filter(m => m.status === 'pendente').sort((a,b) => a.createdAt - b.createdAt);
   if(pending.length === 0) return `<div class="panel accent-red"><h2>Moderação</h2><p class="empty-note">Nenhuma partida aguardando análise.</p></div>`;
@@ -1302,8 +1360,7 @@ function attachTabEvents(){
   if(form){
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById('f_name').value;
-      if(!name.trim()) return;
+      const name = userProfile.playerName;
       const file = document.getElementById('f_proof').files[0];
       if(!file){ alert('Anexe um print do placar final da partida.'); return; }
 
@@ -1316,10 +1373,9 @@ function attachTabEvents(){
       const mvps = cfg.fields.includes('mvps') ? (parseInt(document.getElementById('f_mvps').value) || 0) : 0;
       const result = cfg.hasResultado ? document.getElementById('f_result').value : null;
 
-      const p = findOrCreatePlayer(name);
       const match = {
         id: 'm_' + Date.now() + '_' + Math.floor(Math.random()*1000),
-        playerId: p.id,
+        playerId: currentPlayerId,
         mode: modeKey,
         date: document.getElementById('f_date').value,
         map: document.getElementById('f_map').value,
@@ -1333,12 +1389,9 @@ function attachTabEvents(){
       // Salva e libera o jogador NA HORA — a verificação por IA roda depois, em segundo plano
       matches.push(match);
       await saveShared('brcsgo:matches', matches);
-      await saveShared('brcsgo:players', players);
-      currentPlayerId = p.id;
       viewMode = modeKey;
       lastUsedMode = modeKey;
       lastUsedMap = match.map;
-      await saveLocal('brcsgo:lastPlayer', p.id);
       await saveLocal('brcsgo:lastMode', modeKey);
       await saveLocal('brcsgo:lastMap', match.map);
 
@@ -1417,15 +1470,6 @@ async function verifyMatchInBackground(matchId, playerName, modeKey, file){
 }
 
 function attachModAndActionEvents(){
-  const modLoginBtn = document.getElementById('modLoginBtn');
-  if(modLoginBtn){
-    modLoginBtn.addEventListener('click', () => {
-      const val = document.getElementById('modPin').value;
-      if(val === MOD_PIN){ modAuthed = true; renderTab(); }
-      else alert('PIN incorreto.');
-    });
-  }
-
   document.querySelectorAll('[data-approve]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.approve;
@@ -1453,20 +1497,48 @@ async function init(){
   if(!db){
     storageAvailable = false;
   }
-  players = await loadShared('brcsgo:players');
-  matches = await loadShared('brcsgo:matches');
-  matches.forEach(m => {
-    if(!m.status) m.status = 'aprovada';
-    if(!m.mode) m.mode = 'competitivo';
-    if(m.pontos === undefined) m.pontos = (m.kills||0) * 2;
-  });
-  const lastId = await loadLocal('brcsgo:lastPlayer');
-  if(lastId && players.find(p => p.id === lastId)) currentPlayerId = lastId;
+  let auth = null;
+  try{ if(typeof firebase !== 'undefined') auth = firebase.auth(); }catch(e){}
+  if(!auth){
+    document.getElementById('app').innerHTML = '<div class="storage-warning">⚠ O sistema de login (Firebase Authentication) não pôde ser iniciado. Confira se ele está ativado no seu projeto Firebase (Build → Authentication → Sign-in method → Email/Senha).</div>';
+    return;
+  }
+
   const lastMode = await loadLocal('brcsgo:lastMode');
   if(lastMode && MODES[lastMode]) lastUsedMode = lastMode;
   const lastMap = await loadLocal('brcsgo:lastMap');
   if(lastMap && MAPS.includes(lastMap)) lastUsedMap = lastMap;
-  render();
+
+  auth.onAuthStateChanged(async (user) => {
+    if(!user){
+      authUser = null;
+      userProfile = null;
+      renderAuthGate();
+      return;
+    }
+    authUser = user;
+    players = await loadShared('brcsgo:players');
+    matches = await loadShared('brcsgo:matches');
+    users = await loadShared('brcsgo:users');
+    matches.forEach(m => {
+      if(!m.status) m.status = 'aprovada';
+      if(!m.mode) m.mode = 'competitivo';
+      if(m.pontos === undefined) m.pontos = (m.kills||0) * 2;
+    });
+    userProfile = users.find(u => u.uid === user.uid) || null;
+    if(!userProfile){
+      // conta existe na autenticação mas ainda não tem perfil salvo — cria um básico
+      const fallbackName = (user.email || 'Jogador').split('@')[0];
+      userProfile = {uid: user.uid, playerName: fallbackName, role: 'member'};
+      users.push(userProfile);
+      await saveShared('brcsgo:users', users);
+      players.push({id: user.uid, name: fallbackName, ownerUid: user.uid});
+      await saveShared('brcsgo:players', players);
+    }
+    currentPlayerId = user.uid;
+    if(activeTab === 'moderacao' && userProfile.role !== 'moderator') activeTab = 'ranking';
+    render();
+  });
 }
 
 init();
