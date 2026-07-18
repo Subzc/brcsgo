@@ -365,6 +365,28 @@ function flagsFor(m){
   return flags;
 }
 
+function computePlacementElo(first10, mode){
+  const n = first10.length;
+  if(n === 0) return 0;
+  const avg = key => first10.reduce((s,m) => s + (m[key]||0), 0) / n;
+  const avgPontos = avg('pontos');
+  const avgMvps = avg('mvps');
+  const avgDeaths = avg('deaths');
+  const avgAssists = avg('assists');
+  const wins = first10.filter(m => m.result === 'vitoria').length;
+  const winRate = wins / n;
+
+  let skill;
+  if(mode === '1v5'){
+    // No 1v5, ganhar é raríssimo mesmo pra quem é muito bom — o desempenho individual
+    // (pontos, MVPs, sobrevivência) precisa pesar muito mais que o resultado da partida.
+    skill = (avgPontos*6) + (avgMvps*55) - (avgDeaths*10) + (avgAssists*10) + (winRate*450);
+  } else {
+    skill = (avgPontos*5) + (avgMvps*45) - (avgDeaths*12) + (avgAssists*8) + (winRate*550);
+  }
+  return Math.max(0, Math.round(skill));
+}
+
 function computeModeStats(playerId, mode){
   const cfg = MODES[mode];
   const pm = matches.filter(m => m.playerId === playerId && m.status === 'aprovada' && (m.mode || 'competitivo') === mode)
@@ -381,12 +403,19 @@ function computeModeStats(playerId, mode){
   const kd = deaths > 0 ? (kills/deaths) : kills;
 
   let elo = 0, historyMap = {};
-  if(cfg.hasPatente){
-    let e = 0; const hist = [];
-    pm.forEach(m => {
+  if(cfg.hasPatente && total >= 10){
+    const first10 = pm.slice(0, 10);
+    const placementElo = computePlacementElo(first10, mode);
+    const hist = [];
+    first10.forEach((m, i) => {
+      // as 10 partidas de calibragem, juntas, definem a colocação — não sobem uma a uma
+      hist.push({...m, eloBefore: i === 0 ? 0 : placementElo, eloAfter: placementElo, eloDelta: i === 9 ? placementElo : 0, isPlacement: true});
+    });
+    let e = placementElo;
+    pm.slice(10).forEach(m => {
       const delta = computeEloDelta(m);
-      const before = e; e = Math.max(0, e+delta);
-      hist.push({...m, eloBefore:before, eloAfter:e, eloDelta:delta});
+      const before = e; e = Math.max(0, e + delta);
+      hist.push({...m, eloBefore: before, eloAfter: e, eloDelta: delta, isPlacement: false});
     });
     elo = e;
     historyMap = Object.fromEntries(hist.map(h => [h.id, h]));
@@ -562,8 +591,47 @@ function modeOptionsHTML(selected){
   return MODE_KEYS.map(k => `<option value="${k}" ${k===selected?'selected':''}>${MODES[k].label}</option>`).join('');
 }
 
+const TIER_FAMILIES = [
+  {upto:5,  shape:'circle'},
+  {upto:9,  shape:'square'},
+  {upto:13, shape:'pentagon'},
+  {upto:15, shape:'diamond'},
+  {upto:17, shape:'star'}
+];
+function tierFamilyOf(index){
+  for(const f of TIER_FAMILIES){ if(index <= f.upto) return f; }
+  return TIER_FAMILIES[TIER_FAMILIES.length-1];
+}
+function tierFamilyStart(shape){
+  let prevUpto = -1;
+  for(const f of TIER_FAMILIES){
+    if(f.shape === shape) return prevUpto+1;
+    prevUpto = f.upto;
+  }
+  return 0;
+}
+const TIER_GLYPHS = {
+  circle:   '<circle cx="0" cy="0" r="8" fill="#0A0A0C"/>',
+  square:   '<rect x="-7" y="-7" width="14" height="14" fill="#0A0A0C"/>',
+  pentagon: '<polygon points="0,-9 8,-3 5,8 -5,8 -8,-3" fill="#0A0A0C"/>',
+  diamond:  '<polygon points="0,-10 8,0 0,10 -8,0" fill="#0A0A0C"/>',
+  star:     '<polygon points="0,-10 2.4,-3 9.5,-3 3.8,1.5 5.9,9 0,4.5 -5.9,9 -3.8,1.5 -9.5,-3 -2.4,-3" fill="#0A0A0C"/>'
+};
+function tierIconSVG(tier, size){
+  size = size || 34;
+  const fam = tierFamilyOf(tier.index);
+  const start = tierFamilyStart(fam.shape);
+  const sub = tier.index - start + 1;
+  let ticks = '';
+  for(let i=0;i<sub;i++){
+    const x = -((sub-1)*5)/2 + i*5;
+    ticks += `<rect x="${x-1.5}" y="12" width="3" height="4" fill="#0A0A0C"/>`;
+  }
+  return `<svg viewBox="-16 -16 32 32" width="${size}" height="${size}">${TIER_GLYPHS[fam.shape]}${ticks}</svg>`;
+}
+
 function tierBadgeHTML(tier){
-  return `<div class="badge" style="background:${tier.color}">${tier.index+1}</div>`;
+  return `<div class="badge" style="background:${tier.color}">${tierIconSVG(tier, 34)}</div>`;
 }
 
 function render(){
@@ -871,7 +939,7 @@ function rankingHTML(){
     if(cfg.rankBy === 'elo'){
       const badge = r.s.calibrating
         ? `<span class="mini-badge" style="background:var(--panel2); color:var(--muted); border:1px dashed var(--line);">?</span>`
-        : (() => { const t = getTier(r.s.elo); return `<span class="mini-badge" style="background:${t.color}">${t.index+1}</span>`; })();
+        : (() => { const t = getTier(r.s.elo); return `<span class="mini-badge" style="background:${t.color}">${tierIconSVG(t, 20)}</span>`; })();
       const tierName = r.s.calibrating ? `Calibrando (${r.s.total}/10)` : getTier(r.s.elo).name;
       metricCols = `<td class="name-cell">${badge}${r.p.name}</td><td>${tierName}</td><td>${r.s.elo}</td><td>${r.s.total}</td><td>${r.s.winRate.toFixed(0)}%</td>`;
     } else if(cfg.rankBy === 'winRate'){
