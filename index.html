@@ -548,9 +548,24 @@ function traduzErroAuth(e){
     'auth/wrong-password': 'Senha incorreta.',
     'auth/user-not-found': 'Não existe conta com esse e-mail.',
     'auth/invalid-credential': 'E-mail ou senha incorretos.',
-    'auth/too-many-requests': 'Muitas tentativas seguidas — espere um pouco e tente de novo.'
+    'auth/too-many-requests': 'Muitas tentativas seguidas — espere um pouco e tente de novo.',
+    'auth/popup-closed-by-user': 'A janela de login foi fechada antes de terminar.',
+    'auth/account-exists-with-different-credential': 'Já existe uma conta com esse e-mail usando outro método de login.'
   };
   return map[code] || 'Não foi possível concluir. Tente novamente.';
+}
+
+async function socialSignIn(providerName){
+  authError = '';
+  try{
+    const provider = providerName === 'google'
+      ? new firebase.auth.GoogleAuthProvider()
+      : new firebase.auth.GithubAuthProvider();
+    await firebase.auth().signInWithPopup(provider);
+  }catch(e){
+    authError = traduzErroAuth(e);
+    renderAuthGate();
+  }
 }
 
 function renderAuthGate(){
@@ -577,6 +592,13 @@ function renderAuthGate(){
         <button id="authSubmitBtn" type="button">${authView === 'login' ? 'Entrar' : 'Criar conta'}</button>
         <button class="secondary" id="authSwitchBtn" type="button">${authView === 'login' ? 'Criar uma conta' : 'Já tenho conta'}</button>
       </div>
+      <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+        <p class="empty-note" style="margin-bottom:10px;">ou continue com</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="secondary" id="googleBtn" type="button">Google</button>
+          <button class="secondary" id="githubBtn" type="button">GitHub</button>
+        </div>
+      </div>
     </div>
   `;
   document.getElementById('authSwitchBtn').addEventListener('click', () => {
@@ -584,6 +606,8 @@ function renderAuthGate(){
     authError = '';
     renderAuthGate();
   });
+  document.getElementById('googleBtn').addEventListener('click', () => socialSignIn('google'));
+  document.getElementById('githubBtn').addEventListener('click', () => socialSignIn('github'));
   document.getElementById('authSubmitBtn').addEventListener('click', async () => {
     const btn = document.getElementById('authSubmitBtn');
     const email = document.getElementById('auth_email').value.trim();
@@ -610,6 +634,39 @@ function renderAuthGate(){
       btn.disabled = false;
       renderAuthGate();
     }
+  });
+}
+
+function renderProfileSetupGate(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="header" style="justify-content:center;">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div><h1>BRCSGO</h1><p>Painel de Partidas &amp; Ranking</p></div>
+      </div>
+    </div>
+    <div class="panel" style="max-width:420px;margin:0 auto;">
+      <h2>Complete seu perfil</h2>
+      <p class="empty-note">Falta só escolher seu nick pra entrar.</p>
+      <div class="field"><label>Seu nick (nome de jogador)</label><input type="text" id="setup_nick" placeholder="Ex: NOTZ"></div>
+      <div class="field"><label>Código de moderador (opcional)</label><input type="text" id="setup_modcode"></div>
+      ${authError ? `<div class="helper-note" style="border-left-color:var(--red); color:var(--red);">${authError}</div>` : ''}
+      <button id="setupSubmitBtn" type="button" style="margin-top:14px;">Concluir</button>
+    </div>
+  `;
+  document.getElementById('setupSubmitBtn').addEventListener('click', async () => {
+    const nick = document.getElementById('setup_nick').value.trim();
+    if(!nick){ authError = 'Digite um nick.'; renderProfileSetupGate(); return; }
+    const modCode = document.getElementById('setup_modcode').value.trim();
+    const role = (modCode && modCode === MOD_SIGNUP_CODE) ? 'moderator' : 'member';
+    userProfile = {uid: authUser.uid, playerName: nick, role};
+    users.push(userProfile);
+    await saveShared('brcsgo:users', users);
+    players.push({id: authUser.uid, name: nick, ownerUid: authUser.uid});
+    await saveShared('brcsgo:players', players);
+    currentPlayerId = authUser.uid;
+    render();
   });
 }
 
@@ -1527,13 +1584,10 @@ async function init(){
     });
     userProfile = users.find(u => u.uid === user.uid) || null;
     if(!userProfile){
-      // conta existe na autenticação mas ainda não tem perfil salvo — cria um básico
-      const fallbackName = (user.email || 'Jogador').split('@')[0];
-      userProfile = {uid: user.uid, playerName: fallbackName, role: 'member'};
-      users.push(userProfile);
-      await saveShared('brcsgo:users', users);
-      players.push({id: user.uid, name: fallbackName, ownerUid: user.uid});
-      await saveShared('brcsgo:players', players);
+      // conta existe na autenticação (ex: primeiro login via Google/GitHub) mas ainda não escolheu um nick
+      currentPlayerId = null;
+      renderProfileSetupGate();
+      return;
     }
     currentPlayerId = user.uid;
     if(activeTab === 'moderacao' && userProfile.role !== 'moderator') activeTab = 'ranking';
