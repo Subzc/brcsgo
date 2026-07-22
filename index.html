@@ -1774,14 +1774,15 @@ function moderacaoHTML(){
 
 // =============== EVENTOS / CAMPEONATOS ===============
 const STAGE_DEFS = [
-  { key:'openGroup',   label:'Open Group',      type:'group', advance:60 },
-  { key:'closedGroup', label:'Closed Group',    type:'group', advance:30 },
-  { key:'qualifier',   label:'Qualificatórias', type:'group', advance:16 },
-  { key:'r32',         label:'16 avos',         type:'elim',  slots:16 },
-  { key:'r16',         label:'8 avos',          type:'elim',  slots:8 },
-  { key:'quarters',    label:'Quartas de Final',type:'elim',  slots:4 },
-  { key:'semis',       label:'Semifinal',       type:'elim',  slots:2 },
-  { key:'final',       label:'Final',           type:'elim',  slots:2 }
+  // Cada etapa alimenta a próxima em cadeia sequencial (single-elimination)
+  { key:'openGroup',   label:'Open Group',      type:'group', advance:64 },   // 120 jogadores  -> 64 classificam
+  { key:'closedGroup', label:'Closed Group',    type:'group', advance:32 },   //  64 jogadores  -> 32 classificam
+  { key:'qualifier',   label:'Qualificatórias', type:'group', advance:32 },   //  32 jogadores  -> 32 avançam (seeding)
+  { key:'r32',         label:'16 avos',         type:'elim',  slots:32 },     //  32 times (16 partidas) -> 16 vencedores
+  { key:'r16',         label:'8 avos',          type:'elim',  slots:16 },     //  16 times ( 8 partidas) ->  8 vencedores
+  { key:'quarters',    label:'Quartas de Final',type:'elim',  slots:8  },     //   8 times ( 4 partidas) ->  4 vencedores
+  { key:'semis',       label:'Semifinal',       type:'elim',  slots:4  },     //   4 times ( 2 partidas) ->  2 finalistas
+  { key:'final',       label:'Final',           type:'elim',  slots:2  }      //   2 times ( 1 partida ) ->  campeão
 ];
 
 function newEventDraft(){
