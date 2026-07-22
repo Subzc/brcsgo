@@ -610,7 +610,8 @@
 
   .group-table{ margin-top:6px; }
   .group-table th, .group-table td{ font-size:12px; padding:8px 10px; }
-  .group-standings{ display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .group-standings{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.55fr); gap:18px; align-items:start; }
+  @media (max-width: 980px){ .group-standings{ grid-template-columns: 1fr; } }
   .group-box{ background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius:14px; padding:14px; }
   .group-box h4{ font-family:'Rajdhani',sans-serif; letter-spacing:0.12em; text-transform:uppercase; font-size:12px; color:var(--purple-2); margin-bottom:10px; }
   .group-box .pos{ display:inline-block; width:20px; text-align:center; font-family:'IBM Plex Mono',monospace; color:var(--muted); }
@@ -694,25 +695,93 @@
 
 
 
-  /* Correção para tabelas e partidas cortadas em telas menores */
-.panel, .group-box {
-    overflow-x: auto !important;
-}
+  /* ============ CORREÇÃO DO PAINEL DE PARTIDAS ============ */
+  /* O painel esquerdo (classificação) e o direito (partidas) ficam
+     lado a lado no evento. Antes, .panel ganhava overflow:auto e as
+     linhas de partida tinham nowrap — o painel direito ficava travado
+     e cortado. Agora o container respira, as linhas quebram e os
+     inputs de placar se acomodam. */
+  .panel, .group-box { overflow: visible; }
+  .group-box { min-width: 0; }
 
-/* Garante que as tabelas não esmaguem o texto e tenham rolagem lateral */
-.panel table, .group-table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-}
+  /* Tabela de classificação — rolagem só nela, sem travar o painel */
+  .panel .group-table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .group-table{ width:100%; border-collapse:collapse; }
+  .group-table th, .group-table td{ white-space: nowrap; }
 
-/* Proteção extra para as chaves de eliminação não cortarem */
-.bracket {
-    overflow-x: auto;
-    padding-bottom: 16px;
-    max-width: 100%;
-}
+  /* Lista de partidas do grupo — layout responsivo, nada cortado */
+  .group-matches{ display:flex; flex-direction:column; gap:2px; max-height:640px; overflow-y:auto; padding-right:4px; }
+  .group-matches::-webkit-scrollbar{ width:8px; }
+  .group-matches::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, rgba(139,92,246,.55), rgba(90,169,255,.55)); border-radius:8px; }
+  .group-matches::-webkit-scrollbar-track{ background:rgba(255,255,255,.02); border-radius:8px; }
+
+  .gm-row{
+    display:grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items:center;
+    gap:12px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    transition: border-color .18s ease, background .18s ease, transform .18s ease;
+    margin-bottom:8px;
+  }
+  .gm-row:hover{ border-color: rgba(139,92,246,0.45); background: linear-gradient(180deg, rgba(139,92,246,0.06), rgba(90,169,255,0.04)); transform: translateY(-1px); }
+  .gm-teams{ display:flex; align-items:center; gap:8px; min-width:0; font-size:13.5px; flex-wrap:wrap; }
+  .gm-teams .tm{ font-weight:600; color:#fff; overflow-wrap:anywhere; word-break:break-word; }
+  .gm-teams .vs{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted-2); letter-spacing:.12em; text-transform:uppercase; padding:2px 6px; border-radius:6px; background:rgba(180,170,255,0.06); }
+  .gm-teams .sc{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--orange-2); }
+  .gm-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  .gm-controls .score-inp{ width:52px; padding:5px 6px; font-size:12px; text-align:center; }
+  .gm-controls .mid{ color:var(--muted-2); font-family:'IBM Plex Mono',monospace; }
+  .gm-controls button.small{ padding:5px 9px; font-size:11px; }
+  @media (max-width: 760px){
+    .gm-row{ grid-template-columns: 1fr; }
+    .gm-controls{ justify-content:flex-start; }
+  }
+
+  /* Chaves de eliminação continuam com rolagem própria */
+  .bracket{ overflow-x:auto; padding-bottom:16px; max-width:100%; }
+
+  /* ============ FUNDO ANIMADO ============ */
+  body::before, body::after{
+    content:""; position:fixed; inset:-20%; z-index:-1; pointer-events:none;
+    background-repeat:no-repeat;
+    filter: blur(70px); opacity:.85;
+  }
+  body::before{
+    background:
+      radial-gradient(420px 320px at 20% 30%, rgba(90,169,255,0.35), transparent 60%),
+      radial-gradient(360px 300px at 80% 20%, rgba(255,122,41,0.28), transparent 60%),
+      radial-gradient(500px 400px at 70% 85%, rgba(139,92,246,0.32), transparent 60%);
+    animation: bgFloat 22s ease-in-out infinite alternate;
+  }
+  body::after{
+    background:
+      radial-gradient(300px 260px at 85% 55%, rgba(90,169,255,0.22), transparent 60%),
+      radial-gradient(360px 300px at 15% 75%, rgba(255,122,41,0.18), transparent 60%),
+      radial-gradient(420px 340px at 45% 15%, rgba(139,92,246,0.22), transparent 60%);
+    animation: bgFloat2 28s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+  }
+  @keyframes bgFloat{
+    0%   { transform: translate3d(0,0,0) scale(1); }
+    50%  { transform: translate3d(3%, -2%, 0) scale(1.06); }
+    100% { transform: translate3d(-2%, 3%, 0) scale(1.02); }
+  }
+  @keyframes bgFloat2{
+    0%   { transform: translate3d(0,0,0) scale(1.02); }
+    50%  { transform: translate3d(-4%, 2%, 0) scale(1.08); }
+    100% { transform: translate3d(3%, -3%, 0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    body::before, body::after{ animation: none; }
+  }
+
+  /* Painéis com um leve realce */
+  .panel{ backdrop-filter: blur(6px); }
+  .group-box{ box-shadow: 0 18px 44px -28px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04); }
 
 </style>
 </head>
@@ -1890,15 +1959,19 @@ function eventDetailHTML(ev){
         <div class="group-standings">
           <div class="group-box">
             <h4>Classificação — top ${advance} avança</h4>
-            <table class="group-table"><thead><tr><th>#</th><th>Time</th><th>V</th><th>E</th><th>D</th><th>Saldo</th></tr></thead>
-              <tbody>
-                ${standings.map((s,i) => `<tr class="${i<advance?'qualified':''}"><td><span class="pos">${i+1}</span></td><td>${s.name}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf-s.ga>=0?'+':''}${s.gf-s.ga}</td></tr>`).join('')}
-              </tbody>
-            </table>
+            <div class="group-table-wrap">
+              <table class="group-table"><thead><tr><th>#</th><th>Time</th><th>V</th><th>E</th><th>D</th><th>Saldo</th></tr></thead>
+                <tbody>
+                  ${standings.map((s,i) => `<tr class="${i<advance?'qualified':''}"><td><span class="pos">${i+1}</span></td><td>${s.name}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf-s.ga>=0?'+':''}${s.gf-s.ga}</td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
           <div class="group-box">
             <h4>Partidas (${stage.matches.filter(m=>m.winner).length}/${stage.matches.length})</h4>
-            ${stage.matches.map(m => renderGroupMatch(ev, stage, m, isMod)).join('')}
+            <div class="group-matches">
+              ${stage.matches.map(m => renderGroupMatch(ev, stage, m, isMod)).join('')}
+            </div>
           </div>
         </div>
       `;
@@ -1971,18 +2044,23 @@ function renderElimMatch(ev, stage, m, isMod){
 
 function renderGroupMatch(ev, stage, m, isMod){
   return `
-    <div style="padding:10px 0; border-bottom:1px dashed var(--line); display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px;">
-      <div style="flex:1;">${teamName(ev,m.a)} <span style="color:var(--muted-2);">vs</span> ${teamName(ev,m.b)}</div>
+    <div class="gm-row" data-match-id="${m.id}">
+      <div class="gm-teams">
+        <span class="tm">${teamName(ev,m.a)}</span>
+        <span class="vs">vs</span>
+        <span class="tm">${teamName(ev,m.b)}</span>
+        ${(!isMod && (m.scoreA!=null || m.scoreB!=null)) ? `<span class="sc">${m.scoreA??'-'} × ${m.scoreB??'-'}</span>` : ''}
+      </div>
       ${isMod ? `
-        <div style="display:flex; align-items:center; gap:6px;">
+        <div class="gm-controls">
           <input class="score-inp" data-mid="${m.id}" data-side="a" type="number" min="0" value="${m.scoreA??''}" placeholder="A">
-          <span style="color:var(--muted-2);">×</span>
+          <span class="mid">×</span>
           <input class="score-inp" data-mid="${m.id}" data-side="b" type="number" min="0" value="${m.scoreB??''}" placeholder="B">
           <button class="ok small" data-set-winner="${m.id}" data-side="a">A</button>
           <button class="ok small" data-set-winner="${m.id}" data-side="b">B</button>
           <button class="secondary small" data-set-winner="${m.id}" data-side="d">Empate</button>
         </div>
-      ` : `<div class="mono">${m.scoreA??'-'} × ${m.scoreB??'-'}</div>`}
+      ` : ''}
     </div>
   `;
 }
