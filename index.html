@@ -688,6 +688,32 @@
   .event-banner .eb-desc{ font-size:12.5px; color:var(--muted); margin-top:2px; }
   .event-banner .eb-cta{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color: var(--purple-2); }
 
+
+
+
+
+
+
+  /* Correção para tabelas e partidas cortadas em telas menores */
+.panel, .group-box {
+    overflow-x: auto !important;
+}
+
+/* Garante que as tabelas não esmaguem o texto e tenham rolagem lateral */
+.panel table, .group-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* Proteção extra para as chaves de eliminação não cortarem */
+.bracket {
+    overflow-x: auto;
+    padding-bottom: 16px;
+    max-width: 100%;
+}
+
 </style>
 </head>
 <body>
