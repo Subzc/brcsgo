@@ -499,6 +499,195 @@
     .hero-card .val{ font-size:23px; }
     .tabs{ border-radius:12px; }
   }
+
+  /* ============ EVENTS / CHAMPIONSHIPS ============ */
+  .events-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+  .events-toolbar .toolbar-info{ color:var(--muted); font-size:13px; }
+  .events-toolbar .toolbar-info b{ color:var(--white); }
+  .events-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:18px; }
+  .event-card{
+    position:relative; padding:22px; border-radius:18px; overflow:hidden;
+    background:
+      radial-gradient(500px 260px at 100% 0%, rgba(139,92,246,0.18), transparent 55%),
+      radial-gradient(400px 220px at 0% 100%, rgba(90,169,255,0.14), transparent 55%),
+      linear-gradient(180deg, var(--panel2), var(--panel));
+    border:1px solid var(--line-strong);
+    box-shadow: 0 18px 44px -22px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+    cursor:pointer; transition: transform .18s ease, box-shadow .22s ease, border-color .2s ease;
+    animation: fadeIn .35s ease both;
+  }
+  .event-card:hover{ transform: translateY(-3px); border-color: rgba(139,92,246,0.55); box-shadow: 0 26px 60px -22px rgba(139,92,246,0.5), inset 0 1px 0 rgba(255,255,255,0.06); }
+  .event-card::before{ content:""; position:absolute; left:0; right:0; top:0; height:2px;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--purple), var(--orange), transparent);
+    background-size: 200% 100%; animation: borderGlow 6s linear infinite;
+  }
+  .event-card .ev-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .event-card .ev-sigla{
+    font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:0.14em; font-size:12px;
+    color:#fff; padding:5px 10px; border-radius:8px;
+    background: linear-gradient(135deg, var(--blue-deep), var(--purple));
+    box-shadow: 0 6px 18px -6px rgba(139,92,246,0.6);
+  }
+  .event-card .ev-status{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; border:1px solid var(--line-strong);
+  }
+  .event-card .ev-status.live{ color:#fff; background: linear-gradient(90deg,#EB4B6B,#8B5CF6); border-color: transparent; box-shadow: 0 0 14px rgba(235,75,107,0.55); animation: pillPulse 1.6s ease-in-out infinite; }
+  .event-card .ev-status.upcoming{ color: var(--blue); background: var(--blue-soft); border-color: rgba(90,169,255,0.35); }
+  .event-card .ev-status.finished{ color: var(--muted); background: rgba(255,255,255,0.03); }
+  .event-card .ev-title{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:24px; margin-top:14px; line-height:1.15;
+    background: linear-gradient(90deg,#fff 0%, #C7B8FF 60%, #7DC3FF 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .event-card .ev-desc{ color:var(--muted); font-size:13px; line-height:1.55; margin-top:8px; min-height:38px; }
+  .event-card .ev-meta{ display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; font-size:12px; color:var(--muted); }
+  .event-card .ev-meta span b{ color: var(--white); font-family:'IBM Plex Mono',monospace; }
+  .event-card .ev-reward{ margin-top:14px; padding:10px 14px; border-radius:12px;
+    background: linear-gradient(90deg, rgba(255,122,41,0.12), rgba(139,92,246,0.12));
+    border:1px solid rgba(255,122,41,0.25); font-size:13px; color:#FFD5B0;
+    display:flex; align-items:center; gap:8px;
+  }
+  .event-card .ev-reward svg{ width:16px; height:16px; color: var(--orange-2); }
+  .event-card .ev-new{ position:absolute; top:14px; right:14px; width:10px; height:10px; border-radius:50%; background: var(--red); box-shadow: 0 0 12px var(--red); animation: pillPulse 1.4s ease-in-out infinite; }
+
+  .event-detail-hero{
+    position:relative; padding:28px; border-radius:20px; margin-bottom:22px; overflow:hidden;
+    background:
+      radial-gradient(700px 320px at 100% 0%, rgba(139,92,246,0.22), transparent 55%),
+      radial-gradient(600px 280px at 0% 100%, rgba(90,169,255,0.16), transparent 55%),
+      linear-gradient(180deg, var(--panel3), var(--panel));
+    border:1px solid var(--line-strong);
+    box-shadow: 0 22px 60px -24px rgba(0,0,0,0.75);
+  }
+  .event-detail-hero::before{ content:""; position:absolute; left:0; right:0; top:0; height:3px;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--purple), var(--orange), transparent);
+    background-size: 200% 100%; animation: borderGlow 6s linear infinite;
+  }
+  .event-detail-hero h1{ font-family:'Rajdhani',sans-serif; font-size:34px; letter-spacing:0.02em; line-height:1.05;
+    background: linear-gradient(90deg,#fff,#C7B8FF 50%, #7DC3FF); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .event-detail-hero .hero-sub{ color:var(--muted); margin-top:6px; font-size:14px; }
+  .event-detail-hero .hero-meta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .event-detail-hero .hero-meta > *{
+    padding:8px 12px; border-radius:10px; background: rgba(255,255,255,0.03); border:1px solid var(--line);
+    font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:6px;
+  }
+  .event-detail-hero .hero-meta b{ color:var(--white); font-family:'IBM Plex Mono',monospace; }
+
+  .stage-nav{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+  .stage-nav .st-btn{
+    padding:9px 14px; border-radius:10px; background: rgba(255,255,255,0.02); color:var(--muted);
+    border:1px solid var(--line); font-family:'Rajdhani',sans-serif; font-weight:600; letter-spacing:0.08em;
+    text-transform:uppercase; font-size:12px; cursor:pointer; transition: all .2s ease;
+  }
+  .stage-nav .st-btn:hover{ color:#fff; border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); }
+  .stage-nav .st-btn.active{
+    color:#fff; background: linear-gradient(135deg, rgba(90,169,255,0.28), rgba(139,92,246,0.34));
+    border-color: rgba(139,92,246,0.55); box-shadow: 0 6px 18px -6px rgba(139,92,246,0.55);
+  }
+  .stage-nav .st-btn.done{ color: var(--blue); border-color: rgba(90,169,255,0.35); }
+
+  .bracket{ display:flex; gap:26px; overflow-x:auto; padding-bottom:8px; }
+  .bracket-round{ min-width:230px; display:flex; flex-direction:column; justify-content:space-around; gap:14px; }
+  .bracket-round h4{ font-family:'Rajdhani',sans-serif; letter-spacing:0.14em; text-transform:uppercase; font-size:11px; color:var(--purple-2); text-align:center; margin-bottom:4px; }
+  .bracket-match{
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+    box-shadow: 0 8px 22px -14px rgba(0,0,0,0.7); position:relative;
+  }
+  .bracket-match .bm-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; font-size:13px; }
+  .bracket-match .bm-row + .bm-row{ border-top:1px dashed var(--line); }
+  .bracket-match .bm-team{ display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
+  .bracket-match .bm-team .seed{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted-2); width:18px; text-align:right; }
+  .bracket-match .bm-team .nm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bracket-match .bm-row.winner .nm{ color:#fff; font-weight:600; text-shadow: 0 0 10px rgba(139,92,246,0.4); }
+  .bracket-match .bm-row.loser .nm{ color:var(--muted); }
+  .bracket-match .bm-score{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px; min-width:22px; text-align:right; color:var(--white); }
+  .bracket-match .bm-row.winner .bm-score{ color: var(--orange-2); }
+  .bracket-match input.score-inp{ width:44px; padding:4px 6px; font-size:12px; text-align:center; }
+  .bracket-match .bm-actions{ display:flex; gap:6px; margin-top:8px; }
+  .bracket-match .bm-actions button{ padding:5px 8px; font-size:11px; }
+
+  .group-table{ margin-top:6px; }
+  .group-table th, .group-table td{ font-size:12px; padding:8px 10px; }
+  .group-standings{ display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .group-box{ background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .group-box h4{ font-family:'Rajdhani',sans-serif; letter-spacing:0.12em; text-transform:uppercase; font-size:12px; color:var(--purple-2); margin-bottom:10px; }
+  .group-box .pos{ display:inline-block; width:20px; text-align:center; font-family:'IBM Plex Mono',monospace; color:var(--muted); }
+  .group-box .qualified .pos{ color: var(--orange-2); }
+  .group-box .qualified td{ color:#fff; }
+
+  .podium{
+    display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-top:14px;
+  }
+  .podium .pd{
+    padding:20px 14px; text-align:center; border-radius:14px;
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border:1px solid var(--line-strong); position:relative; overflow:hidden;
+  }
+  .podium .pd .pos{ font-family:'Rajdhani',sans-serif; font-size:34px; font-weight:700; }
+  .podium .pd .nm{ font-family:'Rajdhani',sans-serif; font-size:18px; margin-top:6px;
+    background: linear-gradient(90deg,#fff,#C7B8FF); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .podium .pd.first{ background: linear-gradient(180deg, rgba(255,122,41,0.18), var(--panel)); border-color: rgba(255,122,41,0.45); box-shadow: 0 0 40px -12px rgba(255,122,41,0.5); }
+  .podium .pd.first .pos{ color: var(--orange); }
+  .podium .pd.second{ background: linear-gradient(180deg, rgba(139,92,246,0.16), var(--panel)); border-color: rgba(139,92,246,0.4); }
+  .podium .pd.second .pos{ color: var(--purple-2); }
+  .podium .pd.third{ background: linear-gradient(180deg, rgba(90,169,255,0.14), var(--panel)); border-color: rgba(90,169,255,0.35); }
+  .podium .pd.third .pos{ color: var(--blue); }
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:200; background: rgba(4,5,12,0.72);
+    backdrop-filter: blur(6px); display:flex; align-items:flex-start; justify-content:center;
+    padding:40px 20px; overflow-y:auto; animation: fadeIn .25s ease;
+  }
+  .modal{
+    width:100%; max-width:720px; border-radius:20px; padding:28px;
+    background:
+      radial-gradient(600px 300px at 100% 0%, rgba(139,92,246,0.16), transparent 55%),
+      linear-gradient(180deg, var(--panel3), var(--panel));
+    border:1px solid var(--line-strong); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.9);
+    position:relative; animation: popIn .3s cubic-bezier(.2,1.4,.4,1);
+  }
+  .modal::before{ content:""; position:absolute; left:0; right:0; top:0; height:2px; border-radius:20px 20px 0 0;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--purple), var(--orange), transparent);
+    background-size:200% 100%; animation: borderGlow 6s linear infinite;
+  }
+  .modal h2{ margin-bottom:6px; font-size:22px; }
+  .modal .modal-sub{ color:var(--muted); font-size:13px; margin-bottom:20px; }
+  .modal .modal-close{
+    position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:8px;
+    background: rgba(255,255,255,0.04); border:1px solid var(--line); color:var(--muted);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .modal .modal-close:hover{ color:#fff; background: rgba(235,75,107,0.15); border-color: rgba(235,75,107,0.4); }
+  .modal .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  @media (max-width:640px){ .modal .grid-2{ grid-template-columns: 1fr; } }
+  .modal .format-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-top:8px; }
+  .modal .fmt-chip{
+    display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px;
+    background: rgba(255,255,255,0.02); border:1px solid var(--line); cursor:pointer;
+    font-size:13px; color:var(--muted); transition: all .18s ease;
+    user-select:none;
+  }
+  .modal .fmt-chip:hover{ color:#fff; border-color: rgba(139,92,246,0.4); }
+  .modal .fmt-chip.on{ color:#fff; background: linear-gradient(135deg, rgba(90,169,255,0.2), rgba(139,92,246,0.28)); border-color: rgba(139,92,246,0.5); box-shadow: 0 6px 18px -8px rgba(139,92,246,0.55); }
+  .modal .fmt-chip input{ display:none; }
+  .modal .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:22px; }
+
+  .event-banner{
+    padding:14px 18px; border-radius:14px; margin-bottom:20px;
+    background: linear-gradient(90deg, rgba(90,169,255,0.14), rgba(139,92,246,0.16), rgba(255,122,41,0.12));
+    border:1px solid rgba(139,92,246,0.35); display:flex; align-items:center; gap:12px; cursor:pointer;
+    box-shadow: 0 0 24px -10px rgba(139,92,246,0.6);
+    animation: fadeIn .35s ease;
+  }
+  .event-banner svg{ width:22px; height:22px; color: var(--orange-2); flex-shrink:0; }
+  .event-banner .eb-body{ flex:1; }
+  .event-banner .eb-title{ font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:0.05em; font-size:15px; color:#fff; }
+  .event-banner .eb-desc{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .event-banner .eb-cta{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color: var(--purple-2); }
+
 </style>
 </head>
 <body>
@@ -714,11 +903,19 @@ const ICONS = {
   historico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
   ranking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 5h12v5a6 6 0 0 1-12 0V5z"/><path d="M9 21h6M12 16v5"/></svg>',
   moderacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>'
+,
+  eventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>'
 };
 const FIELD_LABELS = { kills:'Kills', deaths:'Deaths', assists:'Assists', pontos:'Pontos', mvps:'Estrelas MVP', result:'Resultado', map:'Mapa' };
 
 let players = [];
 let matches = [];
+let events = [];
+let selectedEventId = null;
+let seenEventIds = [];
+let eventDetailStage = 0;
+let eventModalOpen = false;
+let eventModalDraft = null;
 let currentPlayerId = null;
 let viewMode = 'competitivo';
 let lastUsedMode = 'competitivo';
@@ -1058,11 +1255,13 @@ function render(){
       </div>
     </div>
 
+    ${activeEventBannerHTML()}
     <div class="tabs">
       <button class="tab-btn ${activeTab==='registrar'?'active':''}" data-tab="registrar">${ICONS.registrar}Registrar</button>
       <button class="tab-btn ${activeTab==='perfil'?'active':''}" data-tab="perfil">${ICONS.perfil}Meu Perfil</button>
       <button class="tab-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}Histórico</button>
       <button class="tab-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}Ranking</button>
+      <button class="tab-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}Eventos ${(function(){const n=events.filter(ev=>!seenEventIds.includes(ev.id)&&ev.status!=='finished').length;return n>0?`<span class="pill">${n}</span>`:'';})()}</button>
       ${isMod ? `<button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>` : ''}
     </div>
 
@@ -1095,6 +1294,7 @@ function renderTab(){
   else if(activeTab === 'perfil') el.innerHTML = perfilHTML();
   else if(activeTab === 'historico') el.innerHTML = historicoHTML();
   else if(activeTab === 'ranking') el.innerHTML = rankingHTML();
+  else if(activeTab === 'eventos') el.innerHTML = eventosHTML();
   else if(activeTab === 'moderacao') el.innerHTML = moderacaoHTML();
   attachTabEvents();
 
@@ -1411,6 +1611,585 @@ function moderacaoHTML(){
   `;
 }
 
+
+// =============== EVENTOS / CAMPEONATOS ===============
+const STAGE_DEFS = [
+  { key:'openGroup',   label:'Open Group',      type:'group', advance:8 },
+  { key:'closedGroup', label:'Closed Group',    type:'group', advance:8 },
+  { key:'qualifier',   label:'Qualificatórias', type:'group', advance:8 },
+  { key:'r32',         label:'16 avos',         type:'elim',  slots:32 },
+  { key:'r16',         label:'8 avos',          type:'elim',  slots:16 },
+  { key:'quarters',    label:'Quartas de Final',type:'elim',  slots:8 },
+  { key:'semis',       label:'Semifinal',       type:'elim',  slots:4 },
+  { key:'final',       label:'Final',           type:'elim',  slots:2 }
+];
+
+function newEventDraft(){
+  return {
+    name:'', sigla:'', description:'', reward:'', startDate:'',
+    teamsRaw:'',
+    format: { openGroup:false, closedGroup:false, qualifier:false, r32:false, r16:false, quarters:true, semis:true, final:true }
+  };
+}
+
+function parseTeamsList(raw){
+  return (raw||'').split(/\n|,|;/).map(s => s.trim()).filter(Boolean).map((n,i) => ({
+    id: 't_' + Date.now().toString(36) + '_' + i,
+    name: n,
+    seed: i+1
+  }));
+}
+
+function buildStagesFromFormat(format, teams){
+  const active = STAGE_DEFS.filter(sd => format[sd.key]);
+  if(active.length === 0) return [];
+  const stages = [];
+  let currentTeams = teams.map(t => t.id);
+  active.forEach((sd, idx) => {
+    const stage = {
+      key: sd.key, label: sd.label, type: sd.type,
+      teams: currentTeams.slice(),
+      matches: [],
+      advanceCount: null,
+      completed: false
+    };
+    if(sd.type === 'group'){
+      // round-robin: each pair plays once
+      const ts = currentTeams.slice();
+      for(let i=0; i<ts.length; i++){
+        for(let j=i+1; j<ts.length; j++){
+          stage.matches.push({
+            id:'gm_'+idx+'_'+i+'_'+j, a: ts[i], b: ts[j],
+            scoreA:null, scoreB:null, winner:null
+          });
+        }
+      }
+      // default advance = min(next stage slots, half of teams)
+      const next = active[idx+1];
+      stage.advanceCount = next && next.slots ? Math.min(next.slots, ts.length) : Math.max(1, Math.floor(ts.length/2));
+    } else {
+      // elim: pair 1v N, 2v N-1, ...
+      const ts = currentTeams.slice();
+      // pad with BYE if odd
+      while(ts.length % 2 !== 0) ts.push('__BYE__');
+      const half = ts.length / 2;
+      for(let i=0; i<half; i++){
+        stage.matches.push({
+          id:'em_'+idx+'_'+i, a: ts[i], b: ts[ts.length-1-i],
+          scoreA:null, scoreB:null, winner: null
+        });
+      }
+    }
+    stages.push(stage);
+    // For next stage seeding, we pre-fill with placeholders (TBD) — actual advancement happens via advanceStage()
+    currentTeams = new Array( sd.type==='group' ? stage.advanceCount : Math.max(1, Math.floor(stage.matches.length)) ).fill('__TBD__');
+  });
+  return stages;
+}
+
+function teamName(ev, tid){
+  if(tid === '__BYE__') return '(bye)';
+  if(tid === '__TBD__' || !tid) return 'A definir';
+  const t = ev.teams.find(x => x.id === tid);
+  return t ? t.name : tid;
+}
+function teamSeed(ev, tid){
+  const t = ev.teams.find(x => x.id === tid);
+  return t ? t.seed : '';
+}
+
+function stageIsComplete(stage){
+  if(stage.type === 'elim'){
+    return stage.matches.every(m => m.winner || m.a==='__BYE__' || m.b==='__BYE__');
+  }
+  return stage.matches.every(m => m.winner);
+}
+
+function computeGroupStandings(stage, ev){
+  const stats = {};
+  stage.teams.forEach(tid => { stats[tid] = { tid, name: teamName(ev,tid), w:0, l:0, d:0, gf:0, ga:0, played:0 }; });
+  stage.matches.forEach(m => {
+    if(m.winner){
+      stats[m.a].played++; stats[m.b].played++;
+      stats[m.a].gf += m.scoreA||0; stats[m.a].ga += m.scoreB||0;
+      stats[m.b].gf += m.scoreB||0; stats[m.b].ga += m.scoreA||0;
+      if(m.winner === 'a'){ stats[m.a].w++; stats[m.b].l++; }
+      else if(m.winner === 'b'){ stats[m.b].w++; stats[m.a].l++; }
+      else { stats[m.a].d++; stats[m.b].d++; }
+    }
+  });
+  return Object.values(stats).sort((x,y) => (y.w - x.w) || ((y.gf-y.ga)-(x.gf-x.ga)) || (y.gf - x.gf));
+}
+
+function advanceStage(ev, stageIdx){
+  const stage = ev.stages[stageIdx];
+  if(!stage || !stageIsComplete(stage)) return;
+  const next = ev.stages[stageIdx+1];
+  stage.completed = true;
+  let advanced = [];
+  if(stage.type === 'group'){
+    const standings = computeGroupStandings(stage, ev);
+    advanced = standings.slice(0, stage.advanceCount || standings.length).map(s => s.tid);
+  } else {
+    advanced = stage.matches.map(m => {
+      if(m.a === '__BYE__') return m.b;
+      if(m.b === '__BYE__') return m.a;
+      return m.winner === 'a' ? m.a : m.b;
+    });
+  }
+  if(next){
+    if(next.type === 'elim'){
+      let ts = advanced.slice();
+      while(ts.length % 2 !== 0) ts.push('__BYE__');
+      next.teams = ts;
+      next.matches = [];
+      const half = ts.length/2;
+      for(let i=0; i<half; i++){
+        next.matches.push({
+          id:'em_a'+stageIdx+'_'+i, a: ts[i], b: ts[ts.length-1-i],
+          scoreA:null, scoreB:null, winner:null
+        });
+      }
+    } else {
+      next.teams = advanced.slice();
+      next.matches = [];
+      for(let i=0; i<advanced.length; i++){
+        for(let j=i+1; j<advanced.length; j++){
+          next.matches.push({ id:'gm_a'+stageIdx+'_'+i+'_'+j, a:advanced[i], b:advanced[j], scoreA:null, scoreB:null, winner:null });
+        }
+      }
+    }
+  } else {
+    // finished the whole thing
+    if(stage.type === 'elim' && stage.key === 'final'){
+      const finalM = stage.matches[0];
+      if(finalM && finalM.winner){
+        ev.winner = finalM.winner === 'a' ? finalM.a : finalM.b;
+      }
+    }
+    ev.status = 'finished';
+  }
+}
+
+function eventStatusLabel(ev){
+  if(ev.status === 'finished') return 'Encerrado';
+  if(ev.status === 'live') return 'Ao vivo';
+  return 'Em breve';
+}
+
+function eventsSortedActive(){
+  const order = { live:0, upcoming:1, finished:2 };
+  return events.slice().sort((a,b) => (order[a.status]||9) - (order[b.status]||9) || (b.createdAt||0) - (a.createdAt||0));
+}
+
+function markEventSeen(id){
+  if(!authUser) return;
+  if(!seenEventIds.includes(id)){
+    seenEventIds.push(id);
+    try{ localStorage.setItem('brcsgo:seenEvents:'+authUser.uid, JSON.stringify(seenEventIds)); }catch(e){}
+  }
+}
+
+function activeEventBannerHTML(){
+  const unseen = events.filter(e => e.status !== 'finished' && !seenEventIds.includes(e.id));
+  if(unseen.length === 0) return '';
+  const ev = unseen[0];
+  return `
+    <div class="event-banner" data-goto-event="${ev.id}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/></svg>
+      <div class="eb-body">
+        <div class="eb-title">${ev.sigla ? '['+ev.sigla+'] ' : ''}${ev.name}</div>
+        <div class="eb-desc">${ev.status==='live' ? 'Ao vivo agora' : 'Novo campeonato aberto'}${ev.reward ? ' · Premiação: '+ev.reward : ''}${ev.startDate ? ' · '+ev.startDate : ''}</div>
+      </div>
+      <div class="eb-cta">Ver &rarr;</div>
+    </div>
+  `;
+}
+
+function eventsListHTML(){
+  const isMod = userProfile && userProfile.role === 'moderator';
+  const list = eventsSortedActive();
+  const cards = list.map(ev => {
+    const isNew = !seenEventIds.includes(ev.id) && ev.status !== 'finished';
+    return `
+      <div class="event-card" data-event-id="${ev.id}">
+        ${isNew ? '<div class="ev-new"></div>' : ''}
+        <div class="ev-head">
+          ${ev.sigla ? `<div class="ev-sigla">${ev.sigla}</div>` : '<div></div>'}
+          <div class="ev-status ${ev.status}">${eventStatusLabel(ev)}</div>
+        </div>
+        <div class="ev-title">${ev.name || '(sem nome)'}</div>
+        <div class="ev-desc">${ev.description || 'Sem descrição.'}</div>
+        <div class="ev-meta">
+          <span>Times: <b>${(ev.teams||[]).length}</b></span>
+          <span>Fases: <b>${(ev.stages||[]).length}</b></span>
+          ${ev.startDate ? `<span>Início: <b>${ev.startDate}</b></span>` : ''}
+          ${ev.winner ? `<span>Campeão: <b>${teamName(ev, ev.winner)}</b></span>` : ''}
+        </div>
+        ${ev.reward ? `<div class="ev-reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/></svg>Premiação: ${ev.reward}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="panel">
+      <h2>Eventos &amp; Campeonatos <span class="sub">Copas, torneios e disputas oficiais do BRCSGO</span></h2>
+      <div class="events-toolbar">
+        <div class="toolbar-info">${list.length} campeonato(s) cadastrado(s) · <b>${list.filter(e => e.status !== 'finished').length}</b> ativo(s)</div>
+        ${isMod ? '<button class="primary" id="btnCreateEvent" type="button">+ Novo campeonato</button>' : ''}
+      </div>
+      ${list.length === 0
+        ? '<p class="empty-note">Nenhum campeonato criado ainda. '+ (isMod ? 'Clique em "+ Novo campeonato" pra começar.' : 'Fique atento — a staff vai anunciar em breve!') +'</p>'
+        : `<div class="events-grid">${cards}</div>`
+      }
+    </div>
+  `;
+}
+
+function eventDetailHTML(ev){
+  const isMod = userProfile && userProfile.role === 'moderator';
+  const stages = ev.stages || [];
+  if(eventDetailStage >= stages.length) eventDetailStage = 0;
+  const stage = stages[eventDetailStage];
+  const stageNav = stages.map((s,i) => `
+    <button class="st-btn ${i===eventDetailStage?'active':''} ${s.completed?'done':''}" data-stage-idx="${i}">${s.label}</button>
+  `).join('');
+  let stageBody = '<p class="empty-note">Sem fases configuradas.</p>';
+  if(stage){
+    if(stage.type === 'elim'){
+      stageBody = `<div class="bracket"><div class="bracket-round"><h4>${stage.label}</h4>${stage.matches.map(m => renderElimMatch(ev, stage, m, isMod)).join('')}</div></div>`;
+    } else {
+      const standings = computeGroupStandings(stage, ev);
+      const advance = stage.advanceCount || 0;
+      stageBody = `
+        <div class="group-standings">
+          <div class="group-box">
+            <h4>Classificação — top ${advance} avança</h4>
+            <table class="group-table"><thead><tr><th>#</th><th>Time</th><th>V</th><th>E</th><th>D</th><th>Saldo</th></tr></thead>
+              <tbody>
+                ${standings.map((s,i) => `<tr class="${i<advance?'qualified':''}"><td><span class="pos">${i+1}</span></td><td>${s.name}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf-s.ga>=0?'+':''}${s.gf-s.ga}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="group-box">
+            <h4>Partidas (${stage.matches.filter(m=>m.winner).length}/${stage.matches.length})</h4>
+            ${stage.matches.map(m => renderGroupMatch(ev, stage, m, isMod)).join('')}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  const podium = (ev.status === 'finished' && stages.length) ? renderPodium(ev) : '';
+  const stageComplete = stage && stageIsComplete(stage);
+  const isLastStage = stage && eventDetailStage === stages.length - 1;
+
+  return `
+    <div class="event-detail-hero">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+        <div>
+          ${ev.sigla ? `<div class="ev-sigla" style="display:inline-block; margin-bottom:10px;">${ev.sigla}</div>` : ''}
+          <h1>${ev.name}</h1>
+          <div class="hero-sub">${ev.description || 'Campeonato oficial BRCSGO.'}</div>
+          <div class="hero-meta">
+            <span class="ev-status ${ev.status}">${eventStatusLabel(ev)}</span>
+            <span>👥 <b>${(ev.teams||[]).length}</b> times</span>
+            <span>🎯 <b>${stages.length}</b> fases</span>
+            ${ev.startDate ? `<span>📅 <b>${ev.startDate}</b></span>` : ''}
+            ${ev.reward ? `<span>🏆 ${ev.reward}</span>` : ''}
+            ${ev.winner ? `<span>👑 Campeão: <b>${teamName(ev, ev.winner)}</b></span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="secondary" id="btnBackEvents" type="button">← Voltar</button>
+          ${isMod ? `<button class="danger" id="btnDeleteEvent" data-event-id="${ev.id}" type="button">Excluir</button>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="stage-nav">${stageNav}</div>
+      ${stageBody}
+      ${isMod && stage && stageComplete && !isLastStage ? `<div style="margin-top:16px;"><button class="primary" id="btnAdvanceStage" data-stage-idx="${eventDetailStage}">Avançar para ${stages[eventDetailStage+1].label} →</button></div>` : ''}
+      ${isMod && stage && stageComplete && isLastStage && ev.status !== 'finished' ? `<div style="margin-top:16px;"><button class="primary" id="btnFinishEvent">Encerrar campeonato 🏆</button></div>` : ''}
+    </div>
+    ${podium}
+  `;
+}
+
+function renderElimMatch(ev, stage, m, isMod){
+  const winnerA = m.winner === 'a';
+  const winnerB = m.winner === 'b';
+  const decided = m.winner || m.a==='__BYE__' || m.b==='__BYE__';
+  return `
+    <div class="bracket-match" data-match-id="${m.id}">
+      <div class="bm-row ${winnerA?'winner':(decided?'loser':'')}">
+        <div class="bm-team"><span class="seed">${teamSeed(ev,m.a)||''}</span><span class="nm">${teamName(ev,m.a)}</span></div>
+        ${isMod && m.a!=='__BYE__' && m.b!=='__BYE__' && m.a!=='__TBD__' && m.b!=='__TBD__'
+          ? `<input class="score-inp" data-mid="${m.id}" data-side="a" type="number" min="0" value="${m.scoreA??''}" placeholder="0">`
+          : `<div class="bm-score">${m.scoreA??'-'}</div>`}
+      </div>
+      <div class="bm-row ${winnerB?'winner':(decided?'loser':'')}">
+        <div class="bm-team"><span class="seed">${teamSeed(ev,m.b)||''}</span><span class="nm">${teamName(ev,m.b)}</span></div>
+        ${isMod && m.a!=='__BYE__' && m.b!=='__BYE__' && m.a!=='__TBD__' && m.b!=='__TBD__'
+          ? `<input class="score-inp" data-mid="${m.id}" data-side="b" type="number" min="0" value="${m.scoreB??''}" placeholder="0">`
+          : `<div class="bm-score">${m.scoreB??'-'}</div>`}
+      </div>
+      ${isMod && m.a!=='__BYE__' && m.b!=='__BYE__' && m.a!=='__TBD__' && m.b!=='__TBD__' ? `
+        <div class="bm-actions">
+          <button class="ok small" data-set-winner="${m.id}" data-side="a">Vence A</button>
+          <button class="ok small" data-set-winner="${m.id}" data-side="b">Vence B</button>
+          ${m.winner ? `<button class="secondary small" data-clear-winner="${m.id}">Limpar</button>` : ''}
+        </div>` : ''}
+    </div>
+  `;
+}
+
+function renderGroupMatch(ev, stage, m, isMod){
+  return `
+    <div style="padding:10px 0; border-bottom:1px dashed var(--line); display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px;">
+      <div style="flex:1;">${teamName(ev,m.a)} <span style="color:var(--muted-2);">vs</span> ${teamName(ev,m.b)}</div>
+      ${isMod ? `
+        <div style="display:flex; align-items:center; gap:6px;">
+          <input class="score-inp" data-mid="${m.id}" data-side="a" type="number" min="0" value="${m.scoreA??''}" placeholder="A">
+          <span style="color:var(--muted-2);">×</span>
+          <input class="score-inp" data-mid="${m.id}" data-side="b" type="number" min="0" value="${m.scoreB??''}" placeholder="B">
+          <button class="ok small" data-set-winner="${m.id}" data-side="a">A</button>
+          <button class="ok small" data-set-winner="${m.id}" data-side="b">B</button>
+          <button class="secondary small" data-set-winner="${m.id}" data-side="d">Empate</button>
+        </div>
+      ` : `<div class="mono">${m.scoreA??'-'} × ${m.scoreB??'-'}</div>`}
+    </div>
+  `;
+}
+
+function renderPodium(ev){
+  const finalStage = ev.stages[ev.stages.length-1];
+  if(!finalStage || finalStage.type !== 'elim' || !finalStage.matches[0]) return '';
+  const fm = finalStage.matches[0];
+  const first = fm.winner === 'a' ? fm.a : fm.b;
+  const second = fm.winner === 'a' ? fm.b : fm.a;
+  // third: from semis stage if exists
+  let third = null;
+  const semis = ev.stages.find(s => s.key === 'semis');
+  if(semis){
+    const losers = semis.matches.map(m => m.winner === 'a' ? m.b : m.a).filter(t => t !== first && t !== second);
+    third = losers[0];
+  }
+  return `
+    <div class="panel accent-blue">
+      <h2>Pódio 🏆</h2>
+      <div class="podium">
+        <div class="pd second"><div class="pos">2º</div><div class="nm">${teamName(ev, second)}</div></div>
+        <div class="pd first"><div class="pos">1º</div><div class="nm">${teamName(ev, first)}</div></div>
+        <div class="pd third"><div class="pos">3º</div><div class="nm">${third ? teamName(ev, third) : '—'}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function eventModalHTML(){
+  if(!eventModalOpen || !eventModalDraft) return '';
+  const d = eventModalDraft;
+  const fmt = d.format;
+  return `
+    <div class="modal-overlay" id="eventModalOverlay">
+      <div class="modal" id="eventModal">
+        <button class="modal-close" id="btnCloseModal" type="button">✕</button>
+        <h2>Novo Campeonato</h2>
+        <div class="modal-sub">Crie um evento oficial: escolha as fases, informe os times convocados e a premiação.</div>
+        <div class="grid-2">
+          <div class="field"><label>Nome do campeonato</label><input id="ev_name" value="${d.name}" placeholder="Ex: BRCSGO Major Series"></div>
+          <div class="field"><label>Sigla / abreviação</label><input id="ev_sigla" value="${d.sigla}" placeholder="Ex: BMS-01" maxlength="10"></div>
+          <div class="field"><label>Data de início</label><input type="date" id="ev_start" value="${d.startDate}"></div>
+          <div class="field"><label>Premiação</label><input id="ev_reward" value="${d.reward}" placeholder="Ex: R$ 500 + skin AWP"></div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Descrição</label>
+          <textarea id="ev_desc" rows="2" placeholder="Regras rápidas, contexto, formato...">${d.description}</textarea>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Times convocados (um por linha ou separados por vírgula)</label>
+          <textarea id="ev_teams" rows="4" placeholder="Time Alfa&#10;Furia&#10;Imperial&#10;paiN Gaming">${d.teamsRaw}</textarea>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Fases do campeonato</label>
+          <div class="format-grid">
+            ${STAGE_DEFS.map(sd => `
+              <label class="fmt-chip ${fmt[sd.key]?'on':''}" data-fmt="${sd.key}">
+                <input type="checkbox" ${fmt[sd.key]?'checked':''} data-fmt-cb="${sd.key}">
+                ${sd.label}
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary" id="btnCancelEvent" type="button">Cancelar</button>
+          <button class="primary" id="btnSaveEvent" type="button">Criar campeonato</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function eventosHTML(){
+  const detail = selectedEventId ? events.find(e => e.id === selectedEventId) : null;
+  const body = detail ? eventDetailHTML(detail) : eventsListHTML();
+  return body + eventModalHTML();
+}
+
+function openEventModal(){
+  eventModalOpen = true;
+  eventModalDraft = newEventDraft();
+  renderTab();
+}
+function closeEventModal(){
+  eventModalOpen = false;
+  eventModalDraft = null;
+  renderTab();
+}
+
+async function saveNewEvent(){
+  const d = eventModalDraft;
+  d.name = document.getElementById('ev_name').value.trim();
+  d.sigla = document.getElementById('ev_sigla').value.trim().toUpperCase();
+  d.description = document.getElementById('ev_desc').value.trim();
+  d.reward = document.getElementById('ev_reward').value.trim();
+  d.startDate = document.getElementById('ev_start').value;
+  d.teamsRaw = document.getElementById('ev_teams').value;
+  if(!d.name){ alert('Informe o nome do campeonato.'); return; }
+  const teams = parseTeamsList(d.teamsRaw);
+  if(teams.length < 2){ alert('Informe pelo menos 2 times.'); return; }
+  const anyStage = Object.values(d.format).some(Boolean);
+  if(!anyStage){ alert('Selecione ao menos uma fase.'); return; }
+  const ev = {
+    id: 'ev_' + Date.now().toString(36) + '_' + Math.floor(Math.random()*1000),
+    name: d.name, sigla: d.sigla, description: d.description, reward: d.reward,
+    startDate: d.startDate, teams, format: d.format,
+    stages: buildStagesFromFormat(d.format, teams),
+    status: 'upcoming', createdBy: userProfile.playerName, createdAt: Date.now(), winner: null
+  };
+  events.push(ev);
+  await saveShared('brcsgo:events', events);
+  showToast('Campeonato "'+ev.name+'" criado!');
+  closeEventModal();
+  selectedEventId = ev.id;
+  eventDetailStage = 0;
+  markEventSeen(ev.id);
+  renderTab();
+}
+
+function attachEventosEvents(){
+  // event banner (visible in any tab render since attachTabEvents runs each render)
+  document.querySelectorAll('[data-goto-event]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.gotoEvent;
+      selectedEventId = id; activeTab = 'eventos'; eventDetailStage = 0; markEventSeen(id); render();
+    });
+  });
+  if(activeTab !== 'eventos') return;
+
+  const btnCreate = document.getElementById('btnCreateEvent');
+  if(btnCreate) btnCreate.addEventListener('click', openEventModal);
+
+  document.querySelectorAll('.event-card[data-event-id]').forEach(card => {
+    card.addEventListener('click', () => {
+      selectedEventId = card.dataset.eventId;
+      eventDetailStage = 0;
+      markEventSeen(selectedEventId);
+      renderTab();
+    });
+  });
+
+  const back = document.getElementById('btnBackEvents');
+  if(back) back.addEventListener('click', () => { selectedEventId = null; renderTab(); });
+
+  document.querySelectorAll('[data-stage-idx]').forEach(btn => {
+    if(btn.classList.contains('st-btn')){
+      btn.addEventListener('click', () => { eventDetailStage = parseInt(btn.dataset.stageIdx); renderTab(); });
+    }
+  });
+
+  const adv = document.getElementById('btnAdvanceStage');
+  if(adv) adv.addEventListener('click', async () => {
+    const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+    if(ev.status === 'upcoming') ev.status = 'live';
+    advanceStage(ev, parseInt(adv.dataset.stageIdx));
+    eventDetailStage++;
+    await saveShared('brcsgo:events', events);
+    showToast('Fase avançada!');
+    renderTab();
+  });
+
+  const fin = document.getElementById('btnFinishEvent');
+  if(fin) fin.addEventListener('click', async () => {
+    const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+    advanceStage(ev, ev.stages.length - 1);
+    await saveShared('brcsgo:events', events);
+    showToast('Campeonato encerrado!');
+    renderTab();
+  });
+
+  const del = document.getElementById('btnDeleteEvent');
+  if(del) del.addEventListener('click', async () => {
+    if(!confirm('Excluir este campeonato? Não dá pra desfazer.')) return;
+    events = events.filter(e => e.id !== del.dataset.eventId);
+    selectedEventId = null;
+    await saveShared('brcsgo:events', events);
+    showToast('Campeonato excluído.');
+    renderTab();
+  });
+
+  // score inputs
+  document.querySelectorAll('input.score-inp').forEach(inp => {
+    inp.addEventListener('change', async () => {
+      const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+      const stage = ev.stages[eventDetailStage]; if(!stage) return;
+      const m = stage.matches.find(x => x.id === inp.dataset.mid); if(!m) return;
+      const v = inp.value === '' ? null : parseInt(inp.value);
+      if(inp.dataset.side === 'a') m.scoreA = v; else m.scoreB = v;
+      await saveShared('brcsgo:events', events);
+    });
+  });
+
+  // set-winner buttons
+  document.querySelectorAll('[data-set-winner]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+      const stage = ev.stages[eventDetailStage]; if(!stage) return;
+      const m = stage.matches.find(x => x.id === btn.dataset.setWinner); if(!m) return;
+      m.winner = btn.dataset.side; // 'a', 'b', or 'd'
+      if(ev.status === 'upcoming') ev.status = 'live';
+      await saveShared('brcsgo:events', events);
+      renderTab();
+    });
+  });
+  document.querySelectorAll('[data-clear-winner]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+      const stage = ev.stages[eventDetailStage]; if(!stage) return;
+      const m = stage.matches.find(x => x.id === btn.dataset.clearWinner); if(!m) return;
+      m.winner = null;
+      await saveShared('brcsgo:events', events);
+      renderTab();
+    });
+  });
+
+  // modal
+  const overlay = document.getElementById('eventModalOverlay');
+  if(overlay){
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeEventModal(); });
+    const closeBtn = document.getElementById('btnCloseModal'); if(closeBtn) closeBtn.addEventListener('click', closeEventModal);
+    const cancelBtn = document.getElementById('btnCancelEvent'); if(cancelBtn) cancelBtn.addEventListener('click', closeEventModal);
+    const saveBtn = document.getElementById('btnSaveEvent'); if(saveBtn) saveBtn.addEventListener('click', saveNewEvent);
+    document.querySelectorAll('[data-fmt-cb]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        eventModalDraft.format[cb.dataset.fmtCb] = cb.checked;
+        cb.closest('.fmt-chip').classList.toggle('on', cb.checked);
+      });
+    });
+  }
+}
+// =============== FIM EVENTOS ===============
+
 async function loadProofImages(list){
   for(const m of list){
     const img = document.getElementById('proof-' + m.id);
@@ -1424,6 +2203,7 @@ async function loadProofImages(list){
 }
 
 function attachTabEvents(){
+  attachEventosEvents();
   const claimBtn = document.getElementById('claimBtn');
   if(claimBtn){
     claimBtn.addEventListener('click', async () => {
@@ -1612,6 +2392,9 @@ async function init(){
     players = await loadShared('brcsgo:players');
     matches = await loadShared('brcsgo:matches');
     users = await loadShared('brcsgo:users');
+    events = await loadShared('brcsgo:events');
+    if(!Array.isArray(events)) events = [];
+    try{ const seen = localStorage.getItem('brcsgo:seenEvents:'+user.uid); seenEventIds = seen ? JSON.parse(seen) : []; }catch(e){ seenEventIds = []; }
     matches.forEach(m => {
       if(!m.status) m.status = 'aprovada';
       if(!m.mode) m.mode = 'competitivo';
