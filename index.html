@@ -1067,6 +1067,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .challenger-chip{padding:4px 8px;border:1px solid rgba(229,38,43,.5);border-radius:4px;font-size:12px;color:#fff}
 .challenger-chip i{margin-left:6px;font-style:normal;font-size:10px;color:var(--orange-2);text-transform:uppercase}
 @media (max-width:820px){.shell{display:block}.side{position:static;height:auto;flex-direction:row;align-items:center;justify-content:space-between;padding:10px 0;border:0}.side .tabs{display:none}.side .header-controls{margin:0;flex-direction:row;align-items:center}.main{padding-top:4px}}
+
+/* ===== Seletor de idiomas ===== */
+.lang-switch{position:fixed;right:14px;bottom:14px;z-index:80;display:flex;gap:2px;padding:3px;border:1px solid var(--line-strong);border-radius:8px;background:#0E0E10}
+.lang-switch button{min-width:34px;padding:5px 8px;border:0;border-radius:5px;background:transparent;color:var(--muted);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;cursor:pointer}
+.lang-switch button:hover{color:#fff}
+.lang-switch button.active{background:var(--orange);color:#fff}
+@media (max-width:820px){.lang-switch{bottom:88px;right:10px}}
 </style>
 </head>
 <body>
@@ -1213,7 +1220,7 @@ function renderAuthGate(){
           <div class="brand"><div class="brand-mark"></div><div><h1>BRCS2</h1><p>Command Center</p></div></div>
           <h2>${authView === 'login' ? 'Identifique-se' : 'Entre no squad'}</h2>
           <p class="auth-description">${authView === 'login' ? 'Acesse seu perfil para registrar a próxima missão.' : 'Crie seu perfil e comece sua trajetória no ranking.'}</p>
-          ${authView === 'signup' ? `<div class="field"><label>Seu nick</label><input type="text" id="auth_nick" placeholder="Ex: NOTZ"></div><div class="field"><label>Região em que você joga</label><select id="auth_region"><option value="">Selecionar…</option>${REGIONS.map(r => `<option value="${r}">${r}</option>`).join('')}</select></div>` : ''}
+          ${authView === 'signup' ? `<div class="field"><label>Seu nick</label><input type="text" id="auth_nick" placeholder="Ex: NOTZ"></div><div class="field"><label>Região em que você joga</label><select id="auth_region"><option value="">Selecionar…</option>${REGIONS.map(r => `<option value="${r}">${regionLabel(r)}</option>`).join('')}</select></div>` : ''}
           <div class="field"><label>Email</label><input type="email" id="auth_email" placeholder="voce@exemplo.com"></div>
           <div class="field"><label>Senha</label><input type="password" id="auth_pass" placeholder="••••••••"></div>
           ${authView === 'signup' ? `<div class="field"><label>Código de moderador <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="auth_modcode" placeholder="Somente equipe"></div>` : ''}
@@ -1276,7 +1283,7 @@ function renderProfileSetupGate(){
       <h2>Complete seu perfil</h2>
       <p class="empty-note">Falta só escolher seu nick pra entrar.</p>
       <div class="field"><label>Seu nick (nome de jogador)</label><input type="text" id="setup_nick" placeholder="Ex: NOTZ"></div>
-      <div class="field"><label>Região em que você joga</label><select id="setup_region"><option value="">Selecionar…</option>${REGIONS.map(r => `<option value="${r}">${r}</option>`).join('')}</select></div>
+      <div class="field"><label>Região em que você joga</label><select id="setup_region"><option value="">Selecionar…</option>${REGIONS.map(r => `<option value="${r}">${regionLabel(r)}</option>`).join('')}</select></div>
       <div class="field"><label>Código de moderador (opcional)</label><input type="text" id="setup_modcode"></div>
       ${authError ? `<div class="helper-note" style="border-left-color:var(--red); color:var(--red);">${authError}</div>` : ''}
       <button id="setupSubmitBtn" type="button" style="margin-top:14px;">Concluir</button>
@@ -1330,7 +1337,9 @@ const LEVELS = [
 const TIERS = LEVELS;               // compatibilidade com o código antigo
 const ELO_MIN = 100;                // piso de ELO (início do Nível 1)
 const CHALLENGER_SLOTS = 1000;      // Challenger = Nível 10 + Top 1000 da região
-const REGIONS = ["Norte","Nordeste","Centro-Oeste","Sudeste","Sul","Internacional"];
+const REGION_NAMES = {NA:"América do Norte", CAM:"América Central e Caribe", SA:"América do Sul", EU:"Europa", CIS:"Rússia e CEI", ME:"Oriente Médio", AF:"África", AS:"Ásia", OCE:"Oceania"};
+const REGIONS = Object.keys(REGION_NAMES);
+function regionLabel(c){ return c + " · " + REGION_NAMES[c]; }
 let rankRegion = 'all';
 const MAPS = ["Dust II","Mirage","Inferno","Nuke","Overpass","Ancient","Anubis","Vertigo","Train"];
 
@@ -1866,7 +1875,7 @@ function updateFormForMode(modeKey){
 }
 
 function regionBlockHTML(p){
-  return `<div class="region-row ${p.region ? '' : 'missing'}"><label for="regionSelect">Região em que você joga</label><select id="regionSelect"><option value="">Selecionar região…</option>${REGIONS.map(r => `<option value="${r}" ${p.region === r ? 'selected' : ''}>${r}</option>`).join('')}</select>${p.region ? '' : '<span class="empty-note">Defina sua região para entrar no ranking regional e disputar o Challenger.</span>'}</div>`;
+  return `<div class="region-row ${p.region ? '' : 'missing'}"><label for="regionSelect">Região em que você joga</label><select id="regionSelect"><option value="">Selecionar região…</option>${REGIONS.map(r => `<option value="${r}" ${p.region === r ? 'selected' : ''}>${regionLabel(r)}</option>`).join('')}</select>${p.region ? '' : '<span class="empty-note">Defina sua região para entrar no ranking regional e disputar o Challenger.</span>'}</div>`;
 }
 function perfilHTML(){
   const p = players.find(p => p.id === currentPlayerId);
@@ -2010,7 +2019,7 @@ function rankingHTML(){
   const chIds = cfg.rankBy === 'elo' ? challengerIds(viewMode) : new Set();
   const ranked = getModeRanking(viewMode).filter(r => rankRegion === 'all' || r.p.region === rankRegion);
   const leader = ranked[0];
-  const regionChips = `<div class="mode-chips"><div class="mode-chip ${rankRegion==='all'?'active':''}" data-region="all">Todas as regiões</div>${REGIONS.map(r => `<div class="mode-chip ${rankRegion===r?'active':''}" data-region="${r}">${r}</div>`).join('')}</div>`;
+  const regionChips = `<div class="mode-chips"><div class="mode-chip ${rankRegion==='all'?'active':''}" data-region="all">Todas as regiões</div>${REGIONS.map(r => `<div class="mode-chip ${rankRegion===r?'active':''}" data-region="${r}">${regionLabel(r)}</div>`).join('')}</div>`;
   const chList = cfg.rankBy === 'elo' ? (() => {
     const list = ranked.filter(r => chIds.has(r.p.id));
     return `<div class="challenger-box"><div class="challenger-head">${challengerSVG(34)}<div><b>Challenger</b><span>Os melhores de cada região · Nível 10 + Top ${CHALLENGER_SLOTS}</span></div></div>${list.length ? `<div class="challenger-list">${list.map(r => `<span class="challenger-chip">${r.p.name}<i>${r.p.region}</i></span>`).join('')}</div>` : `<p class="empty-note">Ninguém alcançou o Challenger ainda — chegue ao Nível 10 (2001+ ELO) e fique entre os ${CHALLENGER_SLOTS} melhores da sua região.</p>`}</div>`;
@@ -2927,6 +2936,89 @@ document.addEventListener('pointermove', (event) => {
   });
 }, {passive:true});
 init();
+</script>
+
+<script>
+// ====== Idiomas (PT / EN / ES) — traduz a interface em tempo real, sem mexer na lógica ======
+(function(){
+  var DICT = {"en": {"Registrar": "Log match", "Meu Perfil": "My Profile", "Histórico": "History", "Ranking": "Ranking", "Eventos": "Events", "Moderação": "Moderation", "Sair": "Log out", "Perfil": "Profile", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Matches & Ranking", "Rede BRCS2 online": "BRCS2 network online", "Partidas, ranks e": "Matches, ranks and", "níveis.": "levels.", "Operadores": "Players", "Partidas": "Matches", "Eventos ativos": "Active events", "Em revisão": "Under review", "Modo": "Mode", "Staff autorizado": "Authorized staff", "Operador ativo": "Active player", "Todas as regiões": "All regions", "Região": "Region", "Região em que você joga": "Region you play in", "Selecionar região…": "Select region…", "Selecionar…": "Select…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Set your region to join the regional ranking and compete for Challenger.", "Escolha a região em que você joga.": "Choose the region you play in.", "Challenger": "Challenger", "Nível": "Level", "Elo": "Elo", "Jogador": "Player", "Vitória %%": "Win %%", "Jogadores Ranqueados": "Ranked Players", "Partidas Aprovadas": "Approved Matches", "Em Análise": "Under Review", "Líder Atual": "Current Leader", "Nenhum jogador com partidas aprovadas neste modo ainda.": "No players with approved matches in this mode yet.", "Os melhores de cada região · Nível 10 + Top 1000": "The best of each region · Level 10 + Top 1000", "Em calibragem — MD10": "Calibrating — MD10", "Taxa Vitória": "Win Rate", "Vitórias": "Wins", "Derrotas": "Losses", "Kills Totais": "Total Kills", "Pontos Totais": "Total Points", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Points", "Estrelas MVP": "MVP Stars", "Mapa": "Map", "Resultado": "Result", "Vitória": "Win", "Derrota": "Loss", "Empate": "Draw", "Modo de Jogo": "Game Mode", "Competitivo": "Competitive", "Casual": "Casual", "Mata-Mata": "Deathmatch", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Log Match", "Print do placar final": "Final scoreboard screenshot", "Enviar para Análise": "Submit for Review", "Partida enviada! Verificando em segundo plano...": "Match submitted! Verifying in the background...", "Anexe um print do placar final da partida.": "Attach a screenshot of the final scoreboard.", "Envie o print em PNG, JPEG ou WebP.": "Upload the screenshot as PNG, JPEG or WebP.", "O print deve ter no máximo 5 MB.": "The screenshot must be at most 5 MB.", "Selecione um jogador para ver o histórico.": "Select a player to see their history.", "Nenhuma partida registrada neste modo ainda.": "No matches logged in this mode yet.", "Data": "Date", "Status / Δ Elo": "Status / Δ Elo", "🤖 ajustado": "🤖 adjusted", "Aprovar": "Approve", "Rejeitar": "Reject", "Rejeitar esta partida?": "Reject this match?", "Baixar imagem": "Download image", "Nenhuma partida aguardando análise.": "No matches awaiting review.", "Acesso restrito à equipe do BRCS2.": "Access restricted to the BRCS2 staff.", "Eventos & Campeonatos": "Events & Championships", "Copas, torneios e disputas oficiais do BRCS2": "Official BRCS2 cups, tournaments and contests", "+ Novo campeonato": "+ New championship", "Novo Campeonato": "New Championship", "Criar campeonato": "Create championship", "Cancelar": "Cancel", "Nome do campeonato": "Championship name", "Sigla / abreviação": "Acronym / abbreviation", "Descrição": "Description", "Premiação": "Prize", "Data de início": "Start date", "Fases do campeonato": "Championship stages", "Times convocados (um por linha ou separados por vírgula)": "Invited teams (one per line or comma-separated)", "Qualificatórias": "Qualifiers", "16 avos": "Round of 32", "8 avos": "Round of 16", "Quartas de Final": "Quarterfinals", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podium 🏆", "Campeão:": "Champion:", "👑 Campeão:": "👑 Champion:", "Encerrar campeonato 🏆": "End championship 🏆", "Excluir": "Delete", "Campeonato encerrado!": "Championship finished!", "Campeonato excluído.": "Championship deleted.", "Fase avançada!": "Stage advanced!", "Excluir este campeonato? Não dá pra desfazer.": "Delete this championship? This can't be undone.", "Informe o nome do campeonato.": "Enter the championship name.", "Informe pelo menos 2 times.": "Enter at least 2 teams.", "Selecione ao menos uma fase.": "Select at least one stage.", "Sem descrição.": "No description.", "Sem fases configuradas.": "No stages configured.", "← Voltar": "← Back", "Time": "Team", "Times:": "Teams:", "Fases:": "Stages:", "Início:": "Start:", "Acesso autorizado": "Authorized access", "Seu squad.": "Your squad.", "Seu legado.": "Your legacy.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Log every match, track your progress and earn your place in the BRCS2 ranking.", "Complete seu perfil": "Complete your profile", "Falta só escolher seu nick pra entrar.": "Just pick your nickname to get in.", "Seu nick": "Your nickname", "Seu nick (nome de jogador)": "Your nickname (player name)", "Código de moderador": "Moderator code", "Código de moderador (opcional)": "Moderator code (optional)", "(opcional)": "(optional)", "Somente equipe": "Staff only", "Concluir": "Finish", "Email": "Email", "Senha": "Password", "ou continue com": "or continue with", "Acesse seu perfil para registrar a próxima missão.": "Access your profile to log your next match.", "Crie seu perfil e comece sua trajetória no ranking.": "Create your profile and start your ranking journey.", "Entrar no comando": "Sign in", "Criar conta": "Create account", "Já tenho acesso": "I already have an account", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "You can play, log, compete, evolve and lead on BRCS2", "JOGAR.": "PLAY.", "REGISTRAR.": "LOG.", "COMPETIR.": "COMPETE.", "EVOLUIR.": "EVOLVE.", "LIDERAR.": "LEAD.", "VOCÊ PODE": "YOU CAN", "Carregando painel...": "Loading dashboard...", "Reivindicar Jogador Antigo": "Claim Old Player", "Jogador antigo": "Old player", "Transferir histórico pra minha conta": "Transfer history to my account", "Histórico antigo transferido com sucesso!": "Old history transferred successfully!", "Digite um nick.": "Enter a nickname.", "E-mail inválido.": "Invalid email.", "E-mail ou senha incorretos.": "Wrong email or password.", "Senha incorreta.": "Wrong password.", "Não existe conta com esse e-mail.": "No account with this email.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "This email already has an account. Try signing in instead.", "Use um nick entre 3 e 24 caracteres.": "Use a nickname between 3 and 24 characters.", "Use uma senha com pelo menos 12 caracteres.": "Use a password with at least 12 characters.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Include uppercase, lowercase letters and numbers in the password.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Too many attempts — wait a bit and try again.", "Não foi possível concluir. Tente novamente.": "Could not complete. Please try again.", "IA confirmou todas as estatísticas do print.": "AI confirmed all stats in the screenshot.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "The AI couldn't confirm the screenshot data — manual review needed.", "Sincronizado": "Synced", "Sistema": "System", "Objetivo": "Goal", "Registrar resultado": "Log a result", "Subir no ranking": "Climb the ranking", "Ver →": "View →", "Operação selecionada": "Selected mode", "Salvando…": "Saving…", "NA · América do Norte": "NA · North America", "CAM · América Central e Caribe": "CAM · Central America & Caribbean", "SA · América do Sul": "SA · South America", "EU · Europa": "EU · Europe", "CIS · Rússia e CEI": "CIS · Russia & CIS", "ME · Oriente Médio": "ME · Middle East", "AF · África": "AF · Africa", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceania"}, "es": {"Registrar": "Registrar", "Meu Perfil": "Mi perfil", "Histórico": "Historial", "Ranking": "Ranking", "Eventos": "Eventos", "Moderação": "Moderación", "Sair": "Salir", "Perfil": "Perfil", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Partidas y Ranking", "Rede BRCS2 online": "Red BRCS2 en línea", "Partidas, ranks e": "Partidas, rangos y", "níveis.": "niveles.", "Operadores": "Jugadores", "Partidas": "Partidas", "Eventos ativos": "Eventos activos", "Em revisão": "En revisión", "Modo": "Modo", "Staff autorizado": "Staff autorizado", "Operador ativo": "Jugador activo", "Todas as regiões": "Todas las regiones", "Região": "Región", "Região em que você joga": "Región en la que juegas", "Selecionar região…": "Seleccionar región…", "Selecionar…": "Seleccionar…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Define tu región para entrar al ranking regional y competir por Challenger.", "Escolha a região em que você joga.": "Elige la región en la que juegas.", "Challenger": "Challenger", "Nível": "Nivel", "Elo": "Elo", "Jogador": "Jugador", "Vitória %%": "Victoria %%", "Jogadores Ranqueados": "Jugadores clasificados", "Partidas Aprovadas": "Partidas aprobadas", "Em Análise": "En análisis", "Líder Atual": "Líder actual", "Nenhum jogador com partidas aprovadas neste modo ainda.": "Aún no hay jugadores con partidas aprobadas en este modo.", "Os melhores de cada região · Nível 10 + Top 1000": "Los mejores de cada región · Nivel 10 + Top 1000", "Em calibragem — MD10": "En calibración — MD10", "Taxa Vitória": "Tasa de victorias", "Vitórias": "Victorias", "Derrotas": "Derrotas", "Kills Totais": "Kills totales", "Pontos Totais": "Puntos totales", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Puntos", "Estrelas MVP": "Estrellas MVP", "Mapa": "Mapa", "Resultado": "Resultado", "Vitória": "Victoria", "Derrota": "Derrota", "Empate": "Empate", "Modo de Jogo": "Modo de juego", "Competitivo": "Competitivo", "Casual": "Casual", "Mata-Mata": "Duelo a muerte", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Registrar partida", "Print do placar final": "Captura del marcador final", "Enviar para Análise": "Enviar a revisión", "Partida enviada! Verificando em segundo plano...": "¡Partida enviada! Verificando en segundo plano...", "Anexe um print do placar final da partida.": "Adjunta una captura del marcador final.", "Envie o print em PNG, JPEG ou WebP.": "Sube la captura en PNG, JPEG o WebP.", "O print deve ter no máximo 5 MB.": "La captura debe pesar como máximo 5 MB.", "Selecione um jogador para ver o histórico.": "Selecciona un jugador para ver su historial.", "Nenhuma partida registrada neste modo ainda.": "Aún no hay partidas registradas en este modo.", "Data": "Fecha", "Status / Δ Elo": "Estado / Δ Elo", "🤖 ajustado": "🤖 ajustado", "Aprovar": "Aprobar", "Rejeitar": "Rechazar", "Rejeitar esta partida?": "¿Rechazar esta partida?", "Baixar imagem": "Descargar imagen", "Nenhuma partida aguardando análise.": "Ninguna partida en espera de revisión.", "Acesso restrito à equipe do BRCS2.": "Acceso restringido al equipo de BRCS2.", "Eventos & Campeonatos": "Eventos y campeonatos", "Copas, torneios e disputas oficiais do BRCS2": "Copas, torneos y competiciones oficiales de BRCS2", "+ Novo campeonato": "+ Nuevo campeonato", "Novo Campeonato": "Nuevo campeonato", "Criar campeonato": "Crear campeonato", "Cancelar": "Cancelar", "Nome do campeonato": "Nombre del campeonato", "Sigla / abreviação": "Sigla / abreviatura", "Descrição": "Descripción", "Premiação": "Premio", "Data de início": "Fecha de inicio", "Fases do campeonato": "Fases del campeonato", "Times convocados (um por linha ou separados por vírgula)": "Equipos convocados (uno por línea o separados por coma)", "Qualificatórias": "Clasificatorias", "16 avos": "Dieciseisavos", "8 avos": "Octavos", "Quartas de Final": "Cuartos de final", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podio 🏆", "Campeão:": "Campeón:", "👑 Campeão:": "👑 Campeón:", "Encerrar campeonato 🏆": "Finalizar campeonato 🏆", "Excluir": "Eliminar", "Campeonato encerrado!": "¡Campeonato finalizado!", "Campeonato excluído.": "Campeonato eliminado.", "Fase avançada!": "¡Fase avanzada!", "Excluir este campeonato? Não dá pra desfazer.": "¿Eliminar este campeonato? No se puede deshacer.", "Informe o nome do campeonato.": "Indica el nombre del campeonato.", "Informe pelo menos 2 times.": "Indica al menos 2 equipos.", "Selecione ao menos uma fase.": "Selecciona al menos una fase.", "Sem descrição.": "Sin descripción.", "Sem fases configuradas.": "Sin fases configuradas.", "← Voltar": "← Volver", "Time": "Equipo", "Times:": "Equipos:", "Fases:": "Fases:", "Início:": "Inicio:", "Acesso autorizado": "Acceso autorizado", "Seu squad.": "Tu equipo.", "Seu legado.": "Tu legado.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Registra cada partida, sigue tu evolución y conquista tu lugar en el ranking BRCS2.", "Complete seu perfil": "Completa tu perfil", "Falta só escolher seu nick pra entrar.": "Solo falta elegir tu nick para entrar.", "Seu nick": "Tu nick", "Seu nick (nome de jogador)": "Tu nick (nombre de jugador)", "Código de moderador": "Código de moderador", "Código de moderador (opcional)": "Código de moderador (opcional)", "(opcional)": "(opcional)", "Somente equipe": "Solo equipo", "Concluir": "Finalizar", "Email": "Correo", "Senha": "Contraseña", "ou continue com": "o continúa con", "Acesse seu perfil para registrar a próxima missão.": "Accede a tu perfil para registrar tu próxima partida.", "Crie seu perfil e comece sua trajetória no ranking.": "Crea tu perfil y empieza tu trayectoria en el ranking.", "Entrar no comando": "Iniciar sesión", "Criar conta": "Crear cuenta", "Já tenho acesso": "Ya tengo cuenta", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "Puedes jugar, registrar, competir, evolucionar y liderar en BRCS2", "JOGAR.": "JUGAR.", "REGISTRAR.": "REGISTRAR.", "COMPETIR.": "COMPETIR.", "EVOLUIR.": "EVOLUCIONAR.", "LIDERAR.": "LIDERAR.", "VOCÊ PODE": "PUEDES", "Carregando painel...": "Cargando panel...", "Reivindicar Jogador Antigo": "Reclamar jugador antiguo", "Jogador antigo": "Jugador antiguo", "Transferir histórico pra minha conta": "Transferir historial a mi cuenta", "Histórico antigo transferido com sucesso!": "¡Historial antiguo transferido con éxito!", "Digite um nick.": "Escribe un nick.", "E-mail inválido.": "Correo inválido.", "E-mail ou senha incorretos.": "Correo o contraseña incorrectos.", "Senha incorreta.": "Contraseña incorrecta.", "Não existe conta com esse e-mail.": "No existe una cuenta con este correo.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "Este correo ya tiene una cuenta. Intenta iniciar sesión.", "Use um nick entre 3 e 24 caracteres.": "Usa un nick de entre 3 y 24 caracteres.", "Use uma senha com pelo menos 12 caracteres.": "Usa una contraseña de al menos 12 caracteres.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Incluye mayúsculas, minúsculas y números en la contraseña.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Demasiados intentos seguidos — espera un poco e inténtalo de nuevo.", "Não foi possível concluir. Tente novamente.": "No se pudo completar. Inténtalo de nuevo.", "IA confirmou todas as estatísticas do print.": "La IA confirmó todas las estadísticas de la captura.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "La IA no pudo confirmar los datos de la captura — se requiere revisión manual.", "Sincronizado": "Sincronizado", "Sistema": "Sistema", "Objetivo": "Objetivo", "Registrar resultado": "Registrar resultado", "Subir no ranking": "Subir en el ranking", "Ver →": "Ver →", "Operação selecionada": "Modo seleccionado", "Salvando…": "Guardando…", "NA · América do Norte": "NA · Norteamérica", "CAM · América Central e Caribe": "CAM · Centroamérica y Caribe", "SA · América do Sul": "SA · Sudamérica", "EU · Europa": "EU · Europa", "CIS · Rússia e CEI": "CIS · Rusia y CEI", "ME · Oriente Médio": "ME · Oriente Medio", "AF · África": "AF · África", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceanía"}};
+  var PATTERNS = {
+    en: [[/^Nível (\d+)$/,'Level $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Level $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 of 10 approved matches'],[/^Calibrando \((\d+)\/10\)$/,'Calibrating ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% to '+t(b);}],[/^Região atualizada: (.+)$/,'Region updated: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 active']],
+    es: [[/^Nível (\d+)$/,'Nivel $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Nivel $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 de 10 partidas aprobadas'],[/^Calibrando \((\d+)\/10\)$/,'Calibrando ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% hasta '+t(b);}],[/^Região atualizada: (.+)$/,'Región actualizada: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 activos']]
+  };
+  var LANGS = {pt:'Português', en:'English', es:'Español'};
+  var lang = 'pt';
+  try{ lang = localStorage.getItem('brcsgo:lang') || ''; }catch(e){}
+  if(!LANGS[lang]){ var nav = (navigator.language||'pt').slice(0,2).toLowerCase(); lang = LANGS[nav] ? nav : 'pt'; }
+
+  function tr(str){
+    if(lang === 'pt' || !str) return str;
+    var key = str.trim(); if(!key) return str;
+    var d = DICT[lang];
+    if(d[key] !== undefined) return str.replace(key, d[key]);
+    var ps = PATTERNS[lang];
+    for(var i=0;i<ps.length;i++){
+      var m = key.match(ps[i][0]);
+      if(m){
+        var out = typeof ps[i][1] === 'function' ? ps[i][1].apply(null, m.concat([tr])) : key.replace(ps[i][0], ps[i][1]);
+        return str.replace(key, out);
+      }
+    }
+    return str;
+  }
+  var textState = new WeakMap(), ATTRS = ['placeholder','title','aria-label'];
+  function doText(node){
+    var st = textState.get(node), src = node.nodeValue;
+    if(st && src === st.shown) src = st.orig;
+    var shown = tr(src);
+    textState.set(node, {orig: src, shown: shown});
+    if(shown !== node.nodeValue) node.nodeValue = shown;
+  }
+  function doAttrs(el){
+    var st = el.__i18n || (el.__i18n = {});
+    ATTRS.forEach(function(a){
+      if(!el.hasAttribute(a)) return;
+      var cur = el.getAttribute(a), s = st[a];
+      if(s && cur === s.shown) cur = s.orig;
+      var shown = tr(cur); st[a] = {orig: cur, shown: shown};
+      if(shown !== el.getAttribute(a)) el.setAttribute(a, shown);
+    });
+  }
+  function walk(root){
+    if(!root) return;
+    if(root.nodeType === 3){ doText(root); return; }
+    if(root.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA)$/.test(root.tagName)) return;
+    doAttrs(root);
+    for(var c = root.firstChild; c; c = c.nextSibling) walk(c);
+  }
+  var busy = false;
+  var obs = new MutationObserver(function(muts){
+    if(busy) return; busy = true;
+    muts.forEach(function(m){
+      if(m.type === 'characterData') doText(m.target);
+      else if(m.type === 'attributes') doAttrs(m.target);
+      else m.addedNodes.forEach(walk);
+    });
+    busy = false;
+  });
+  function start(){ obs.observe(document.body, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:ATTRS}); }
+  function apply(){
+    document.documentElement.lang = {pt:'pt-BR', en:'en', es:'es'}[lang];
+    busy = true; walk(document.body); busy = false;
+    document.querySelectorAll('.lang-switch button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang === lang); });
+  }
+  var box = document.createElement('div');
+  box.className = 'lang-switch'; box.setAttribute('role','group'); box.setAttribute('aria-label','Idioma');
+  box.innerHTML = Object.keys(LANGS).map(function(k){ return '<button type="button" data-lang="'+k+'" title="'+LANGS[k]+'">'+k.toUpperCase()+'</button>'; }).join('');
+  box.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    lang = b.dataset.lang;
+    try{ localStorage.setItem('brcsgo:lang', lang); }catch(err){}
+    apply();
+  });
+  document.body.appendChild(box);
+  apply(); start();
+})();
 </script>
 </body>
 </html>
