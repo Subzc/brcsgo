@@ -1118,6 +1118,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 @keyframes cs10ring{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(9)}}
 @media (max-width:640px){.cs10-node{width:26px;height:26px}.cs10-node svg{width:26px;height:26px}.cs10-rail{top:12px;left:30px;right:30px}.cs10-iconwrap{width:130px;height:130px}.cs10-iconwrap svg{width:130px;height:130px}}
 @media (prefers-reduced-motion:reduce){.cs10.slam .cs10-stage,.cs10.slam .cs10-flash,.cs10.slam .cs10-ring,.cs10-icon.pop{animation:none}}
+
+/* ===== Popup de subida de nível (verde) ===== */
+.lvlup{position:fixed;top:18px;left:50%;transform:translate(-50%,-160%);z-index:900;display:flex;align-items:center;gap:12px;padding:10px 20px 12px 12px;border:1px solid #1CE400;border-radius:10px;background:rgba(7,20,9,.97);box-shadow:0 0 0 1px rgba(28,228,0,.22),0 12px 44px -8px rgba(28,228,0,.6);color:#fff;font-family:'Rajdhani',sans-serif;opacity:0;overflow:hidden;pointer-events:none;transition:transform .55s cubic-bezier(.2,1.3,.4,1),opacity .35s}
+.lvlup.on{transform:translate(-50%,0);opacity:1}
+.lvlup svg{flex:none;filter:drop-shadow(0 0 8px #1CE400)}
+.lvlup.on svg{animation:lvlupPop .55s cubic-bezier(.2,1.5,.4,1)}
+@keyframes lvlupPop{0%{transform:scale(.4)}100%{transform:scale(1)}}
+.lvlup b{display:block;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#1CE400}
+.lvlup span{display:block;font-size:22px;font-weight:700;letter-spacing:.08em;line-height:1.1}
+.lvlup small{display:block;margin-top:2px;font:500 11px 'IBM Plex Mono',monospace;color:rgba(255,255,255,.6)}
+.lvlup::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;background:#1CE400;transform-origin:left;transform:scaleX(0)}
+.lvlup.on::after{animation:lvlupBar 4s linear forwards}
+@keyframes lvlupBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media (max-width:640px){.lvlup{top:10px;max-width:92vw}}
+@media (prefers-reduced-motion:reduce){.lvlup,.lvlup.on svg,.lvlup.on::after{animation:none;transition:opacity .2s}}
 </style>
 </head>
 <body>
@@ -3099,9 +3114,9 @@ init();
   var active = false, soundOn = true, actx = null;
   try{ soundOn = localStorage.getItem('brcsgo:cs10sound') !== '0'; }catch(e){}
   var TXT = {
-    pt:{reach:'Nível alcançado', lv:'NÍVEL', done:'Nível 10 alcançado', elo:'ELO', go:'Continuar', skip:'Pular ›', ch:'Challenger — Top 1000 da região', sub:'Você está entre a elite do BRCS2'},
-    en:{reach:'Level reached', lv:'LEVEL', done:'Level 10 reached', elo:'ELO', go:'Continue', skip:'Skip ›', ch:'Challenger — Top 1000 of the region', sub:'You are among the BRCS2 elite'},
-    es:{reach:'Nivel alcanzado', lv:'NIVEL', done:'Nivel 10 alcanzado', elo:'ELO', go:'Continuar', skip:'Saltar ›', ch:'Challenger — Top 1000 de la región', sub:'Estás en la élite de BRCS2'}
+    pt:{up:'Subiu de nível!', reach:'Nível alcançado', lv:'NÍVEL', done:'Nível 10 alcançado', elo:'ELO', go:'Continuar', skip:'Pular ›', ch:'Challenger — Top 1000 da região', sub:'Você está entre a elite do BRCS2'},
+    en:{up:'Level up!', reach:'Level reached', lv:'LEVEL', done:'Level 10 reached', elo:'ELO', go:'Continue', skip:'Skip ›', ch:'Challenger — Top 1000 of the region', sub:'You are among the BRCS2 elite'},
+    es:{up:'¡Subiste de nivel!', reach:'Nivel alcanzado', lv:'NIVEL', done:'Nivel 10 alcanzado', elo:'ELO', go:'Continuar', skip:'Saltar ›', ch:'Challenger — Top 1000 de la región', sub:'Estás en la élite de BRCS2'}
   };
   function L(){ var k=(document.documentElement.lang||'pt').slice(0,2); return TXT[k]||TXT.pt; }
   var master = null, wet = null, noiseBuf = null, drone = null;
@@ -3246,6 +3261,21 @@ init();
     later(function(){ if(closed) return; el.classList.add('slam'); sfxSlam(); }, t + (reduce?200:750));
     later(function(){ if(!closed){ el.classList.add('done'); sfxReveal(); } }, t + (reduce?500:1900));
   }
+  // ---- popup verde de subida de nível ----
+  var upTimer = null, upEl = null;
+  function sfxLevelUp(){ pop(640,0.38,0); pop(960,0.26,0.09); thump(150,50,0.28,0.45,0); note(196,0.45,'triangle',0.09,0.04,600,0.4); }
+  function levelUpPopup(info){
+    info = info || {}; var T = L(), lv = LEVELS[Math.max(0,Math.min(9,(info.level||1)-1))];
+    if(upEl){ upEl.remove(); clearTimeout(upTimer); }
+    var el = document.createElement('div'); upEl = el; el.className = 'lvlup'; el.setAttribute('role','status'); el.setAttribute('aria-live','polite');
+    el.innerHTML = tierIconSVG(lv,48)+'<div><b>▲ '+T.up+'</b><span>'+T.lv+' '+lv.level+'</span>'+(info.elo?'<small>'+info.elo+' '+T.elo+(info.mode?' · '+info.mode:'')+'</small>':'')+'</div>';
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('on'); }); });
+    sfxLevelUp();
+    upTimer = setTimeout(function(){ el.classList.remove('on'); setTimeout(function(){ el.remove(); if(upEl===el) upEl=null; }, 600); }, 4000);
+  }
+  window.playLevelUpPopup = function(n){ levelUpPopup({level:n||4, elo:1000, mode:'Competitivo'}); };
+
   window.playLevel10Cutscene = play;
 
   // ---- gatilho: detecta a subida para o Nível 10 do jogador logado ----
@@ -3265,13 +3295,15 @@ init();
         if(seen !== null && Number(seen) < 10 && lvl >= 10){
           var tier = playerTier(p, st, mode);
           play({mode: MODES[mode].label, name: p.name, elo: st.elo, region: p.region || '', challenger: !!tier.challenger});
+        } else if(seen !== null && lvl > Number(seen) && lvl < 10){
+          levelUpPopup({level: lvl, elo: st.elo, mode: MODES[mode].label});   // subiu de nível (inclui sair da calibragem)
         }
       });
     }catch(e){}
   }
   setInterval(check, 1200);
   // pré-visualização: abra o site com #cutscene10 no final do endereço (ou use playLevel10Cutscene() no console)
-  function preview(){ if(location.hash === '#cutscene10'){ var n=document.querySelector('.name-cell'); play({mode:'Competitivo', name:(typeof userProfile!=='undefined'&&userProfile&&userProfile.playerName)||'Player', elo:2034, region:'', challenger:false}); history.replaceState(null,'',location.pathname+location.search); } }
+  function preview(){ if(location.hash === '#levelup'){ window.playLevelUpPopup(4); history.replaceState(null,'',location.pathname+location.search); } if(location.hash === '#cutscene10'){ var n=document.querySelector('.name-cell'); play({mode:'Competitivo', name:(typeof userProfile!=='undefined'&&userProfile&&userProfile.playerName)||'Player', elo:2034, region:'', challenger:false}); history.replaceState(null,'',location.pathname+location.search); } }
   window.addEventListener('hashchange', preview); setTimeout(preview, 2500);
 })();
 </script>
