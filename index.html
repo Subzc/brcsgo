@@ -3212,10 +3212,26 @@ init();
     n.buffer = noiseBuf; n.loop = true; fl.type = 'lowpass'; fl.frequency.value = lp||90; g.gain.setValueAtTime(0.0001,t);
     if(rise){ g.gain.exponentialRampToValueAtTime(pk,t+d); } else { g.gain.exponentialRampToValueAtTime(pk,t+d*0.15); g.gain.exponentialRampToValueAtTime(0.0001,t+d); }
     n.connect(fl); fl.connect(g); out(g,0,0.3); n.start(t); n.stop(t+d+0.2); return {g:g}; }
+  // saturação pesada: dá harmônicos graves audíveis até em caixas pequenas (rosnado, não metal)
+  var distCurve = null;
+  function dist(){ if(!distCurve){ distCurve = new Float32Array(2048); for(var i=0;i<2048;i++){ var x = i/1024-1; distCurve[i] = Math.tanh(4.2*x); } } var w = ctx.createWaveShaper(); w.curve = distCurve; return w; }
+  // sub-boom distorcido (peito): queda de tom + saturação
+  function bodyD(f0,f1,d,pk,w,sL){ if(!ok()) return; var t = T(w), o = ctx.createOscillator(), ws = dist(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+d*0.75); env(g,t,0.004,d,pk); o.connect(ws); ws.connect(g); out(g,0.08,sL||0.2); o.start(t); o.stop(t+d+0.1); }
+  // ROSNADO: ruído passando por formantes graves, modulado em "vocal fry" e distorcido (besta/dragão)
+  function roar(d,pk,w,fa,fb,r0,r1){ if(!ok()) return; var t = T(w), n = ctx.createBufferSource(), f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), mix = ctx.createGain(), am = ctx.createGain(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), ws = dist();
+    n.buffer = noiseBuf; n.loop = true;
+    f1.type = 'bandpass'; f1.Q.value = 5; f1.frequency.setValueAtTime(fa,t); f1.frequency.exponentialRampToValueAtTime(fb,t+d);
+    f2.type = 'bandpass'; f2.Q.value = 3; f2.frequency.setValueAtTime(fa*2.6,t); f2.frequency.exponentialRampToValueAtTime(fb*2.6,t+d);
+    lfo.frequency.setValueAtTime(r0,t); lfo.frequency.linearRampToValueAtTime(r1,t+d); lg.gain.value = 0.55; am.gain.value = 0.45; lfo.connect(lg); lg.connect(am.gain);
+    n.connect(f1); n.connect(f2); f1.connect(mix); f2.connect(mix); mix.connect(am); am.connect(ws); ws.connect(g);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk*2.4,t+d*0.18); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    out(g,0.1,0.5); n.start(t); lfo.start(t); n.stop(t+d+0.1); lfo.stop(t+d+0.1); }
+  // trovão: rumble longo + pancadas que vão morrendo
+  function thunder(w,d,pk){ rumble(d,pk,w,110); for(var i=0;i<5;i++) body(64-i*4,22,0.7,pk*(0.75-i*0.14),w+0.45+i*0.5,0.4); }
   function startDrone(){ if(drone || !ok()) return; var bg = ctx.createGain(); bg.gain.value = 1; bg.connect(master); bus = bg;
-    rumble(9,0.45,0,170,true);
-    var t = 0; while(t < 8.3){ var k = t/8.3, pk = 0.32+0.58*k; body(78+k*30,32,0.3,pk,t); hit('lowpass',320,1,0.1,0.25+0.3*k,t); body(66,30,0.2,pk*0.6,t+0.13); t += 0.95-0.68*k; }
-    ratchet(28,2.0,8.2,0.13,2600);
+    rumble(9,0.5,0,150,true);
+    var t = 0; while(t < 8.3){ var k = t/8.3; roar(0.95-0.4*k,0.1+0.3*k,t,110,70,6+k*8,10+k*10); bodyD(90+k*25,30,0.4,0.35+0.55*k,t,0.2); bodyD(70,26,0.3,(0.35+0.55*k)*0.6,t+0.14,0.2); t += 1.15-0.8*k; }
     bus = null; drone = {g:bg}; }
   function stopDrone(f){ if(!drone || !ctx) return; var t = ctx.currentTime, d = drone; drone = null; f = f||0.5;
     d.g.gain.cancelScheduledValues(t); d.g.gain.setValueAtTime(Math.max(d.g.gain.value,0.0001),t); d.g.gain.exponentialRampToValueAtTime(0.0001,t+f); }
@@ -3233,13 +3249,13 @@ init();
     notify:function(){ ring(440,0.38,0.12,0,0.35,[1,2.76,5.4]); body(115,50,0.16,0.4,0); hit('bandpass',2600,2,0.02,0.15,0); },
     error:function(){ body(72,30,0.4,0.75,0); hit('lowpass',520,1,0.22,0.5,0); body(68,30,0.34,0.6,0.13); ratchet(5,0.02,0.2,0.1,1800); },
     warn:function(){ body(82,36,0.3,0.65,0); hit('lowpass',600,1,0.14,0.4,0); ring(150,0.3,0.06,0,0.2,[1,2.4]); },
-    levelup:function(){ body(112,40,0.34,0.85,0); hit('bandpass',2100,2,0.04,0.3,0); ring(262,0.8,0.18,0,0.5); body(150,60,0.12,0.4,0.11); hit('bandpass',3400,3,0.025,0.25,0.11); ring(392,0.6,0.14,0.11,0.5); whoosh(120,1400,0.4,0.12,0.02,0.8); rumble(0.7,0.22,0,110); },
-    intro:function(){ whoosh(70,1200,1.4,0.4,0,0.7); body(70,28,1.7,0.85,0.04,0.4); hit('lowpass',260,1,1.0,0.5,0.04,0.4); hiss(0.5,0.25,0.3); chunk(0.7,1.0); chunk(0.5,1.06); startDrone(); },
-    step:function(i){ i = i||0; body(170-i*5,38,0.4,0.9,0); hit('lowpass',400,1,0.14,0.45,0); ring(150+i*26,0.65,0.16+i*0.01,0.01,0.45,[1,2.76,5.4,8.93]); pop(260,0.42,0.06); hiss(0.2,0.12+i*0.012,0.02); whoosh(120,900+i*220,0.34,0.14+i*0.012,0,0.9); ratchet(3,0.02,0.1,0.14,2400); if(i>=4) splash(0.16+i*0.02,0.05); if(i>=8) body(60,26,0.6,0.5,0.08,0.3); },
-    riser:function(){ ratchet(16,0,0.95,0.2,2200); whoosh(100,6500,0.95,0.5,0,0.7); rumble(0.95,0.55,0,260,true); body(80,34,0.3,0.5,0.35); body(84,34,0.3,0.6,0.6); body(90,34,0.3,0.75,0.8); hiss(0.9,0.18,0.05); },
-    slam:function(){ stopDrone(0.8); body(120,20,3.0,1.0,0,0.5); body(70,18,3.2,0.9,0.03,0.5); hit('lowpass',600,1,1.8,0.9,0,0.6); ring(98,2.8,0.3,0,0.8,[1,2.76,5.4,8.93,11.3]); ring(49,3.4,0.3,0,0.9,[1,2.1,3.7,5.2]); ring(196,2.2,0.2,0.01,0.8); chunk(0.9,0); chunk(0.7,0.09); splash(0.7,0.02); hit('highpass',3000,1,0.2,0.4,0); hiss(1.2,0.35,0.05); whoosh(7000,140,1.2,0.4,0.02,0.7); rumble(3,0.65,0,100); body(90,30,0.5,0.45,0.55,0.3); body(80,28,0.5,0.35,0.9,0.3); ring(320,0.4,0.1,0.35,0.5); ring(240,0.5,0.08,0.7,0.5); },
-    reveal:function(){ chunk(0.6,0); ring(330,1.6,0.14,0.02,0.9,[1,2.76,5.4]); pop(300,0.4,0.1); hiss(0.4,0.15,0.1); whoosh(150,1800,0.6,0.1,0,0.8); body(100,45,0.4,0.5,0.05,0.3); },
-    out:function(){ whoosh(1800,100,0.7,0.2,0); body(100,45,0.2,0.4,0.25); hiss(0.4,0.12,0.1); }
+    levelup:function(){ bodyD(100,32,0.55,0.9,0,0.3); body(110,38,0.4,0.7,0); roar(0.55,0.4,0.03,170,85,22,12); pop(190,0.45,0.07); whoosh(70,800,0.4,0.14,0,0.8); hit('lowpass',300,1,0.2,0.45,0); },
+    intro:function(){ whoosh(60,700,1.5,0.45,0,0.6); bodyD(80,28,1.8,0.9,0.05,0.4); thunder(0.1,2.2,0.35); bodyD(70,26,1.6,0.8,1.0,0.4); startDrone(); },
+    step:function(i){ i = i||0; var k = i/9; bodyD(118-i*4,30,0.5,0.7+0.2*k,0,0.3); body(100-i*3,28,0.55,0.8,0); roar(0.45,0.3+0.3*k,0.02,170-i*6,80,18,34); pop(170-i*4,0.45,0.07); whoosh(70,520+i*110,0.38,0.16+0.012*i,0,0.8); hit('lowpass',260,1,0.18,0.5,0); if(i>=4) bodyD(55,20,0.8,0.5,0.1,0.4); if(i>=7) thunder(0.15,1.2,0.3); },
+    riser:function(){ roar(0.95,0.8,0,90,380,12,46); whoosh(60,3500,0.95,0.5,0,0.6); rumble(0.95,0.7,0,200,true); bodyD(90,30,0.4,0.55,0.3,0.3); bodyD(90,30,0.4,0.7,0.58,0.3); bodyD(90,30,0.4,0.9,0.8,0.3); },
+    slam:function(){ stopDrone(0.6); bodyD(75,15,4.2,1.0,0,0.6); bodyD(52,14,4.6,0.95,0.02,0.6); body(120,20,3.0,1.0,0,0.5); roar(2.8,1.0,0.02,150,48,26,7); roar(2.2,0.8,0.15,95,40,18,6); hit('lowpass',520,1,1.8,0.9,0,0.7); whoosh(1100,50,1.5,0.5,0,0.6); thunder(0.1,4.6,0.8); bodyD(66,20,0.9,0.7,0.55,0.5); bodyD(58,18,0.9,0.55,1.05,0.5); bodyD(50,16,1.0,0.4,1.7,0.5); splash(0.35,0.03); },
+    reveal:function(){ whoosh(120,900,0.7,0.14,0,0.7); roar(0.9,0.35,0,140,70,10,6); bodyD(90,36,0.6,0.55,0.05,0.4); pop(190,0.4,0.12); },
+    out:function(){ whoosh(900,60,0.8,0.22,0); body(90,36,0.3,0.4,0.3); }
   };
   window.SFX = {
     enabled:function(){ return on; },
