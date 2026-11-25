@@ -1133,6 +1133,45 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 @keyframes lvlupBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @media (max-width:640px){.lvlup{top:10px;max-width:92vw}}
 @media (prefers-reduced-motion:reduce){.lvlup,.lvlup.on svg,.lvlup.on::after{animation:none;transition:opacity .2s}}
+
+/* ===== MD10 — calibração minimalista ===== */
+.md10{display:flex;align-items:center;gap:22px;padding:6px 2px}
+.md10-ring{position:relative;flex:none;width:104px;height:104px}
+.md10-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.md10-ring circle{fill:none;stroke-width:5}
+.md10-ring .trk{stroke:rgba(255,255,255,.08)}
+.md10-ring .arc{stroke:var(--orange);stroke-linecap:round;stroke-dasharray:var(--c);stroke-dashoffset:var(--off);filter:drop-shadow(0 0 6px rgba(229,38,43,.7));animation:md10arc 1.2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes md10arc{from{stroke-dashoffset:var(--c)}}
+.md10-count{position:absolute;inset:0;display:flex;align-items:baseline;justify-content:center;padding-top:30px;font-family:'Rajdhani',sans-serif}
+.md10-count b{font-size:38px;line-height:1;color:#fff}
+.md10-count span{font-size:15px;color:var(--muted);margin-left:2px}
+.md10-info{min-width:0;flex:1}
+.md10-tag{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--orange-2)}
+.md10-title{margin:4px 0 12px;font:700 20px 'Rajdhani',sans-serif;letter-spacing:.04em;color:#fff}
+.md10-slots{display:flex;gap:6px}
+.md10-slot{flex:1;max-width:34px;height:10px;border-radius:2px;background:rgba(255,255,255,.07);transform-origin:bottom;animation:md10in .45s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i)*60ms)}
+@keyframes md10in{from{transform:scaleY(.2);opacity:0}}
+.md10-slot.win{background:var(--orange);box-shadow:0 0 10px rgba(229,38,43,.55)}
+.md10-slot.loss{background:#3C3C43}
+.md10-slot.draw{background:#8A8A92}
+.md10-slot.next{background:transparent;box-shadow:inset 0 0 0 1px var(--orange);animation:md10in .45s both,md10pulse 1.6s ease-in-out infinite .6s;animation-delay:calc(var(--i)*60ms),0s}
+@keyframes md10pulse{0%,100%{box-shadow:inset 0 0 0 1px var(--orange),0 0 0 rgba(229,38,43,0)}50%{box-shadow:inset 0 0 0 1px var(--orange-2),0 0 12px rgba(229,38,43,.6)}}
+.md10-note{margin-top:10px;font-size:12px;color:var(--muted)}
+@media (max-width:560px){.md10{gap:14px}.md10-ring{width:84px;height:84px}.md10-count{padding-top:22px}.md10-count b{font-size:30px}.md10-title{font-size:17px}}
+/* ===== Dinamismo geral ===== */
+button,.tab-btn,.mode-chip,.dock-btn{transition:transform .12s,background .18s,border-color .18s,color .18s,box-shadow .18s}
+button:not(.cs10-go):active,.tab-btn:active,.mode-chip:active,.dock-btn:active{transform:scale(.95)!important}
+.panel{animation:panelIn .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes panelIn{from{opacity:0;transform:translateY(7px)}}
+.event-card{transition:transform .2s,border-color .2s}
+.event-card:hover{transform:translateY(-2px);border-color:var(--orange)!important}
+tbody tr{transition:background .15s}
+tbody tr:hover td{background:rgba(229,38,43,.07)}
+.progress-fill{transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.side .tab-btn{transition:transform .12s,background .18s,border-color .18s,padding-left .18s}
+.side .tab-btn:hover{padding-left:16px}
+.lang-switch button.sfx{min-width:30px;border-left:1px solid var(--line);border-radius:0 5px 5px 0;margin-left:2px}
+@media (prefers-reduced-motion:reduce){.panel,.md10-slot,.md10-ring .arc{animation:none}}
 </style>
 </head>
 <body>
@@ -1947,15 +1986,23 @@ function perfilHTML(){
   let rankBlock = '';
   if(cfg.hasPatente){
     if(s.calibrating){
-      let dots = '';
-      for(let i=0;i<10;i++) dots += `<div class="calib-dot ${i < s.total ? 'filled' : ''}"></div>`;
+      const calibMs = matches.filter(m => m.playerId === p.id && (m.mode||'competitivo') === viewMode && m.status === 'aprovada').sort((a,b) => (a.createdAt||0) - (b.createdAt||0)).slice(0,10);
+      const left = Math.max(0, 10 - s.total);
+      const R = 44, C = 2*Math.PI*R, off = (C * (1 - Math.min(10, s.total)/10)).toFixed(1);
+      let slots = '';
+      for(let i=0;i<10;i++){
+        const m = calibMs[i];
+        const kind = m ? (m.result === 'vitoria' ? 'win' : (m.result === 'empate' ? 'draw' : 'loss')) : (i === calibMs.length ? 'next' : 'empty');
+        slots += `<i class="md10-slot ${kind}" style="--i:${i}" title="${m ? (m.map || '') : ''}"></i>`;
+      }
       rankBlock = `
-        <div class="rank-row">
-          <div class="badge" style="background:var(--panel2); border:1px dashed var(--line); color:var(--muted);">?</div>
-          <div class="rank-info">
-            <div class="rank-name">Em calibragem — MD10</div>
-            <div class="elo">${s.total} de 10 partidas aprovadas</div>
-            <div class="calib-dots">${dots}</div>
+        <div class="md10">
+          <div class="md10-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="${R}"/><circle class="arc" cx="50" cy="50" r="${R}" style="--c:${C.toFixed(1)};--off:${off}"/></svg><div class="md10-count"><b>${Math.min(10, s.total)}</b><span>/10</span></div></div>
+          <div class="md10-info">
+            <div class="md10-tag">MD10 · Calibração</div>
+            <div class="md10-title">${left} ${left === 1 ? 'partida' : 'partidas'} para revelar seu nível</div>
+            <div class="md10-slots">${slots}</div>
+            <div class="md10-note">As 10 partidas juntas definem seu ELO inicial.</div>
           </div>
         </div>`;
     } else {
@@ -3028,10 +3075,10 @@ init();
 <script>
 // ====== Idiomas (PT / EN / ES) — traduz a interface em tempo real, sem mexer na lógica ======
 (function(){
-  var DICT = {"en": {"Remover":"Remove","Ação":"Action","Ver histórico de":"View history of","Registrar": "Log match", "Meu Perfil": "My Profile", "Histórico": "History", "Ranking": "Ranking", "Eventos": "Events", "Moderação": "Moderation", "Sair": "Log out", "Perfil": "Profile", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Matches & Ranking", "Rede BRCS2 online": "BRCS2 network online", "Partidas, ranks e": "Matches, ranks and", "níveis.": "levels.", "Operadores": "Players", "Partidas": "Matches", "Eventos ativos": "Active events", "Em revisão": "Under review", "Modo": "Mode", "Staff autorizado": "Authorized staff", "Operador ativo": "Active player", "Todas as regiões": "All regions", "Região": "Region", "Região em que você joga": "Region you play in", "Selecionar região…": "Select region…", "Selecionar…": "Select…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Set your region to join the regional ranking and compete for Challenger.", "Escolha a região em que você joga.": "Choose the region you play in.", "Challenger": "Challenger", "Nível": "Level", "Elo": "Elo", "Jogador": "Player", "Vitória %%": "Win %%", "Jogadores Ranqueados": "Ranked Players", "Partidas Aprovadas": "Approved Matches", "Em Análise": "Under Review", "Líder Atual": "Current Leader", "Nenhum jogador com partidas aprovadas neste modo ainda.": "No players with approved matches in this mode yet.", "Os melhores de cada região · Nível 10 + Top 1000": "The best of each region · Level 10 + Top 1000", "Em calibragem — MD10": "Calibrating — MD10", "Taxa Vitória": "Win Rate", "Vitórias": "Wins", "Derrotas": "Losses", "Kills Totais": "Total Kills", "Pontos Totais": "Total Points", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Points", "Estrelas MVP": "MVP Stars", "Mapa": "Map", "Resultado": "Result", "Vitória": "Win", "Derrota": "Loss", "Empate": "Draw", "Modo de Jogo": "Game Mode", "Competitivo": "Competitive", "Casual": "Casual", "Mata-Mata": "Deathmatch", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Log Match", "Print do placar final": "Final scoreboard screenshot", "Enviar para Análise": "Submit for Review", "Partida enviada! Verificando em segundo plano...": "Match submitted! Verifying in the background...", "Anexe um print do placar final da partida.": "Attach a screenshot of the final scoreboard.", "Envie o print em PNG, JPEG ou WebP.": "Upload the screenshot as PNG, JPEG or WebP.", "O print deve ter no máximo 5 MB.": "The screenshot must be at most 5 MB.", "Selecione um jogador para ver o histórico.": "Select a player to see their history.", "Nenhuma partida registrada neste modo ainda.": "No matches logged in this mode yet.", "Data": "Date", "Status / Δ Elo": "Status / Δ Elo", "🤖 ajustado": "🤖 adjusted", "Aprovar": "Approve", "Rejeitar": "Reject", "Rejeitar esta partida?": "Reject this match?", "Baixar imagem": "Download image", "Nenhuma partida aguardando análise.": "No matches awaiting review.", "Acesso restrito à equipe do BRCS2.": "Access restricted to the BRCS2 staff.", "Eventos & Campeonatos": "Events & Championships", "Copas, torneios e disputas oficiais do BRCS2": "Official BRCS2 cups, tournaments and contests", "+ Novo campeonato": "+ New championship", "Novo Campeonato": "New Championship", "Criar campeonato": "Create championship", "Cancelar": "Cancel", "Nome do campeonato": "Championship name", "Sigla / abreviação": "Acronym / abbreviation", "Descrição": "Description", "Premiação": "Prize", "Data de início": "Start date", "Fases do campeonato": "Championship stages", "Times convocados (um por linha ou separados por vírgula)": "Invited teams (one per line or comma-separated)", "Qualificatórias": "Qualifiers", "16 avos": "Round of 32", "8 avos": "Round of 16", "Quartas de Final": "Quarterfinals", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podium 🏆", "Campeão:": "Champion:", "👑 Campeão:": "👑 Champion:", "Encerrar campeonato 🏆": "End championship 🏆", "Excluir": "Delete", "Campeonato encerrado!": "Championship finished!", "Campeonato excluído.": "Championship deleted.", "Fase avançada!": "Stage advanced!", "Excluir este campeonato? Não dá pra desfazer.": "Delete this championship? This can't be undone.", "Informe o nome do campeonato.": "Enter the championship name.", "Informe pelo menos 2 times.": "Enter at least 2 teams.", "Selecione ao menos uma fase.": "Select at least one stage.", "Sem descrição.": "No description.", "Sem fases configuradas.": "No stages configured.", "← Voltar": "← Back", "Time": "Team", "Times:": "Teams:", "Fases:": "Stages:", "Início:": "Start:", "Acesso autorizado": "Authorized access", "Seu squad.": "Your squad.", "Seu legado.": "Your legacy.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Log every match, track your progress and earn your place in the BRCS2 ranking.", "Complete seu perfil": "Complete your profile", "Falta só escolher seu nick pra entrar.": "Just pick your nickname to get in.", "Seu nick": "Your nickname", "Seu nick (nome de jogador)": "Your nickname (player name)", "Código de moderador": "Moderator code", "Código de moderador (opcional)": "Moderator code (optional)", "(opcional)": "(optional)", "Somente equipe": "Staff only", "Concluir": "Finish", "Email": "Email", "Senha": "Password", "ou continue com": "or continue with", "Acesse seu perfil para registrar a próxima missão.": "Access your profile to log your next match.", "Crie seu perfil e comece sua trajetória no ranking.": "Create your profile and start your ranking journey.", "Entrar no comando": "Sign in", "Criar conta": "Create account", "Já tenho acesso": "I already have an account", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "You can play, log, compete, evolve and lead on BRCS2", "JOGAR.": "PLAY.", "REGISTRAR.": "LOG.", "COMPETIR.": "COMPETE.", "EVOLUIR.": "EVOLVE.", "LIDERAR.": "LEAD.", "VOCÊ PODE": "YOU CAN", "Carregando painel...": "Loading dashboard...", "Reivindicar Jogador Antigo": "Claim Old Player", "Jogador antigo": "Old player", "Transferir histórico pra minha conta": "Transfer history to my account", "Histórico antigo transferido com sucesso!": "Old history transferred successfully!", "Digite um nick.": "Enter a nickname.", "E-mail inválido.": "Invalid email.", "E-mail ou senha incorretos.": "Wrong email or password.", "Senha incorreta.": "Wrong password.", "Não existe conta com esse e-mail.": "No account with this email.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "This email already has an account. Try signing in instead.", "Use um nick entre 3 e 24 caracteres.": "Use a nickname between 3 and 24 characters.", "Use uma senha com pelo menos 12 caracteres.": "Use a password with at least 12 characters.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Include uppercase, lowercase letters and numbers in the password.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Too many attempts — wait a bit and try again.", "Não foi possível concluir. Tente novamente.": "Could not complete. Please try again.", "IA confirmou todas as estatísticas do print.": "AI confirmed all stats in the screenshot.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "The AI couldn't confirm the screenshot data — manual review needed.", "Sincronizado": "Synced", "Sistema": "System", "Objetivo": "Goal", "Registrar resultado": "Log a result", "Subir no ranking": "Climb the ranking", "Ver →": "View →", "Operação selecionada": "Selected mode", "Salvando…": "Saving…", "NA · América do Norte": "NA · North America", "CAM · América Central e Caribe": "CAM · Central America & Caribbean", "SA · América do Sul": "SA · South America", "EU · Europa": "EU · Europe", "CIS · Rússia e CEI": "CIS · Russia & CIS", "ME · Oriente Médio": "ME · Middle East", "AF · África": "AF · Africa", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceania"}, "es": {"Remover":"Eliminar","Ação":"Acción","Ver histórico de":"Ver historial de","Registrar": "Registrar", "Meu Perfil": "Mi perfil", "Histórico": "Historial", "Ranking": "Ranking", "Eventos": "Eventos", "Moderação": "Moderación", "Sair": "Salir", "Perfil": "Perfil", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Partidas y Ranking", "Rede BRCS2 online": "Red BRCS2 en línea", "Partidas, ranks e": "Partidas, rangos y", "níveis.": "niveles.", "Operadores": "Jugadores", "Partidas": "Partidas", "Eventos ativos": "Eventos activos", "Em revisão": "En revisión", "Modo": "Modo", "Staff autorizado": "Staff autorizado", "Operador ativo": "Jugador activo", "Todas as regiões": "Todas las regiones", "Região": "Región", "Região em que você joga": "Región en la que juegas", "Selecionar região…": "Seleccionar región…", "Selecionar…": "Seleccionar…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Define tu región para entrar al ranking regional y competir por Challenger.", "Escolha a região em que você joga.": "Elige la región en la que juegas.", "Challenger": "Challenger", "Nível": "Nivel", "Elo": "Elo", "Jogador": "Jugador", "Vitória %%": "Victoria %%", "Jogadores Ranqueados": "Jugadores clasificados", "Partidas Aprovadas": "Partidas aprobadas", "Em Análise": "En análisis", "Líder Atual": "Líder actual", "Nenhum jogador com partidas aprovadas neste modo ainda.": "Aún no hay jugadores con partidas aprobadas en este modo.", "Os melhores de cada região · Nível 10 + Top 1000": "Los mejores de cada región · Nivel 10 + Top 1000", "Em calibragem — MD10": "En calibración — MD10", "Taxa Vitória": "Tasa de victorias", "Vitórias": "Victorias", "Derrotas": "Derrotas", "Kills Totais": "Kills totales", "Pontos Totais": "Puntos totales", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Puntos", "Estrelas MVP": "Estrellas MVP", "Mapa": "Mapa", "Resultado": "Resultado", "Vitória": "Victoria", "Derrota": "Derrota", "Empate": "Empate", "Modo de Jogo": "Modo de juego", "Competitivo": "Competitivo", "Casual": "Casual", "Mata-Mata": "Duelo a muerte", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Registrar partida", "Print do placar final": "Captura del marcador final", "Enviar para Análise": "Enviar a revisión", "Partida enviada! Verificando em segundo plano...": "¡Partida enviada! Verificando en segundo plano...", "Anexe um print do placar final da partida.": "Adjunta una captura del marcador final.", "Envie o print em PNG, JPEG ou WebP.": "Sube la captura en PNG, JPEG o WebP.", "O print deve ter no máximo 5 MB.": "La captura debe pesar como máximo 5 MB.", "Selecione um jogador para ver o histórico.": "Selecciona un jugador para ver su historial.", "Nenhuma partida registrada neste modo ainda.": "Aún no hay partidas registradas en este modo.", "Data": "Fecha", "Status / Δ Elo": "Estado / Δ Elo", "🤖 ajustado": "🤖 ajustado", "Aprovar": "Aprobar", "Rejeitar": "Rechazar", "Rejeitar esta partida?": "¿Rechazar esta partida?", "Baixar imagem": "Descargar imagen", "Nenhuma partida aguardando análise.": "Ninguna partida en espera de revisión.", "Acesso restrito à equipe do BRCS2.": "Acceso restringido al equipo de BRCS2.", "Eventos & Campeonatos": "Eventos y campeonatos", "Copas, torneios e disputas oficiais do BRCS2": "Copas, torneos y competiciones oficiales de BRCS2", "+ Novo campeonato": "+ Nuevo campeonato", "Novo Campeonato": "Nuevo campeonato", "Criar campeonato": "Crear campeonato", "Cancelar": "Cancelar", "Nome do campeonato": "Nombre del campeonato", "Sigla / abreviação": "Sigla / abreviatura", "Descrição": "Descripción", "Premiação": "Premio", "Data de início": "Fecha de inicio", "Fases do campeonato": "Fases del campeonato", "Times convocados (um por linha ou separados por vírgula)": "Equipos convocados (uno por línea o separados por coma)", "Qualificatórias": "Clasificatorias", "16 avos": "Dieciseisavos", "8 avos": "Octavos", "Quartas de Final": "Cuartos de final", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podio 🏆", "Campeão:": "Campeón:", "👑 Campeão:": "👑 Campeón:", "Encerrar campeonato 🏆": "Finalizar campeonato 🏆", "Excluir": "Eliminar", "Campeonato encerrado!": "¡Campeonato finalizado!", "Campeonato excluído.": "Campeonato eliminado.", "Fase avançada!": "¡Fase avanzada!", "Excluir este campeonato? Não dá pra desfazer.": "¿Eliminar este campeonato? No se puede deshacer.", "Informe o nome do campeonato.": "Indica el nombre del campeonato.", "Informe pelo menos 2 times.": "Indica al menos 2 equipos.", "Selecione ao menos uma fase.": "Selecciona al menos una fase.", "Sem descrição.": "Sin descripción.", "Sem fases configuradas.": "Sin fases configuradas.", "← Voltar": "← Volver", "Time": "Equipo", "Times:": "Equipos:", "Fases:": "Fases:", "Início:": "Inicio:", "Acesso autorizado": "Acceso autorizado", "Seu squad.": "Tu equipo.", "Seu legado.": "Tu legado.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Registra cada partida, sigue tu evolución y conquista tu lugar en el ranking BRCS2.", "Complete seu perfil": "Completa tu perfil", "Falta só escolher seu nick pra entrar.": "Solo falta elegir tu nick para entrar.", "Seu nick": "Tu nick", "Seu nick (nome de jogador)": "Tu nick (nombre de jugador)", "Código de moderador": "Código de moderador", "Código de moderador (opcional)": "Código de moderador (opcional)", "(opcional)": "(opcional)", "Somente equipe": "Solo equipo", "Concluir": "Finalizar", "Email": "Correo", "Senha": "Contraseña", "ou continue com": "o continúa con", "Acesse seu perfil para registrar a próxima missão.": "Accede a tu perfil para registrar tu próxima partida.", "Crie seu perfil e comece sua trajetória no ranking.": "Crea tu perfil y empieza tu trayectoria en el ranking.", "Entrar no comando": "Iniciar sesión", "Criar conta": "Crear cuenta", "Já tenho acesso": "Ya tengo cuenta", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "Puedes jugar, registrar, competir, evolucionar y liderar en BRCS2", "JOGAR.": "JUGAR.", "REGISTRAR.": "REGISTRAR.", "COMPETIR.": "COMPETIR.", "EVOLUIR.": "EVOLUCIONAR.", "LIDERAR.": "LIDERAR.", "VOCÊ PODE": "PUEDES", "Carregando painel...": "Cargando panel...", "Reivindicar Jogador Antigo": "Reclamar jugador antiguo", "Jogador antigo": "Jugador antiguo", "Transferir histórico pra minha conta": "Transferir historial a mi cuenta", "Histórico antigo transferido com sucesso!": "¡Historial antiguo transferido con éxito!", "Digite um nick.": "Escribe un nick.", "E-mail inválido.": "Correo inválido.", "E-mail ou senha incorretos.": "Correo o contraseña incorrectos.", "Senha incorreta.": "Contraseña incorrecta.", "Não existe conta com esse e-mail.": "No existe una cuenta con este correo.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "Este correo ya tiene una cuenta. Intenta iniciar sesión.", "Use um nick entre 3 e 24 caracteres.": "Usa un nick de entre 3 y 24 caracteres.", "Use uma senha com pelo menos 12 caracteres.": "Usa una contraseña de al menos 12 caracteres.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Incluye mayúsculas, minúsculas y números en la contraseña.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Demasiados intentos seguidos — espera un poco e inténtalo de nuevo.", "Não foi possível concluir. Tente novamente.": "No se pudo completar. Inténtalo de nuevo.", "IA confirmou todas as estatísticas do print.": "La IA confirmó todas las estadísticas de la captura.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "La IA no pudo confirmar los datos de la captura — se requiere revisión manual.", "Sincronizado": "Sincronizado", "Sistema": "Sistema", "Objetivo": "Objetivo", "Registrar resultado": "Registrar resultado", "Subir no ranking": "Subir en el ranking", "Ver →": "Ver →", "Operação selecionada": "Modo seleccionado", "Salvando…": "Guardando…", "NA · América do Norte": "NA · Norteamérica", "CAM · América Central e Caribe": "CAM · Centroamérica y Caribe", "SA · América do Sul": "SA · Sudamérica", "EU · Europa": "EU · Europa", "CIS · Rússia e CEI": "CIS · Rusia y CEI", "ME · Oriente Médio": "ME · Oriente Medio", "AF · África": "AF · África", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceanía"}};
+  var DICT = {"en": {"MD10 · Calibração":"MD10 · Calibration","As 10 partidas juntas definem seu ELO inicial.":"The 10 matches together set your starting ELO.","Remover":"Remove","Ação":"Action","Ver histórico de":"View history of","Registrar": "Log match", "Meu Perfil": "My Profile", "Histórico": "History", "Ranking": "Ranking", "Eventos": "Events", "Moderação": "Moderation", "Sair": "Log out", "Perfil": "Profile", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Matches & Ranking", "Rede BRCS2 online": "BRCS2 network online", "Partidas, ranks e": "Matches, ranks and", "níveis.": "levels.", "Operadores": "Players", "Partidas": "Matches", "Eventos ativos": "Active events", "Em revisão": "Under review", "Modo": "Mode", "Staff autorizado": "Authorized staff", "Operador ativo": "Active player", "Todas as regiões": "All regions", "Região": "Region", "Região em que você joga": "Region you play in", "Selecionar região…": "Select region…", "Selecionar…": "Select…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Set your region to join the regional ranking and compete for Challenger.", "Escolha a região em que você joga.": "Choose the region you play in.", "Challenger": "Challenger", "Nível": "Level", "Elo": "Elo", "Jogador": "Player", "Vitória %%": "Win %%", "Jogadores Ranqueados": "Ranked Players", "Partidas Aprovadas": "Approved Matches", "Em Análise": "Under Review", "Líder Atual": "Current Leader", "Nenhum jogador com partidas aprovadas neste modo ainda.": "No players with approved matches in this mode yet.", "Os melhores de cada região · Nível 10 + Top 1000": "The best of each region · Level 10 + Top 1000", "Em calibragem — MD10": "Calibrating — MD10", "Taxa Vitória": "Win Rate", "Vitórias": "Wins", "Derrotas": "Losses", "Kills Totais": "Total Kills", "Pontos Totais": "Total Points", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Points", "Estrelas MVP": "MVP Stars", "Mapa": "Map", "Resultado": "Result", "Vitória": "Win", "Derrota": "Loss", "Empate": "Draw", "Modo de Jogo": "Game Mode", "Competitivo": "Competitive", "Casual": "Casual", "Mata-Mata": "Deathmatch", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Log Match", "Print do placar final": "Final scoreboard screenshot", "Enviar para Análise": "Submit for Review", "Partida enviada! Verificando em segundo plano...": "Match submitted! Verifying in the background...", "Anexe um print do placar final da partida.": "Attach a screenshot of the final scoreboard.", "Envie o print em PNG, JPEG ou WebP.": "Upload the screenshot as PNG, JPEG or WebP.", "O print deve ter no máximo 5 MB.": "The screenshot must be at most 5 MB.", "Selecione um jogador para ver o histórico.": "Select a player to see their history.", "Nenhuma partida registrada neste modo ainda.": "No matches logged in this mode yet.", "Data": "Date", "Status / Δ Elo": "Status / Δ Elo", "🤖 ajustado": "🤖 adjusted", "Aprovar": "Approve", "Rejeitar": "Reject", "Rejeitar esta partida?": "Reject this match?", "Baixar imagem": "Download image", "Nenhuma partida aguardando análise.": "No matches awaiting review.", "Acesso restrito à equipe do BRCS2.": "Access restricted to the BRCS2 staff.", "Eventos & Campeonatos": "Events & Championships", "Copas, torneios e disputas oficiais do BRCS2": "Official BRCS2 cups, tournaments and contests", "+ Novo campeonato": "+ New championship", "Novo Campeonato": "New Championship", "Criar campeonato": "Create championship", "Cancelar": "Cancel", "Nome do campeonato": "Championship name", "Sigla / abreviação": "Acronym / abbreviation", "Descrição": "Description", "Premiação": "Prize", "Data de início": "Start date", "Fases do campeonato": "Championship stages", "Times convocados (um por linha ou separados por vírgula)": "Invited teams (one per line or comma-separated)", "Qualificatórias": "Qualifiers", "16 avos": "Round of 32", "8 avos": "Round of 16", "Quartas de Final": "Quarterfinals", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podium 🏆", "Campeão:": "Champion:", "👑 Campeão:": "👑 Champion:", "Encerrar campeonato 🏆": "End championship 🏆", "Excluir": "Delete", "Campeonato encerrado!": "Championship finished!", "Campeonato excluído.": "Championship deleted.", "Fase avançada!": "Stage advanced!", "Excluir este campeonato? Não dá pra desfazer.": "Delete this championship? This can't be undone.", "Informe o nome do campeonato.": "Enter the championship name.", "Informe pelo menos 2 times.": "Enter at least 2 teams.", "Selecione ao menos uma fase.": "Select at least one stage.", "Sem descrição.": "No description.", "Sem fases configuradas.": "No stages configured.", "← Voltar": "← Back", "Time": "Team", "Times:": "Teams:", "Fases:": "Stages:", "Início:": "Start:", "Acesso autorizado": "Authorized access", "Seu squad.": "Your squad.", "Seu legado.": "Your legacy.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Log every match, track your progress and earn your place in the BRCS2 ranking.", "Complete seu perfil": "Complete your profile", "Falta só escolher seu nick pra entrar.": "Just pick your nickname to get in.", "Seu nick": "Your nickname", "Seu nick (nome de jogador)": "Your nickname (player name)", "Código de moderador": "Moderator code", "Código de moderador (opcional)": "Moderator code (optional)", "(opcional)": "(optional)", "Somente equipe": "Staff only", "Concluir": "Finish", "Email": "Email", "Senha": "Password", "ou continue com": "or continue with", "Acesse seu perfil para registrar a próxima missão.": "Access your profile to log your next match.", "Crie seu perfil e comece sua trajetória no ranking.": "Create your profile and start your ranking journey.", "Entrar no comando": "Sign in", "Criar conta": "Create account", "Já tenho acesso": "I already have an account", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "You can play, log, compete, evolve and lead on BRCS2", "JOGAR.": "PLAY.", "REGISTRAR.": "LOG.", "COMPETIR.": "COMPETE.", "EVOLUIR.": "EVOLVE.", "LIDERAR.": "LEAD.", "VOCÊ PODE": "YOU CAN", "Carregando painel...": "Loading dashboard...", "Reivindicar Jogador Antigo": "Claim Old Player", "Jogador antigo": "Old player", "Transferir histórico pra minha conta": "Transfer history to my account", "Histórico antigo transferido com sucesso!": "Old history transferred successfully!", "Digite um nick.": "Enter a nickname.", "E-mail inválido.": "Invalid email.", "E-mail ou senha incorretos.": "Wrong email or password.", "Senha incorreta.": "Wrong password.", "Não existe conta com esse e-mail.": "No account with this email.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "This email already has an account. Try signing in instead.", "Use um nick entre 3 e 24 caracteres.": "Use a nickname between 3 and 24 characters.", "Use uma senha com pelo menos 12 caracteres.": "Use a password with at least 12 characters.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Include uppercase, lowercase letters and numbers in the password.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Too many attempts — wait a bit and try again.", "Não foi possível concluir. Tente novamente.": "Could not complete. Please try again.", "IA confirmou todas as estatísticas do print.": "AI confirmed all stats in the screenshot.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "The AI couldn't confirm the screenshot data — manual review needed.", "Sincronizado": "Synced", "Sistema": "System", "Objetivo": "Goal", "Registrar resultado": "Log a result", "Subir no ranking": "Climb the ranking", "Ver →": "View →", "Operação selecionada": "Selected mode", "Salvando…": "Saving…", "NA · América do Norte": "NA · North America", "CAM · América Central e Caribe": "CAM · Central America & Caribbean", "SA · América do Sul": "SA · South America", "EU · Europa": "EU · Europe", "CIS · Rússia e CEI": "CIS · Russia & CIS", "ME · Oriente Médio": "ME · Middle East", "AF · África": "AF · Africa", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceania"}, "es": {"MD10 · Calibração":"MD10 · Calibración","As 10 partidas juntas definem seu ELO inicial.":"Las 10 partidas juntas definen tu ELO inicial.","Remover":"Eliminar","Ação":"Acción","Ver histórico de":"Ver historial de","Registrar": "Registrar", "Meu Perfil": "Mi perfil", "Histórico": "Historial", "Ranking": "Ranking", "Eventos": "Eventos", "Moderação": "Moderación", "Sair": "Salir", "Perfil": "Perfil", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Partidas y Ranking", "Rede BRCS2 online": "Red BRCS2 en línea", "Partidas, ranks e": "Partidas, rangos y", "níveis.": "niveles.", "Operadores": "Jugadores", "Partidas": "Partidas", "Eventos ativos": "Eventos activos", "Em revisão": "En revisión", "Modo": "Modo", "Staff autorizado": "Staff autorizado", "Operador ativo": "Jugador activo", "Todas as regiões": "Todas las regiones", "Região": "Región", "Região em que você joga": "Región en la que juegas", "Selecionar região…": "Seleccionar región…", "Selecionar…": "Seleccionar…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Define tu región para entrar al ranking regional y competir por Challenger.", "Escolha a região em que você joga.": "Elige la región en la que juegas.", "Challenger": "Challenger", "Nível": "Nivel", "Elo": "Elo", "Jogador": "Jugador", "Vitória %%": "Victoria %%", "Jogadores Ranqueados": "Jugadores clasificados", "Partidas Aprovadas": "Partidas aprobadas", "Em Análise": "En análisis", "Líder Atual": "Líder actual", "Nenhum jogador com partidas aprovadas neste modo ainda.": "Aún no hay jugadores con partidas aprobadas en este modo.", "Os melhores de cada região · Nível 10 + Top 1000": "Los mejores de cada región · Nivel 10 + Top 1000", "Em calibragem — MD10": "En calibración — MD10", "Taxa Vitória": "Tasa de victorias", "Vitórias": "Victorias", "Derrotas": "Derrotas", "Kills Totais": "Kills totales", "Pontos Totais": "Puntos totales", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Puntos", "Estrelas MVP": "Estrellas MVP", "Mapa": "Mapa", "Resultado": "Resultado", "Vitória": "Victoria", "Derrota": "Derrota", "Empate": "Empate", "Modo de Jogo": "Modo de juego", "Competitivo": "Competitivo", "Casual": "Casual", "Mata-Mata": "Duelo a muerte", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Registrar partida", "Print do placar final": "Captura del marcador final", "Enviar para Análise": "Enviar a revisión", "Partida enviada! Verificando em segundo plano...": "¡Partida enviada! Verificando en segundo plano...", "Anexe um print do placar final da partida.": "Adjunta una captura del marcador final.", "Envie o print em PNG, JPEG ou WebP.": "Sube la captura en PNG, JPEG o WebP.", "O print deve ter no máximo 5 MB.": "La captura debe pesar como máximo 5 MB.", "Selecione um jogador para ver o histórico.": "Selecciona un jugador para ver su historial.", "Nenhuma partida registrada neste modo ainda.": "Aún no hay partidas registradas en este modo.", "Data": "Fecha", "Status / Δ Elo": "Estado / Δ Elo", "🤖 ajustado": "🤖 ajustado", "Aprovar": "Aprobar", "Rejeitar": "Rechazar", "Rejeitar esta partida?": "¿Rechazar esta partida?", "Baixar imagem": "Descargar imagen", "Nenhuma partida aguardando análise.": "Ninguna partida en espera de revisión.", "Acesso restrito à equipe do BRCS2.": "Acceso restringido al equipo de BRCS2.", "Eventos & Campeonatos": "Eventos y campeonatos", "Copas, torneios e disputas oficiais do BRCS2": "Copas, torneos y competiciones oficiales de BRCS2", "+ Novo campeonato": "+ Nuevo campeonato", "Novo Campeonato": "Nuevo campeonato", "Criar campeonato": "Crear campeonato", "Cancelar": "Cancelar", "Nome do campeonato": "Nombre del campeonato", "Sigla / abreviação": "Sigla / abreviatura", "Descrição": "Descripción", "Premiação": "Premio", "Data de início": "Fecha de inicio", "Fases do campeonato": "Fases del campeonato", "Times convocados (um por linha ou separados por vírgula)": "Equipos convocados (uno por línea o separados por coma)", "Qualificatórias": "Clasificatorias", "16 avos": "Dieciseisavos", "8 avos": "Octavos", "Quartas de Final": "Cuartos de final", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podio 🏆", "Campeão:": "Campeón:", "👑 Campeão:": "👑 Campeón:", "Encerrar campeonato 🏆": "Finalizar campeonato 🏆", "Excluir": "Eliminar", "Campeonato encerrado!": "¡Campeonato finalizado!", "Campeonato excluído.": "Campeonato eliminado.", "Fase avançada!": "¡Fase avanzada!", "Excluir este campeonato? Não dá pra desfazer.": "¿Eliminar este campeonato? No se puede deshacer.", "Informe o nome do campeonato.": "Indica el nombre del campeonato.", "Informe pelo menos 2 times.": "Indica al menos 2 equipos.", "Selecione ao menos uma fase.": "Selecciona al menos una fase.", "Sem descrição.": "Sin descripción.", "Sem fases configuradas.": "Sin fases configuradas.", "← Voltar": "← Volver", "Time": "Equipo", "Times:": "Equipos:", "Fases:": "Fases:", "Início:": "Inicio:", "Acesso autorizado": "Acceso autorizado", "Seu squad.": "Tu equipo.", "Seu legado.": "Tu legado.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Registra cada partida, sigue tu evolución y conquista tu lugar en el ranking BRCS2.", "Complete seu perfil": "Completa tu perfil", "Falta só escolher seu nick pra entrar.": "Solo falta elegir tu nick para entrar.", "Seu nick": "Tu nick", "Seu nick (nome de jogador)": "Tu nick (nombre de jugador)", "Código de moderador": "Código de moderador", "Código de moderador (opcional)": "Código de moderador (opcional)", "(opcional)": "(opcional)", "Somente equipe": "Solo equipo", "Concluir": "Finalizar", "Email": "Correo", "Senha": "Contraseña", "ou continue com": "o continúa con", "Acesse seu perfil para registrar a próxima missão.": "Accede a tu perfil para registrar tu próxima partida.", "Crie seu perfil e comece sua trajetória no ranking.": "Crea tu perfil y empieza tu trayectoria en el ranking.", "Entrar no comando": "Iniciar sesión", "Criar conta": "Crear cuenta", "Já tenho acesso": "Ya tengo cuenta", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "Puedes jugar, registrar, competir, evolucionar y liderar en BRCS2", "JOGAR.": "JUGAR.", "REGISTRAR.": "REGISTRAR.", "COMPETIR.": "COMPETIR.", "EVOLUIR.": "EVOLUCIONAR.", "LIDERAR.": "LIDERAR.", "VOCÊ PODE": "PUEDES", "Carregando painel...": "Cargando panel...", "Reivindicar Jogador Antigo": "Reclamar jugador antiguo", "Jogador antigo": "Jugador antiguo", "Transferir histórico pra minha conta": "Transferir historial a mi cuenta", "Histórico antigo transferido com sucesso!": "¡Historial antiguo transferido con éxito!", "Digite um nick.": "Escribe un nick.", "E-mail inválido.": "Correo inválido.", "E-mail ou senha incorretos.": "Correo o contraseña incorrectos.", "Senha incorreta.": "Contraseña incorrecta.", "Não existe conta com esse e-mail.": "No existe una cuenta con este correo.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "Este correo ya tiene una cuenta. Intenta iniciar sesión.", "Use um nick entre 3 e 24 caracteres.": "Usa un nick de entre 3 y 24 caracteres.", "Use uma senha com pelo menos 12 caracteres.": "Usa una contraseña de al menos 12 caracteres.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Incluye mayúsculas, minúsculas y números en la contraseña.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Demasiados intentos seguidos — espera un poco e inténtalo de nuevo.", "Não foi possível concluir. Tente novamente.": "No se pudo completar. Inténtalo de nuevo.", "IA confirmou todas as estatísticas do print.": "La IA confirmó todas las estadísticas de la captura.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "La IA no pudo confirmar los datos de la captura — se requiere revisión manual.", "Sincronizado": "Sincronizado", "Sistema": "Sistema", "Objetivo": "Objetivo", "Registrar resultado": "Registrar resultado", "Subir no ranking": "Subir en el ranking", "Ver →": "Ver →", "Operação selecionada": "Modo seleccionado", "Salvando…": "Guardando…", "NA · América do Norte": "NA · Norteamérica", "CAM · América Central e Caribe": "CAM · Centroamérica y Caribe", "SA · América do Sul": "SA · Sudamérica", "EU · Europa": "EU · Europa", "CIS · Rússia e CEI": "CIS · Rusia y CEI", "ME · Oriente Médio": "ME · Oriente Medio", "AF · África": "AF · África", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceanía"}};
   var PATTERNS = {
-    en: [[/^Nível (\d+)$/,'Level $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Level $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 of 10 approved matches'],[/^Calibrando \((\d+)\/10\)$/,'Calibrating ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% to '+t(b);}],[/^Região atualizada: (.+)$/,'Region updated: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 active']],
-    es: [[/^Nível (\d+)$/,'Nivel $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Nivel $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 de 10 partidas aprobadas'],[/^Calibrando \((\d+)\/10\)$/,'Calibrando ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% hasta '+t(b);}],[/^Região atualizada: (.+)$/,'Región actualizada: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 activos']]
+    en: [[/^(\d+) partidas? para revelar seu nível$/,function(m,n){return n+(n==='1'?' match':' matches')+' to reveal your level';}],[/^Nível (\d+)$/,'Level $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Level $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 of 10 approved matches'],[/^Calibrando \((\d+)\/10\)$/,'Calibrating ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% to '+t(b);}],[/^Região atualizada: (.+)$/,'Region updated: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 active']],
+    es: [[/^(\d+) partidas? para revelar seu nível$/,function(m,n){return n+(n==='1'?' partida':' partidas')+' para revelar tu nivel';}],[/^Nível (\d+)$/,'Nivel $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Nivel $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 de 10 partidas aprobadas'],[/^Calibrando \((\d+)\/10\)$/,'Calibrando ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% hasta '+t(b);}],[/^Região atualizada: (.+)$/,'Región actualizada: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 activos']]
   };
   var LANGS = {pt:'Português', en:'English', es:'Español'};
   var lang = 'pt';
@@ -3098,7 +3145,7 @@ init();
   box.className = 'lang-switch'; box.setAttribute('role','group'); box.setAttribute('aria-label','Idioma');
   box.innerHTML = Object.keys(LANGS).map(function(k){ return '<button type="button" data-lang="'+k+'" title="'+LANGS[k]+'">'+k.toUpperCase()+'</button>'; }).join('');
   box.addEventListener('click', function(e){
-    var b = e.target.closest('button'); if(!b) return;
+    var b = e.target.closest('button'); if(!b || !b.dataset.lang) return;
     lang = b.dataset.lang;
     try{ localStorage.setItem('brcsgo:lang', lang); }catch(err){}
     apply();
@@ -3109,100 +3156,143 @@ init();
 </script>
 
 <script>
+// ====== SFX — efeitos sonoros mecânicos e graves do site inteiro ======
+(function(){
+  var on = true, ctx = null, master = null, wetS = null, wetL = null, noiseBuf = null, drone = null, lastUi = 0, lastHover = 0;
+  try{ on = localStorage.getItem('brcsgo:cs10sound') !== '0'; }catch(e){}
+  function ac(){
+    if(!ctx){ try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+    if(ctx.state === 'suspended') ctx.resume();
+    if(!master){
+      var c = ctx;
+      var comp = c.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 10; comp.ratio.value = 6; comp.attack.value = 0.003; comp.release.value = 0.2;
+      var shelf = c.createBiquadFilter(); shelf.type = 'lowshelf'; shelf.frequency.value = 130; shelf.gain.value = 9;      // graves pesados
+      var ws = c.createWaveShaper(), cv = new Float32Array(1024); for(var i=0;i<1024;i++){ var x = i/512-1; cv[i] = Math.tanh(1.6*x); } ws.curve = cv; // saturação leve = peso "analógico"
+      master = c.createGain(); master.gain.value = 0.85;
+      master.connect(ws); ws.connect(shelf); shelf.connect(comp); comp.connect(c.destination);
+      var mk = function(sec,pow){ var len = Math.floor(c.sampleRate*sec), ir = c.createBuffer(2,len,c.sampleRate); for(var ch=0;ch<2;ch++){ var d = ir.getChannelData(ch); for(var j=0;j<len;j++) d[j] = (Math.random()*2-1)*Math.pow(1-j/len,pow); } var k = c.createConvolver(); k.buffer = ir; return k; };
+      var cs = mk(0.7,3.2), cl = mk(2.8,2.4);                                   // sala de metal curta + hall longo
+      wetS = c.createGain(); wetS.gain.value = 0.22; wetS.connect(cs); cs.connect(master);
+      wetL = c.createGain(); wetL.gain.value = 0.4; wetL.connect(cl); cl.connect(master);
+      var nb = c.createBuffer(1,c.sampleRate*2,c.sampleRate), nd = nb.getChannelData(0); for(var k2=0;k2<nd.length;k2++) nd[k2] = Math.random()*2-1; noiseBuf = nb;
+    }
+    return ctx;
+  }
+  function ok(){ return on && ac(); }
+  function T(w){ return ctx.currentTime + (w||0); }
+  function out(g,sS,sL){ g.connect(master); if(sS){ var a = ctx.createGain(); a.gain.value = sS; g.connect(a); a.connect(wetS); } if(sL){ var b = ctx.createGain(); b.gain.value = sL; g.connect(b); b.connect(wetL); } }
+  function env(g,t,a,d,pk){ g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+a+d); }
+  // pancada grave com queda de tom (corpo de impacto)
+  function body(f0,f1,d,pk,w,sL){ if(!ok()) return; var t = T(w), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+d*0.7); env(g,t,0.003,d,pk); o.connect(g); out(g,0.08,sL||0); o.start(t); o.stop(t+d+0.1); }
+  // estalo de ruído filtrado (click de tecla, trinco, impacto)
+  function hit(type,f,q,d,pk,w,sL){ if(!ok()) return; var t = T(w), n = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = noiseBuf; fl.type = type; fl.frequency.value = f; fl.Q.value = q||1; env(g,t,0.002,d,pk); n.connect(fl); fl.connect(g); out(g,0.2,sL||0); n.start(t); n.stop(t+d+0.1); }
+  // batida metálica: parciais inarmônicos com decaimento rápido (chapa/engrenagem)
+  function ring(f,d,pk,w,sL,parts){ if(!ok()) return; parts = parts||[1,2.76,5.4,8.93]; var t = T(w);
+    parts.forEach(function(r,i){ var o = ctx.createOscillator(), g = ctx.createGain(), dd = d/(1+i*0.8); o.type = 'sine'; o.frequency.value = f*r; env(g,t,0.002,dd,pk/(1+i*0.7)); o.connect(g); out(g,0.15,sL||0.3); o.start(t); o.stop(t+dd+0.1); }); }
+  // whoosh de ar (ruído com varredura de frequência)
+  function whoosh(f0,f1,d,pk,w,q){ if(!ok()) return; var t = T(w), n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = noiseBuf; n.loop = true; bp.type = 'bandpass'; bp.Q.value = q||0.9; bp.frequency.setValueAtTime(f0,t); bp.frequency.exponentialRampToValueAtTime(f1,t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk,t+d*0.45); g.gain.exponentialRampToValueAtTime(0.0001,t+d); n.connect(bp); bp.connect(g); out(g,0.1,0.3); n.start(t); n.stop(t+d+0.05); }
+  // motor/servo: serra filtrada com tremolo mecânico (acelera ao subir)
+  function servo(f0,f1,d,pk,w,l0,l1,r0,r1,rise){ if(!ok()) return null; var t = T(w), o = ctx.createOscillator(), fl = ctx.createBiquadFilter(), am = ctx.createGain(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+d);
+    fl.type = 'lowpass'; fl.Q.value = 2; fl.frequency.setValueAtTime(l0,t); fl.frequency.exponentialRampToValueAtTime(l1,t+d);
+    lfo.frequency.setValueAtTime(r0,t); lfo.frequency.linearRampToValueAtTime(r1,t+d); lg.gain.value = 0.5; am.gain.value = 0.5; lfo.connect(lg); lg.connect(am.gain);
+    g.gain.setValueAtTime(0.0001,t); if(rise){ g.gain.exponentialRampToValueAtTime(pk,t+d); } else { g.gain.exponentialRampToValueAtTime(pk,t+d*0.35); g.gain.exponentialRampToValueAtTime(0.0001,t+d); }
+    o.connect(fl); fl.connect(am); am.connect(g); out(g,0.05,0.25); o.start(t); lfo.start(t); o.stop(t+d+0.2); lfo.stop(t+d+0.2); return {g:g}; }
+  function rumble(d,pk,w,lp,rise){ if(!ok()) return null; var t = T(w), n = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = noiseBuf; n.loop = true; fl.type = 'lowpass'; fl.frequency.value = lp||90; g.gain.setValueAtTime(0.0001,t);
+    if(rise){ g.gain.exponentialRampToValueAtTime(pk,t+d); } else { g.gain.exponentialRampToValueAtTime(pk,t+d*0.15); g.gain.exponentialRampToValueAtTime(0.0001,t+d); }
+    n.connect(fl); fl.connect(g); out(g,0,0.3); n.start(t); n.stop(t+d+0.2); return {g:g}; }
+  function startDrone(){ if(drone || !ok()) return; drone = [servo(38,84,9,0.22,0,150,560,9,18,true), rumble(9,0.4,0,170,true)]; }
+  function stopDrone(f){ if(!drone || !ctx) return; var t = ctx.currentTime, d = drone; drone = null; f = f||0.5;
+    d.forEach(function(x){ if(!x) return; x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(Math.max(x.g.gain.value,0.0001),t); x.g.gain.exponentialRampToValueAtTime(0.0001,t+f); }); }
+
+  var A = {
+    click:function(){ hit('bandpass',2800,2.5,0.022,0.2,0); body(170,75,0.09,0.32,0); },
+    nav:function(){ body(145,58,0.12,0.42,0); hit('bandpass',1900,2,0.03,0.22,0); hit('bandpass',3600,3,0.018,0.14,0.05); whoosh(160,900,0.22,0.05,0.02,0.8); },
+    confirm:function(){ body(118,44,0.2,0.6,0); hit('bandpass',2200,2,0.035,0.28,0); ring(300,0.3,0.1,0.01,0.25,[1,2.76,5.4]); hit('bandpass',3800,3,0.02,0.18,0.07); body(160,70,0.08,0.25,0.07); },
+    ok:function(){ A.confirm(); ring(210,0.5,0.1,0.05,0.4,[1,2.76,5.4]); },
+    back:function(){ body(100,48,0.14,0.38,0); hit('bandpass',1500,2,0.03,0.2,0); },
+    hover:function(){ hit('bandpass',4200,4,0.012,0.05,0); },
+    tick:function(){ hit('bandpass',3000,3,0.016,0.16,0); hit('bandpass',2400,3,0.016,0.14,0.04); body(190,100,0.05,0.18,0); },
+    open:function(){ whoosh(140,1100,0.32,0.18,0,0.9); body(92,40,0.28,0.55,0.05); ring(230,0.35,0.07,0.06,0.3); },
+    close:function(){ whoosh(1000,120,0.28,0.14,0); body(110,50,0.16,0.35,0.18); },
+    notify:function(){ ring(440,0.38,0.12,0,0.35,[1,2.76,5.4]); body(115,50,0.16,0.4,0); hit('bandpass',2600,2,0.02,0.15,0); },
+    error:function(){ body(72,30,0.4,0.75,0); hit('lowpass',520,1,0.22,0.5,0); body(68,30,0.34,0.6,0.13); servo(90,45,0.3,0.1,0.02,300,120,24,12); },
+    warn:function(){ body(82,36,0.3,0.65,0); hit('lowpass',600,1,0.14,0.4,0); ring(150,0.3,0.06,0,0.2,[1,2.4]); },
+    levelup:function(){ body(112,40,0.34,0.85,0); hit('bandpass',2100,2,0.04,0.3,0); ring(262,0.8,0.18,0,0.5); body(150,60,0.12,0.4,0.11); hit('bandpass',3400,3,0.025,0.25,0.11); ring(392,0.6,0.14,0.11,0.5); whoosh(120,1400,0.4,0.12,0.02,0.8); rumble(0.7,0.22,0,110); },
+    intro:function(){ whoosh(90,1500,1.1,0.3,0,0.7); body(80,30,1.3,0.55,0.05,0.3); startDrone(); },
+    step:function(i){ i = i||0; body(185-i*6,44,0.32,0.7,0); hit('bandpass',1800+i*120,2,0.04,0.28,0); ring(170+i*30,0.5,0.12+i*0.008,0.01,0.35,[1,2.76,5.4]); body(140,62,0.1,0.3,0.06); hit('bandpass',3200,3,0.02,0.18,0.06); if(i>=2) whoosh(200,1200+i*200,0.3,0.1+i*0.01,0,0.9); },
+    riser:function(){ servo(60,260,0.95,0.18,0,200,1500,12,40,true); whoosh(150,5500,0.95,0.3,0,0.7); },
+    slam:function(){ stopDrone(1.0); body(125,22,2.6,1.0,0,0.4); hit('lowpass',700,1,1.6,0.8,0,0.6); ring(98,2.8,0.3,0,0.8,[1,2.76,5.4,8.93,11.3]); ring(196,2.2,0.2,0.01,0.8); ring(55,3,0.25,0,0.9,[1,2.1,3.7]); hit('highpass',3000,1,0.18,0.3,0); whoosh(6000,160,1.0,0.28,0.02,0.7); rumble(2.4,0.5,0,100); },
+    reveal:function(){ ring(330,1.4,0.13,0,0.8,[1,2.76,5.4]); body(100,50,0.2,0.4,0); hit('bandpass',2600,2,0.03,0.2,0); },
+    out:function(){ whoosh(1800,120,0.6,0.16,0); body(105,50,0.15,0.3,0.25); }
+  };
+  window.SFX = {
+    enabled:function(){ return on; },
+    toggle:function(){ on = !on; try{ localStorage.setItem('brcsgo:cs10sound', on?'1':'0'); }catch(e){} sync(); if(on) A.confirm(); return on; },
+    play:function(n,a){ if(on && A[n]){ try{ A[n](a); }catch(e){} } },
+    stopDrone:stopDrone
+  };
+
+  // ---- botão de som ----
+  var tgl = document.createElement('button'); tgl.type = 'button'; tgl.className = 'sfx'; tgl.setAttribute('aria-label','Som'); tgl.title = 'Som / Sound';
+  function sync(){ tgl.textContent = on ? '🔊' : '🔇'; var b = document.querySelector('.cs10-snd'); if(b) b.textContent = on ? '🔊' : '🔇'; }
+  tgl.addEventListener('click', function(e){ e.stopPropagation(); window.SFX.toggle(); });
+  (document.querySelector('.lang-switch') || document.body).appendChild(tgl); sync();
+
+  // ---- sons de interface (delegados) ----
+  var DANGER = /rejeit|exclu|remov|reject|delete|remove|eliminar|sair|log out|salir/i;
+  function ui(n){ var now = Date.now(); if(now - lastUi < 25) return; lastUi = now; window.SFX.play(n); }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('button,.tab-btn,.dock-btn,.mode-chip,.event-card,[data-tab],[data-region],a');
+    if(!b || b.closest('.cs10,.lvlup') || b.classList.contains('sfx')) return;
+    if(b.matches('.ok,[data-approve]')) return ui('ok');
+    if(b.matches('.danger,[data-reject],[data-remove-match]') || (b.tagName === 'BUTTON' && DANGER.test(b.textContent||''))) return ui('warn');
+    if(b.matches('.tab-btn,.dock-btn,.mode-chip,[data-tab],[data-region]')) return ui('nav');
+    if(b.matches('.primary,[type=submit]')) return ui('confirm');
+    if(/voltar|back|cancel|fechar|close|×/i.test(b.textContent||'')) return ui('back');
+    ui('click');
+  }, true);
+  document.addEventListener('change', function(e){ var t = e.target; if(t && /^(SELECT|INPUT)$/.test(t.tagName) && t.type !== 'text' && t.type !== 'password' && t.type !== 'email') ui('tick'); }, true);
+  document.addEventListener('mouseover', function(e){
+    var b = e.target.closest && e.target.closest('.tab-btn,.dock-btn,.mode-chip,.event-card,button.primary'); if(!b || (e.relatedTarget && b.contains(e.relatedTarget))) return;
+    var now = Date.now(); if(now - lastHover < 90) return; lastHover = now; window.SFX.play('hover');
+  }, true);
+  new MutationObserver(function(ms){
+    ms.forEach(function(m){
+      m.addedNodes.forEach(function(n){
+        if(n.nodeType !== 1 || (n.closest && n.closest('.cs10,.lvlup,.lang-switch'))) return;
+        if(n.id === 'toast'){ window.SFX.play(/erro|não foi|inválid|incorret|falh|muitas|escolha|digite|use |informe|anexe|envie|selecione|error|invalid|wrong|failed/i.test(n.textContent) ? 'error' : 'notify'); }
+        else if(n.classList.contains('modal-overlay') || n.querySelector('.modal-overlay')) window.SFX.play('open');
+        else if(n.matches('.helper-note[style*="--red"]') || n.querySelector('.helper-note[style*="--red"]')) window.SFX.play('error');
+      });
+      m.removedNodes.forEach(function(n){ if(n.nodeType === 1 && n.classList && n.classList.contains('modal-overlay')) window.SFX.play('close'); });
+    });
+  }).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<script>
 // ====== Cutscene cinematográfica — chegada ao Nível 10 ======
 (function(){
-  var active = false, soundOn = true, actx = null;
-  try{ soundOn = localStorage.getItem('brcsgo:cs10sound') !== '0'; }catch(e){}
+  var active = false;
   var TXT = {
     pt:{up:'Subiu de nível!', reach:'Nível alcançado', lv:'NÍVEL', done:'Nível 10 alcançado', elo:'ELO', go:'Continuar', skip:'Pular ›', ch:'Challenger — Top 1000 da região', sub:'Você está entre a elite do BRCS2'},
     en:{up:'Level up!', reach:'Level reached', lv:'LEVEL', done:'Level 10 reached', elo:'ELO', go:'Continue', skip:'Skip ›', ch:'Challenger — Top 1000 of the region', sub:'You are among the BRCS2 elite'},
     es:{up:'¡Subiste de nivel!', reach:'Nivel alcanzado', lv:'NIVEL', done:'Nivel 10 alcanzado', elo:'ELO', go:'Continuar', skip:'Saltar ›', ch:'Challenger — Top 1000 de la región', sub:'Estás en la élite de BRCS2'}
   };
   function L(){ var k=(document.documentElement.lang||'pt').slice(0,2); return TXT[k]||TXT.pt; }
-  var master = null, wet = null, noiseBuf = null, drone = null;
-  function ac(){
-    if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
-    if(actx.state === 'suspended') actx.resume();
-    if(!master){
-      var c = actx;
-      var comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.25;
-      var shelf = c.createBiquadFilter(); shelf.type = 'lowshelf'; shelf.frequency.value = 140; shelf.gain.value = 7;   // reforça os graves
-      master = c.createGain(); master.gain.value = 0.9;
-      master.connect(shelf); shelf.connect(comp); comp.connect(c.destination);
-      var len = Math.floor(c.sampleRate*2.6), ir = c.createBuffer(2,len,c.sampleRate);           // reverb de sala grande
-      for(var ch=0; ch<2; ch++){ var d = ir.getChannelData(ch); for(var i=0;i<len;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/len,2.6); }
-      var conv = c.createConvolver(); conv.buffer = ir; wet = c.createGain(); wet.gain.value = 0.32; wet.connect(conv); conv.connect(master);
-      var nb = c.createBuffer(1,c.sampleRate*2,c.sampleRate), nd = nb.getChannelData(0); for(var k=0;k<nd.length;k++) nd[k] = Math.random()*2-1; noiseBuf = nb;
-    }
-    return actx;
-  }
-  function out(node, send){ node.connect(master); if(send){ var x = actx.createGain(); x.gain.value = send; node.connect(x); x.connect(wet); } }
-  function env(g,t,a,d,peak){ g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+a+d); }
-  function thump(f0,f1,d,peak,when){                 // grave com queda de tom (kick / sub-boom)
-    if(!soundOn || !ac()) return;
-    var t = actx.currentTime+(when||0), o = actx.createOscillator(), g = actx.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+d*0.7);
-    env(g,t,0.004,d,peak); o.connect(g); out(g,0.15); o.start(t); o.stop(t+d+0.1);
-  }
-  function pop(f0,peak,when){                        // "pop" bolhoso
-    if(!soundOn || !ac()) return;
-    var t = actx.currentTime+(when||0), o = actx.createOscillator(), g = actx.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f0*0.28,t+0.09);
-    env(g,t,0.003,0.11,peak||0.4); o.connect(g); out(g,0.2); o.start(t); o.stop(t+0.2);
-  }
-  function note(f,d,type,peak,when,lp,send){         // nota grave com filtro
-    if(!soundOn || !ac()) return;
-    var t = actx.currentTime+(when||0), o = actx.createOscillator(), g = actx.createGain(), node = g;
-    o.type = type||'sine'; o.frequency.setValueAtTime(f,t); env(g,t,0.03,d,peak||0.1);
-    if(lp){ var fl = actx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = lp; o.connect(fl); fl.connect(g); } else { o.connect(g); }
-    out(node,send||0.25); o.start(t); o.stop(t+d+0.2);
-  }
-  function swoosh(f0,f1,d,peak,when,q,type){         // whoosh: ruído filtrado varrendo a frequência
-    if(!soundOn || !ac()) return;
-    var t = actx.currentTime+(when||0), src = actx.createBufferSource(), bp = actx.createBiquadFilter(), g = actx.createGain();
-    src.buffer = noiseBuf; src.loop = true; bp.type = type||'bandpass'; bp.Q.value = q||1.2;
-    bp.frequency.setValueAtTime(f0,t); bp.frequency.exponentialRampToValueAtTime(f1,t+d);
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+d*0.45); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
-    src.connect(bp); bp.connect(g); out(g,0.35); src.start(t); src.stop(t+d+0.05);
-  }
-  function burst(type,freq,d,peak,when){             // estalo de ruído (click / impacto)
-    if(!soundOn || !ac()) return;
-    var t = actx.currentTime+(when||0), src = actx.createBufferSource(), fl = actx.createBiquadFilter(), g = actx.createGain();
-    src.buffer = noiseBuf; fl.type = type; fl.frequency.value = freq; env(g,t,0.002,d,peak);
-    src.connect(fl); fl.connect(g); out(g,0.3); src.start(t); src.stop(t+d+0.1);
-  }
-  function startDrone(){                             // zumbido grave que sobe durante a subida
-    if(!soundOn || !ac() || drone) return;
-    var t = actx.currentTime, g = actx.createGain(), fl = actx.createBiquadFilter(), oscs = [];
-    fl.type = 'lowpass'; fl.Q.value = 4; fl.frequency.setValueAtTime(90,t); fl.frequency.exponentialRampToValueAtTime(900,t+9);
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.2,t+2.5);
-    [41,41.7,82.2].forEach(function(f,i){ var o = actx.createOscillator(); o.type = i===2?'triangle':'sawtooth'; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*2.1,t+9); o.connect(fl); o.start(t); oscs.push(o); });
-    fl.connect(g); out(g,0.2); drone = {g:g, oscs:oscs};
-  }
-  function stopDrone(fade){
-    if(!drone || !actx) return; var t = actx.currentTime, d = drone; drone = null;
-    d.g.gain.cancelScheduledValues(t); d.g.gain.setValueAtTime(Math.max(d.g.gain.value,0.0001),t); d.g.gain.exponentialRampToValueAtTime(0.0001,t+(fade||0.5));
-    d.oscs.forEach(function(o){ try{ o.stop(t+(fade||0.5)+0.1); }catch(e){} });
-  }
-  function sfxIntro(){ swoosh(120,2400,1.1,0.38,0,0.9); thump(95,34,1.3,0.55,0.05); startDrone(); }
-  function sfxStep(i){
-    thump(190,46,0.34,0.6,0);                                   // batida grave
-    pop(520+i*40,0.32,0.02);                                    // pop
-    burst('bandpass',2400,0.05,0.22,0);                         // click
-    note(110*Math.pow(2,i/7),0.55,'triangle',0.17,0.03,520,0.4); // nota grave que sobe de nível em nível
-    if(i>=2) swoosh(260,1600+i*260,0.3,0.15+i*0.012,0,1.4);     // whoosh curto
-  }
-  function sfxRiser(){ swoosh(220,8000,0.95,0.45,0,0.8); note(70,1.0,'sawtooth',0.07,0,300,0.3); }
-  function sfxSlam(){
-    stopDrone(1.2);
-    thump(135,24,2.4,1.0,0);                                    // sub-boom profundo
-    burst('lowpass',900,1.5,0.75,0);                            // estrondo do impacto
-    burst('highpass',3500,0.18,0.3,0);                          // estalo metálico
-    swoosh(7000,180,1.0,0.32,0.02,0.7);                         // whoosh descendente
-    [55,82.4,110,164.8].forEach(function(f,i){ note(f,3.2,'sawtooth',0.085,0.04+i*0.03,420,0.7); });  // acorde grave
-  }
-  function sfxReveal(){ pop(560,0.34,0); note(880,1.6,'sine',0.05,0.05,null,0.9); note(1320,1.4,'sine',0.03,0.12,null,0.9); }
-  function sfxOut(){ swoosh(2000,140,0.65,0.22,0,1.0); }
+  var S = window.SFX;
+  function stopDrone(f){ S.stopDrone(f); }
+  function sfxIntro(){ S.play('intro'); }
+  function sfxStep(i){ S.play('step', i); }
+  function sfxRiser(){ S.play('riser'); }
+  function sfxSlam(){ S.play('slam'); }
+  function sfxReveal(){ S.play('reveal'); }
+  function sfxOut(){ S.play('out'); }
 
   function play(info){
     if(active) return; active = true;
@@ -3213,7 +3303,7 @@ init();
     var nodes = LEVELS.map(function(lv,i){ return '<div class="cs10-node" data-i="'+i+'">'+tierIconSVG(lv,44)+'</div>'; }).join('');
     el.innerHTML =
       '<div class="cs10-bar top"></div><div class="cs10-bar bot"></div><div class="cs10-ring"></div>'+
-      '<button class="cs10-snd" type="button" aria-label="Som">'+(soundOn?'🔊':'🔇')+'</button>'+
+      '<button class="cs10-snd" type="button" aria-label="Som">'+(window.SFX.enabled()?'🔊':'🔇')+'</button>'+
       '<button class="cs10-skip" type="button">'+T.skip+'</button>'+
       '<div class="cs10-stage">'+
         '<div class="cs10-kicker">'+(info.mode||'')+(info.name?' · '+info.name:'')+'</div>'+
@@ -3246,10 +3336,9 @@ init();
     function onKey(e){ if(e.key==='Escape'||(e.key==='Enter'&&el.classList.contains('done'))) close(); }
     document.addEventListener('keydown', onKey);
     el.querySelector('.cs10-skip').onclick = close;
-    el.querySelector('.cs10-go').onclick = function(){ pop(420,0.3,0); close(); };
+    el.querySelector('.cs10-go').onclick = function(){ S.play('confirm'); close(); };
     el.querySelector('.cs10-snd').onclick = function(e){
-      soundOn = !soundOn; e.currentTarget.textContent = soundOn?'🔊':'🔇';
-      try{ localStorage.setItem('brcsgo:cs10sound', soundOn?'1':'0'); }catch(err){}
+      e.currentTarget.textContent = window.SFX.toggle() ? '🔊' : '🔇';
     };
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('on'); }); });
     var t = reduce ? 500 : 1500;
@@ -3263,7 +3352,7 @@ init();
   }
   // ---- popup verde de subida de nível ----
   var upTimer = null, upEl = null;
-  function sfxLevelUp(){ pop(640,0.38,0); pop(960,0.26,0.09); thump(150,50,0.28,0.45,0); note(196,0.45,'triangle',0.09,0.04,600,0.4); }
+  function sfxLevelUp(){ S.play('levelup'); }
   function levelUpPopup(info){
     info = info || {}; var T = L(), lv = LEVELS[Math.max(0,Math.min(9,(info.level||1)-1))];
     if(upEl){ upEl.remove(); clearTimeout(upTimer); }
