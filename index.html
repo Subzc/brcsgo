@@ -1109,15 +1109,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .cs10-skip{right:16px}.cs10-snd{left:16px}
 .cs10-skip:hover,.cs10-snd:hover{color:#fff;border-color:#fff}
 .cs10-flash{position:absolute;inset:0;z-index:5;background:#fff;opacity:0;pointer-events:none}
-.cs10.slam .cs10-flash{animation:cs10flash 1s ease-out}
-@keyframes cs10flash{0%{opacity:.95;background:#fff}30%{opacity:.6;background:#FE1F00}100%{opacity:0}}
+.cs10.slam .cs10-flash{animation:cs10flash 1.1s ease-out}
+@keyframes cs10flash{0%{opacity:1;background:#fff}7%{opacity:0}13%{opacity:1;background:#fff}30%{opacity:.8;background:#FF2A2A}100%{opacity:0}}
 .cs10.slam .cs10-stage{animation:cs10shake .5s linear}
 @keyframes cs10shake{0%,100%{transform:translate(0)}15%{transform:translate(-9px,5px)}30%{transform:translate(8px,-6px)}45%{transform:translate(-6px,-4px)}60%{transform:translate(5px,5px)}80%{transform:translate(-3px,2px)}}
-.cs10-ring{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px 0 0 -100px;border:2px solid var(--c);border-radius:50%;opacity:0;z-index:1;pointer-events:none}
-.cs10.slam .cs10-ring{animation:cs10ring 1.4s ease-out}
-@keyframes cs10ring{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(9)}}
 @media (max-width:640px){.cs10-node{width:26px;height:26px}.cs10-node svg{width:26px;height:26px}.cs10-rail{top:12px;left:30px;right:30px}.cs10-iconwrap{width:130px;height:130px}.cs10-iconwrap svg{width:130px;height:130px}}
-@media (prefers-reduced-motion:reduce){.cs10.slam .cs10-stage,.cs10.slam .cs10-flash,.cs10.slam .cs10-ring,.cs10-icon.pop{animation:none}}
+@media (prefers-reduced-motion:reduce){.cs10.slam .cs10-stage,.cs10.slam .cs10-flash,.cs10.slam .cs10-icon,.cs10.slam .cs10-title,.cs10-icon.pop{animation:none}}
 
 /* ===== Popup de subida de nível (verde) ===== */
 .lvlup{position:fixed;top:18px;left:50%;transform:translate(-50%,-160%);z-index:900;display:flex;align-items:center;gap:12px;padding:10px 20px 12px 12px;border:1px solid #1CE400;border-radius:10px;background:rgba(7,20,9,.97);box-shadow:0 0 0 1px rgba(28,228,0,.22),0 12px 44px -8px rgba(28,228,0,.6);color:#fff;font-family:'Rajdhani',sans-serif;opacity:0;overflow:hidden;pointer-events:none;transition:transform .55s cubic-bezier(.2,1.3,.4,1),opacity .35s}
@@ -1172,6 +1169,26 @@ tbody tr:hover td{background:rgba(229,38,43,.07)}
 .side .tab-btn:hover{padding-left:16px}
 .lang-switch button.sfx{min-width:30px;border-left:1px solid var(--line);border-radius:0 5px 5px 0;margin-left:2px}
 @media (prefers-reduced-motion:reduce){.panel,.md10-slot,.md10-ring .arc{animation:none}}
+
+/* ===== Impacto do Nível 10: flash + raios de luz + ícone esmagando a tela ===== */
+.cs10-fx{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
+.cs10-streak,.cs10-beam{position:absolute;left:50%;top:50%;z-index:3;opacity:0;pointer-events:none}
+.cs10-streak{width:160vw;height:4px;margin:-2px 0 0 -80vw;background:linear-gradient(90deg,transparent,#fff 30%,#fff 70%,transparent);box-shadow:0 0 28px 8px rgba(255,70,70,.95),0 0 110px 26px rgba(255,30,30,.55);transform:scaleX(0)}
+.cs10-beam{width:4px;height:160vh;margin:-80vh 0 0 -2px;background:linear-gradient(180deg,transparent,#fff 30%,#fff 70%,transparent);box-shadow:0 0 28px 8px rgba(255,70,70,.95),0 0 110px 26px rgba(255,30,30,.55);transform:scaleY(0)}
+.cs10.slam .cs10-streak{animation:cs10streak 1.4s cubic-bezier(.1,.9,.2,1) forwards}
+.cs10.slam .cs10-beam{animation:cs10beam 1.2s cubic-bezier(.1,.9,.2,1) .05s forwards}
+@keyframes cs10streak{0%{opacity:1;transform:scaleX(0)}18%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1.15) scaleY(.1)}}
+@keyframes cs10beam{0%{opacity:1;transform:scaleY(0)}18%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1.15) scaleX(.1)}}
+.cs10.slam .cs10-icon{animation:cs10slam 1.1s cubic-bezier(.1,.9,.2,1) both}
+@keyframes cs10slam{0%{opacity:0;transform:scale(3.4);filter:blur(16px) drop-shadow(-12px 0 0 rgba(255,0,0,.9)) drop-shadow(12px 0 0 rgba(255,255,255,.8))}22%{opacity:1;transform:scale(.9);filter:blur(0) drop-shadow(-9px 0 0 rgba(255,0,0,.9)) drop-shadow(9px 0 0 rgba(255,255,255,.8))}40%{transform:scale(1.1);filter:drop-shadow(-4px 0 0 rgba(255,0,0,.8)) drop-shadow(4px 0 0 rgba(255,255,255,.7))}100%{opacity:1;transform:scale(1);filter:drop-shadow(0 0 28px var(--c))}}
+.cs10.slam .cs10-title{animation:cs10gl .5s steps(2) 2}
+@keyframes cs10gl{0%{transform:translateX(0);filter:drop-shadow(4px 0 0 #f00)}50%{transform:translateX(-5px) skewX(-6deg);filter:drop-shadow(-4px 0 0 #fff)}100%{transform:none;filter:none}}
+.cs10-name{margin-bottom:4px;font:700 clamp(34px,7.5vw,72px)/1 'Rajdhani',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#fff;filter:drop-shadow(0 0 22px var(--c));word-break:break-word}
+.cs10.done .cs10-name{animation:cs10name .9s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes cs10name{0%{opacity:0;transform:scale(1.8);letter-spacing:.5em}100%{opacity:1;transform:none;letter-spacing:.14em}}
+.cs10-final h3{font-size:clamp(15px,2.4vw,22px);letter-spacing:.3em;color:var(--c)}
+
+@media (max-height:780px){.cs10-stage{gap:8px}.cs10-iconwrap{width:116px;height:116px}.cs10-iconwrap svg{width:116px;height:116px}.cs10-title{font-size:24px;min-height:28px}.cs10-track{margin-top:4px}.cs10-final p{margin:4px 0 10px}.cs10-name{font-size:clamp(30px,6vw,56px)}}
 </style>
 </head>
 <body>
@@ -3212,26 +3229,10 @@ init();
     n.buffer = noiseBuf; n.loop = true; fl.type = 'lowpass'; fl.frequency.value = lp||90; g.gain.setValueAtTime(0.0001,t);
     if(rise){ g.gain.exponentialRampToValueAtTime(pk,t+d); } else { g.gain.exponentialRampToValueAtTime(pk,t+d*0.15); g.gain.exponentialRampToValueAtTime(0.0001,t+d); }
     n.connect(fl); fl.connect(g); out(g,0,0.3); n.start(t); n.stop(t+d+0.2); return {g:g}; }
-  // saturação pesada: dá harmônicos graves audíveis até em caixas pequenas (rosnado, não metal)
-  var distCurve = null;
-  function dist(){ if(!distCurve){ distCurve = new Float32Array(2048); for(var i=0;i<2048;i++){ var x = i/1024-1; distCurve[i] = Math.tanh(4.2*x); } } var w = ctx.createWaveShaper(); w.curve = distCurve; return w; }
-  // sub-boom distorcido (peito): queda de tom + saturação
-  function bodyD(f0,f1,d,pk,w,sL){ if(!ok()) return; var t = T(w), o = ctx.createOscillator(), ws = dist(), g = ctx.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+d*0.75); env(g,t,0.004,d,pk); o.connect(ws); ws.connect(g); out(g,0.08,sL||0.2); o.start(t); o.stop(t+d+0.1); }
-  // ROSNADO: ruído passando por formantes graves, modulado em "vocal fry" e distorcido (besta/dragão)
-  function roar(d,pk,w,fa,fb,r0,r1){ if(!ok()) return; var t = T(w), n = ctx.createBufferSource(), f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), mix = ctx.createGain(), am = ctx.createGain(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), ws = dist();
-    n.buffer = noiseBuf; n.loop = true;
-    f1.type = 'bandpass'; f1.Q.value = 5; f1.frequency.setValueAtTime(fa,t); f1.frequency.exponentialRampToValueAtTime(fb,t+d);
-    f2.type = 'bandpass'; f2.Q.value = 3; f2.frequency.setValueAtTime(fa*2.6,t); f2.frequency.exponentialRampToValueAtTime(fb*2.6,t+d);
-    lfo.frequency.setValueAtTime(r0,t); lfo.frequency.linearRampToValueAtTime(r1,t+d); lg.gain.value = 0.55; am.gain.value = 0.45; lfo.connect(lg); lg.connect(am.gain);
-    n.connect(f1); n.connect(f2); f1.connect(mix); f2.connect(mix); mix.connect(am); am.connect(ws); ws.connect(g);
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk*2.4,t+d*0.18); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
-    out(g,0.1,0.5); n.start(t); lfo.start(t); n.stop(t+d+0.1); lfo.stop(t+d+0.1); }
-  // trovão: rumble longo + pancadas que vão morrendo
-  function thunder(w,d,pk){ rumble(d,pk,w,110); body(60,22,0.8,pk*0.6,w+0.6,0.3); body(52,20,0.9,pk*0.4,w+1.3,0.3); }
   function startDrone(){ if(drone || !ok()) return; var bg = ctx.createGain(); bg.gain.value = 1; bg.connect(master); bus = bg;
-    rumble(9,0.5,0,150,true);
-    var t = 0; while(t < 8.3){ var k = t/8.3; roar(1.0-0.4*k,0.1+0.3*k,t,110,70,6+k*8,10+k*10); t += 1.15-0.5*k; }
+    rumble(9,0.45,0,170,true);
+    var t = 0; while(t < 8.3){ var k = t/8.3, pk = 0.32+0.58*k; body(78+k*30,32,0.3,pk,t); hit('lowpass',320,1,0.1,0.25+0.3*k,t); body(66,30,0.2,pk*0.6,t+0.13); t += 0.95-0.68*k; }
+    ratchet(28,2.0,8.2,0.13,2600);
     bus = null; drone = {g:bg}; }
   function stopDrone(f){ if(!drone || !ctx) return; var t = ctx.currentTime, d = drone; drone = null; f = f||0.5;
     d.g.gain.cancelScheduledValues(t); d.g.gain.setValueAtTime(Math.max(d.g.gain.value,0.0001),t); d.g.gain.exponentialRampToValueAtTime(0.0001,t+f); }
@@ -3249,13 +3250,13 @@ init();
     notify:function(){ ring(440,0.38,0.12,0,0.35,[1,2.76,5.4]); body(115,50,0.16,0.4,0); hit('bandpass',2600,2,0.02,0.15,0); },
     error:function(){ body(72,30,0.4,0.75,0); hit('lowpass',520,1,0.22,0.5,0); body(68,30,0.34,0.6,0.13); ratchet(5,0.02,0.2,0.1,1800); },
     warn:function(){ body(82,36,0.3,0.65,0); hit('lowpass',600,1,0.14,0.4,0); ring(150,0.3,0.06,0,0.2,[1,2.4]); },
-    levelup:function(){ bodyD(100,32,0.55,0.9,0,0.3); body(110,38,0.4,0.7,0); roar(0.55,0.4,0.03,170,85,22,12); pop(190,0.45,0.07); whoosh(70,800,0.4,0.14,0,0.8); hit('lowpass',300,1,0.2,0.45,0); },
-    intro:function(){ whoosh(60,700,1.5,0.45,0,0.6); bodyD(80,28,1.8,0.9,0.05,0.4); thunder(0.1,2.2,0.35); bodyD(70,26,1.6,0.8,1.0,0.4); startDrone(); },
-    step:function(i){ i = i||0; var k = i/9; bodyD(118-i*4,30,0.5,0.8+0.2*k,0,0.3); roar(0.45,0.3+0.3*k,0.02,170-i*6,80,18,34); pop(170-i*4,0.4,0); whoosh(70,520+i*110,0.38,0.16+0.012*i,0,0.8); hit('lowpass',260,1,0.18,0.45,0); if(i>=7) thunder(0.15,1.2,0.3); },
-    riser:function(){ roar(0.95,0.8,0,90,380,12,46); whoosh(60,3500,0.95,0.5,0,0.6); rumble(0.95,0.7,0,200,true); },
-    slam:function(){ stopDrone(0.6); bodyD(75,15,4.2,1.0,0,0.35); bodyD(52,14,4.6,0.9,0,0.35); roar(2.8,1.0,0.02,150,48,26,7); hit('lowpass',520,1,1.8,0.9,0,0.4); whoosh(1100,50,1.5,0.5,0,0.6); thunder(0.1,4.6,0.7); splash(0.3,0.03); },
-    reveal:function(){ whoosh(120,900,0.7,0.14,0,0.7); roar(0.9,0.35,0,140,70,10,6); bodyD(90,36,0.6,0.55,0.05,0.4); pop(190,0.4,0.12); },
-    out:function(){ whoosh(900,60,0.8,0.22,0); body(90,36,0.3,0.4,0.3); }
+    levelup:function(){ body(112,40,0.34,0.85,0); hit('bandpass',2100,2,0.04,0.3,0); ring(262,0.8,0.18,0,0.5); body(150,60,0.12,0.4,0.11); hit('bandpass',3400,3,0.025,0.25,0.11); ring(392,0.6,0.14,0.11,0.5); whoosh(120,1400,0.4,0.12,0.02,0.8); rumble(0.7,0.22,0,110); },
+    intro:function(){ whoosh(70,1200,1.4,0.4,0,0.7); body(70,28,1.7,0.85,0.04,0.4); hit('lowpass',260,1,1.0,0.5,0.04,0.4); hiss(0.5,0.25,0.3); chunk(0.7,1.0); chunk(0.5,1.06); startDrone(); },
+    step:function(i){ i = i||0; body(170-i*5,38,0.4,0.9,0); hit('lowpass',400,1,0.14,0.45,0); ring(150+i*26,0.65,0.16+i*0.01,0.01,0.45,[1,2.76,5.4,8.93]); pop(260,0.42,0.06); hiss(0.2,0.12+i*0.012,0.02); whoosh(120,900+i*220,0.34,0.14+i*0.012,0,0.9); ratchet(3,0.02,0.1,0.14,2400); if(i>=4) splash(0.16+i*0.02,0.05); if(i>=8) body(60,26,0.6,0.5,0.08,0.3); },
+    riser:function(){ ratchet(16,0,0.95,0.2,2200); whoosh(100,6500,0.95,0.5,0,0.7); rumble(0.95,0.55,0,260,true); body(80,34,0.3,0.5,0.35); body(84,34,0.3,0.6,0.6); body(90,34,0.3,0.75,0.8); hiss(0.9,0.18,0.05); },
+    slam:function(){ stopDrone(0.8); body(120,20,3.0,1.0,0,0.5); body(70,18,3.2,0.9,0.03,0.5); hit('lowpass',600,1,1.8,0.9,0,0.6); ring(98,2.8,0.3,0,0.8,[1,2.76,5.4,8.93,11.3]); ring(49,3.4,0.3,0,0.9,[1,2.1,3.7,5.2]); ring(196,2.2,0.2,0.01,0.8); chunk(0.9,0); chunk(0.7,0.09); splash(0.7,0.02); hit('highpass',3000,1,0.2,0.4,0); hiss(1.2,0.35,0.05); whoosh(7000,140,1.2,0.4,0.02,0.7); rumble(3,0.65,0,100); body(90,30,0.5,0.45,0.55,0.3); body(80,28,0.5,0.35,0.9,0.3); ring(320,0.4,0.1,0.35,0.5); ring(240,0.5,0.08,0.7,0.5); },
+    reveal:function(){ chunk(0.6,0); ring(330,1.6,0.14,0.02,0.9,[1,2.76,5.4]); pop(300,0.4,0.1); hiss(0.4,0.15,0.1); whoosh(150,1800,0.6,0.1,0,0.8); body(100,45,0.4,0.5,0.05,0.3); },
+    out:function(){ whoosh(1800,100,0.7,0.2,0); body(100,45,0.2,0.4,0.25); hiss(0.4,0.12,0.1); }
   };
   window.SFX = {
     enabled:function(){ return on; },
@@ -3321,6 +3322,22 @@ init();
   function sfxReveal(){ S.play('reveal'); }
   function sfxOut(){ S.play('out'); }
 
+  // chuva de faíscas vermelhas/laranja que explode do ícone no impacto
+  function sparks(host){
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cv = document.createElement('canvas'); cv.className = 'cs10-fx'; host.appendChild(cv);
+    var dpr = Math.min(2, window.devicePixelRatio||1), W = cv.width = host.clientWidth*dpr, H = cv.height = host.clientHeight*dpr, x = cv.getContext('2d');
+    var r = host.querySelector('.cs10-iconwrap').getBoundingClientRect(), cx = (r.left+r.width/2)*dpr, cy = (r.top+r.height/2)*dpr, ps = [];
+    for(var i=0;i<220;i++){ var a = Math.random()*Math.PI*2, v = (6+Math.random()*26)*dpr; ps.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v*0.8-4*dpr,life:1,d:0.012+Math.random()*0.02,w:(1+Math.random()*2.4)*dpr,h:Math.random()*40}); }
+    var t0 = performance.now();
+    (function tick(){
+      x.globalCompositeOperation = 'source-over'; x.clearRect(0,0,W,H); x.globalCompositeOperation = 'lighter'; var alive = false;
+      ps.forEach(function(p){ if(p.life <= 0) return; alive = true; var px = p.x, py = p.y; p.x += p.vx; p.y += p.vy; p.vx *= 0.965; p.vy = p.vy*0.965+0.5*dpr; p.life -= p.d;
+        x.strokeStyle = 'hsla('+p.h+',100%,'+(55+p.life*30)+'%,'+Math.max(0,p.life)+')'; x.lineWidth = p.w; x.beginPath(); x.moveTo(px,py); x.lineTo(p.x,p.y); x.stroke(); });
+      if(alive && host.isConnected && performance.now()-t0 < 3500) requestAnimationFrame(tick); else cv.remove();
+    })();
+  }
+
   function play(info){
     if(active) return; active = true;
     info = info || {};
@@ -3329,16 +3346,18 @@ init();
     var el = document.createElement('div'); el.className = 'cs10'; el.setAttribute('role','dialog'); el.setAttribute('aria-live','polite');
     var nodes = LEVELS.map(function(lv,i){ return '<div class="cs10-node" data-i="'+i+'">'+tierIconSVG(lv,44)+'</div>'; }).join('');
     el.innerHTML =
-      '<div class="cs10-bar top"></div><div class="cs10-bar bot"></div><div class="cs10-ring"></div>'+
+      '<div class="cs10-bar top"></div><div class="cs10-bar bot"></div>'+
       '<button class="cs10-snd" type="button" aria-label="Som">'+(window.SFX.enabled()?'🔊':'🔇')+'</button>'+
       '<button class="cs10-skip" type="button">'+T.skip+'</button>'+
       '<div class="cs10-stage">'+
-        '<div class="cs10-kicker">'+(info.mode||'')+(info.name?' · '+info.name:'')+'</div>'+
-        '<div class="cs10-iconwrap"><div class="cs10-icon"></div></div>'+
+        '<div class="cs10-kicker"></div>'+
+        '<div class="cs10-iconwrap"><i class="cs10-streak"></i><i class="cs10-beam"></i><div class="cs10-icon"></div></div>'+
         '<div class="cs10-title"></div>'+
         '<div class="cs10-track"><div class="cs10-rail"><div class="cs10-fill"></div></div><div class="cs10-nodes">'+nodes+'</div></div>'+
-        '<div class="cs10-final"><h3>'+T.done+'</h3><p><b>'+(info.elo||'')+' '+T.elo+'</b>'+(info.region?' · '+info.region:'')+'<br>'+(info.challenger?T.ch:T.sub)+'</p><button class="cs10-go" type="button">'+T.go+'</button></div>'+
+        '<div class="cs10-final"><div class="cs10-name"></div><h3>'+T.done+'</h3><p><b>'+(info.elo||'')+' '+T.elo+'</b>'+(info.region?' · '+info.region:'')+'<br>'+(info.challenger?T.ch:T.sub)+'</p><button class="cs10-go" type="button">'+T.go+'</button></div>'+
       '</div><div class="cs10-flash"></div>';
+    el.querySelector('.cs10-kicker').textContent = (info.mode||'')+(info.name?' · '+info.name:'');
+    el.querySelector('.cs10-name').textContent = info.name || '';
     document.body.appendChild(el);
     sfxIntro();
     var prevOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
@@ -3374,7 +3393,7 @@ init();
       (function(i){ later(function(){ if(!closed) setLevel(i); }, t); })(i);
     });
     // clímax no Nível 10
-    later(function(){ if(closed) return; el.classList.add('slam'); sfxSlam(); }, t + (reduce?200:750));
+    later(function(){ if(closed) return; el.classList.add('slam'); sfxSlam(); sparks(el); }, t + (reduce?200:750));
     later(function(){ if(!closed){ el.classList.add('done'); sfxReveal(); } }, t + (reduce?500:1900));
   }
   // ---- popup verde de subida de nível ----
