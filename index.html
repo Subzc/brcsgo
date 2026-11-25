@@ -1628,6 +1628,9 @@ async function setDoc(key, rawValue){
   catch(e){ storageAvailable = false; console.error('Erro ao salvar', key, e); }
 }
 async function deleteDoc(key){
+  if(!db) return;
+  try{ await db.collection('brcsgo').doc(key).delete(); }catch(e){}
+}
 const SHARED_CHUNK_SIZE = 250000;
 
 async function loadShared(key){
