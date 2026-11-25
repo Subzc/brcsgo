@@ -1189,6 +1189,40 @@ tbody tr:hover td{background:rgba(229,38,43,.07)}
 .cs10-final h3{font-size:clamp(15px,2.4vw,22px);letter-spacing:.3em;color:var(--c)}
 
 @media (max-height:780px){.cs10-stage{gap:8px}.cs10-iconwrap{width:116px;height:116px}.cs10-iconwrap svg{width:116px;height:116px}.cs10-title{font-size:24px;min-height:28px}.cs10-track{margin-top:4px}.cs10-final p{margin:4px 0 10px}.cs10-name{font-size:clamp(30px,6vw,56px)}}
+
+/* ===== Challenger / TOP / ELO oculto / Chat / Compartilhar ===== */
+.top-pill{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:4px;font:700 11px 'Rajdhani',sans-serif;letter-spacing:.1em;color:#fff;background:#B3151A;border:1px solid rgba(255,255,255,.18);vertical-align:middle;white-space:nowrap}
+.top-pill.hot{background:linear-gradient(135deg,#E5262B,#FF6309)}
+.top-pill.gold{background:linear-gradient(135deg,#FFD35A,#FF9A1F);color:#1a0d00;border-color:#FFE9A8;box-shadow:0 0 12px rgba(255,190,60,.45)}
+tr.is-challenger td{background:rgba(229,38,43,.07)}
+tr.is-challenger td.pos{color:var(--orange-2);font-weight:700}
+.elo-lock{opacity:.85;cursor:help}
+.secret-bar{height:12px;margin:8px 0 6px;border-radius:6px;border:1px dashed rgba(255,255,255,.25);background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 8px,rgba(255,255,255,0) 8px 16px);display:flex;align-items:center;justify-content:center;position:relative;overflow:visible}
+.secret-bar span{position:absolute;top:-1px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--muted);background:var(--panel);padding:0 8px;transform:translateY(-2px)}
+.top-ladder{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0 2px}
+.top-step{font:600 10px 'IBM Plex Mono',monospace;padding:3px 6px;border:1px solid var(--line-strong);border-radius:3px;color:var(--muted)}
+.top-step.me{color:#fff;background:var(--orange);border-color:var(--orange)}
+.top-rule{font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.5}
+.challenger-chip b{margin-right:6px;color:var(--orange-2);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.challenger-chip .top-pill{margin-left:6px}
+.share-row{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.share-modal{max-width:780px}
+.share-modal canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--line-strong);display:block;margin:14px 0}
+.share-actions{display:flex;flex-wrap:wrap;gap:8px}
+.chat-list{height:min(58vh,520px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px;margin:12px 0;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.3)}
+.chat-msg{max-width:80%;padding:8px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);align-self:flex-start;word-break:break-word}
+.chat-msg.mine{align-self:flex-end;background:rgba(229,38,43,.16);border-color:rgba(229,38,43,.42)}
+.chat-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:3px}
+.chat-meta b{color:#fff;font-weight:600;font-size:12px}
+.chat-meta .chat-badge{display:inline-grid;place-items:center}
+.chat-meta .top-pill{margin-left:0}
+.chat-text{font-size:14px;line-height:1.45;white-space:pre-wrap}
+.chat-del{margin-left:auto;padding:0 6px;min-height:0;line-height:18px;font-size:14px;background:transparent!important;border:1px solid var(--line-strong)!important;color:var(--muted);border-radius:4px}
+.chat-form{display:flex;gap:8px}
+.chat-form input{flex:1;min-width:0}
+.chat-note{font-size:11px;color:var(--muted-2);margin-top:8px}
+@media (max-width:640px){.chat-msg{max-width:92%}.share-actions button{flex:1 1 45%}}
+.chat-pill[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -1447,11 +1481,13 @@ const LEVELS = [
   {level:7,  name:"Nível 7",  min:1351, max:1530, color:"#FF6309"},
   {level:8,  name:"Nível 8",  min:1531, max:1750, color:"#FF6309"},
   {level:9,  name:"Nível 9",  min:1751, max:2000, color:"#FF6309"},
-  {level:10, name:"Nível 10", min:2001, max:null, color:"#FE1F00"}
+  {level:10, name:"Nível 10", min:2001, max:6999, color:"#FE1F00"}
 ];
 const TIERS = LEVELS;               // compatibilidade com o código antigo
 const ELO_MIN = 100;                // piso de ELO (início do Nível 1)
-const CHALLENGER_SLOTS = 1000;      // Challenger = Nível 10 + Top 1000 da região
+const CHALLENGER_ELO = 7000;        // Challenger = rank acima do Nível 10, a partir de 7000 de ELO
+const TOP_STEPS = [1000,500,250,125,100,75,50,25,10,5,3,2,1];   // degraus do TOP (entre TODOS os Challengers do site)
+const CHALLENGER_TIER = {level:10, name:"Challenger", min:CHALLENGER_ELO, max:null, color:"#E5262B", challenger:true, index:10};
 const REGION_NAMES = {NA:"América do Norte", CAM:"América Central e Caribe", SA:"América do Sul", EU:"Europa", CIS:"Rússia e CEI", ME:"Oriente Médio", AF:"África", AS:"Ásia", OCE:"Oceania"};
 const REGIONS = Object.keys(REGION_NAMES);
 function regionLabel(c){ return c + " · " + REGION_NAMES[c]; }
@@ -1465,7 +1501,8 @@ const ICONS = {
   ranking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 5h12v5a6 6 0 0 1-12 0V5z"/><path d="M9 21h6M12 16v5"/></svg>',
   moderacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>'
 ,
-  eventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>'
+  eventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/></svg>'
 };
 const FIELD_LABELS = { kills:'Kills', deaths:'Deaths', assists:'Assists', pontos:'Pontos', mvps:'Estrelas MVP', result:'Resultado', map:'Mapa' };
 
@@ -1487,25 +1524,56 @@ let modAuthed = false;
 let toastTimer = null;
 
 function getTier(elo){
+  if(elo >= CHALLENGER_ELO) return {...CHALLENGER_TIER};
   let idx = 0;
   for(let i=0;i<LEVELS.length;i++){ if(elo >= LEVELS[i].min) idx = i; }
   return {...LEVELS[idx], index: idx};
 }
-// Challenger: jogadores de Nível 10 que estão entre os CHALLENGER_SLOTS melhores da própria região
-function challengerIds(mode){
-  const ids = new Set();
-  REGIONS.forEach(reg => {
-    getModeRanking(mode)
-      .filter(r => !r.s.calibrating && r.s.elo >= LEVELS[9].min && r.p.region === reg)
-      .slice(0, CHALLENGER_SLOTS)
-      .forEach(r => ids.add(r.p.id));
-  });
-  return ids;
+// Nível 10 (2001–6999): o ELO fica OCULTO — ninguém descobre se está perto do Challenger
+function isEloHidden(elo){ return elo >= LEVELS[9].min && elo < CHALLENGER_ELO; }
+function canSeeHiddenElo(){ return !!(userProfile && userProfile.role === 'moderator'); }
+// menor degrau do TOP que contém a posição (ex.: posição 300 → TOP 500). Acima de 1000 → sem TOP
+function topBucket(pos){
+  if(!pos) return null;
+  const steps = TOP_STEPS.slice().sort((a,b) => a - b);
+  for(const n of steps){ if(pos <= n) return n; }
+  return null;
 }
-function playerTier(p, s, mode, chIds){
+// Challengers do site inteiro, do melhor pro pior: mais ELO, depois vitórias, taxa de vitória e K/D
+function challengerOrder(mode){
+  return getModeRanking(mode)
+    .filter(r => !r.s.calibrating && r.s.elo >= CHALLENGER_ELO)
+    .sort((a,b) => (b.s.elo - a.s.elo) || (b.s.wins - a.s.wins) || (b.s.winRate - a.s.winRate) || (b.s.kd - a.s.kd) || (a.s.total - b.s.total));
+}
+function challengerPositions(mode){
+  const m = new Map();
+  challengerOrder(mode).forEach((r,i) => m.set(r.p.id, i+1));
+  return m;
+}
+function challengerIds(mode){ return new Set(challengerPositions(mode).keys()); }   // compatibilidade
+function playerTier(p, s, mode, posMap){
   const t = getTier(s.elo);
-  const set = chIds || challengerIds(mode);
-  return set.has(p.id) ? {...t, challenger:true, name:'Challenger', color:'#E5262B'} : t;
+  if(!t.challenger) return t;
+  const map = posMap || challengerPositions(mode);
+  const pos = map.get(p.id) || null;
+  return {...t, pos, top: topBucket(pos)};
+}
+// quanto falta pra subir de degrau (TOP 1000 → 500 → 250 → ... → 1)
+function topProgress(pos, total){
+  if(!pos) return {pct:0, label:''};
+  if(pos === 1) return {pct:100, label:'Você é o TOP 1 do BRCS2 👑'};
+  const steps = TOP_STEPS.slice().sort((a,b) => a - b);
+  const cur = steps.find(n => n >= pos);
+  const idx = cur ? steps.indexOf(cur) : steps.length;
+  const target = idx > 0 ? steps[idx-1] : 1;
+  const upper = cur || Math.max(total, pos);
+  const need = pos - target;
+  const pct = Math.max(0, Math.min(100, (upper - pos) / Math.max(1, upper - target) * 100));
+  return {pct, label: `Ultrapasse ${need} ${need === 1 ? 'jogador' : 'jogadores'} para chegar ao TOP ${target}`};
+}
+function topPillHTML(top){
+  if(!top) return '';
+  return `<span class="top-pill ${top <= 3 ? 'gold' : (top <= 25 ? 'hot' : '')}">TOP ${top}</span>`;
 }
 
 function computeEloDelta(m){
@@ -1845,6 +1913,7 @@ function render(){
       <button class="tab-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}Histórico</button>
       <button class="tab-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}Ranking</button>
       <button class="tab-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}Eventos ${(function(){const n=events.filter(ev=>!seenEventIds.includes(ev.id)&&ev.status!=='finished').length;return n>0?`<span class="pill">${n}</span>`:'';})()}</button>
+      <button class="tab-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}Chat <span class="pill chat-pill" ${chatUnread>0?'':'hidden'}>${chatUnread>0?chatUnread:''}</span></button>
       ${isMod ? `<button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>` : ''}
     </div>
       <div class="header-controls">
@@ -1897,6 +1966,7 @@ function render(){
       <button class="dock-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}<span>Histórico</span></button>
       <button class="dock-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}<span>Ranking</span></button>
       <button class="dock-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}<span>Eventos</span></button>
+      <button class="dock-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}<span>Chat</span></button>
     </nav>
   `;
 
@@ -1925,7 +1995,10 @@ function renderTab(){
   else if(activeTab === 'ranking') el.innerHTML = rankingHTML();
   else if(activeTab === 'eventos') el.innerHTML = eventosHTML();
   else if(activeTab === 'moderacao') el.innerHTML = moderacaoHTML();
+  else if(activeTab === 'chat') el.innerHTML = chatHTML();
   attachTabEvents();
+  attachShareEvents();
+  if(activeTab === 'chat') attachChatEvents();
   document.querySelectorAll('[data-region]').forEach(chip => chip.addEventListener('click', () => { rankRegion = chip.dataset.region; renderTab(); }));
   const regionSel = document.getElementById('regionSelect');
   if(regionSel) regionSel.addEventListener('change', async () => {
@@ -2060,17 +2133,37 @@ function perfilHTML(){
           </div>
         </div>`;
     } else {
-      const tier = playerTier(p, s, viewMode);
-      const next = LEVELS[tier.index+1];
-      const pct = next ? Math.min(100, ((s.elo - tier.min) / (next.min - tier.min)) * 100) : 100;
+      const posMap = challengerPositions(viewMode);
+      const tier = playerTier(p, s, viewMode, posMap);
+      const lockedElo = isEloHidden(s.elo);
+      let nameTxt, eloTxt, barHTML, labelTxt;
+      if(tier.challenger){
+        const prog = topProgress(tier.pos, posMap.size);
+        nameTxt = 'Challenger' + (tier.top ? ' · TOP ' + tier.top : '');
+        eloTxt = `${s.elo} ELO · Challenger${tier.pos ? ' · #' + tier.pos + ' do site' : ''}`;
+        barHTML = `<div class="progress-bar"><div class="progress-fill" data-target="${prog.pct}"></div></div>`;
+        labelTxt = prog.label;
+      } else if(lockedElo){
+        nameTxt = tier.name;
+        eloTxt = 'ELO oculto · Nível 10' + (canSeeHiddenElo() ? ` (${s.elo})` : '');
+        barHTML = `<div class="secret-bar" title="Ninguém descobre quando está perto do Challenger"><span>🔒 ??? / ${CHALLENGER_ELO}</span></div>`;
+        labelTxt = 'Rumo ao Challenger — seu progresso é secreto. Continue vencendo.';
+      } else {
+        const next = LEVELS[tier.index+1];
+        const pct = next ? Math.min(100, ((s.elo - tier.min) / (next.min - tier.min)) * 100) : 100;
+        nameTxt = tier.name;
+        eloTxt = `${s.elo} ELO · Nível ${tier.level}`;
+        barHTML = `<div class="progress-bar"><div class="progress-fill" data-target="${pct}"></div></div>`;
+        labelTxt = next ? `${Math.round(pct)}% até ${next.name}` : 'Nível máximo alcançado';
+      }
       rankBlock = `
         <div class="rank-row">
           ${tierBadgeHTML(tier)}
           <div class="rank-info">
-            <div class="rank-name">${tier.challenger ? 'Challenger · Top ' + CHALLENGER_SLOTS + ' ' + (p.region || '') : tier.name}</div>
-            <div class="elo mono">${s.elo} ELO${tier.challenger ? ' · Nível 10' : ' · Nível ' + tier.level}</div>
-            <div class="progress-bar"><div class="progress-fill" data-target="${pct}"></div></div>
-            <div class="progress-label">${next ? `${Math.round(pct)}% até ${next.name}` : (tier.challenger ? 'Você está entre os melhores da região' : 'Nível máximo alcançado')}</div>
+            <div class="rank-name">${nameTxt}</div>
+            <div class="elo mono">${eloTxt}</div>
+            ${barHTML}
+            <div class="progress-label">${labelTxt}</div>
           </div>
         </div>`;
     }
@@ -2117,7 +2210,7 @@ function perfilHTML(){
   return `
     <div class="panel accent-blue">
       <h2>Meu Perfil <span class="sub">${p.name} · ${MODES[viewMode].label}</span></h2>
-      ${rankBlock}${regionBlockHTML(p)}
+      ${rankBlock}${shareRowHTML(cfg, s)}${regionBlockHTML(p)}
       ${pendingOwn > 0 ? `<div class="helper-note">Você tem ${pendingOwn} partida(s) de ${MODES[viewMode].label} aguardando aprovação.</div>` : ''}
       <div class="stat-cards">${cards.join('')}</div>
     </div>
@@ -2139,7 +2232,11 @@ function historicoHTML(){
   const rows = all.map(m => {
     const approved = s.historyMap[m.id];
     const deltaCell = cfg.hasPatente
-      ? (approved ? `<span class="${approved.eloDelta>=0?'win':'loss'}">${approved.eloDelta>=0?'+':''}${approved.eloDelta}</span>` : `<span class="status-badge status-${m.status}">${m.status}</span>`)
+      ? (approved
+          ? ((!isMod && !approved.isPlacement && (isEloHidden(approved.eloBefore) || isEloHidden(approved.eloAfter)))
+              ? `<span class="elo-lock" title="ELO oculto no Nível 10">🔒</span>`
+              : `<span class="${approved.eloDelta>=0?'win':'loss'}">${approved.eloDelta>=0?'+':''}${approved.eloDelta}</span>`)
+          : `<span class="status-badge status-${m.status}">${m.status}</span>`)
       : `<span class="status-badge status-${m.status}">${m.status}</span>`;
     return `
       <tr>
@@ -2182,44 +2279,64 @@ function rankingHTML(){
     return `<div class="panel"><h2>Ranking <span class="sub">${cfg.label}</span></h2><p class="empty-note">${cfg.label} é um modo livre, sem ranking oficial — as partidas ficam registradas só no histórico de cada jogador.</p></div>`;
   }
 
-  const chIds = cfg.rankBy === 'elo' ? challengerIds(viewMode) : new Set();
-  const ranked = getModeRanking(viewMode).filter(r => rankRegion === 'all' || r.p.region === rankRegion);
-  const leader = ranked[0];
+  const isElo = cfg.rankBy === 'elo';
+  const posMap = isElo ? challengerPositions(viewMode) : new Map();
+  const seeAll = canSeeHiddenElo();
+  const filtered = getModeRanking(viewMode).filter(r => rankRegion === 'all' || r.p.region === rankRegion);
+  let ordered = filtered, chRows = [];
+  if(isElo){
+    // Challengers primeiro (ordem do TOP) · depois Nível 10 (sem posição/ELO, ordem alfabética) · depois o resto por ELO
+    chRows = filtered.filter(r => posMap.has(r.p.id)).sort((a,b) => posMap.get(a.p.id) - posMap.get(b.p.id));
+    const l10 = filtered.filter(r => !r.s.calibrating && isEloHidden(r.s.elo)).sort((a,b) => String(a.p.name).localeCompare(String(b.p.name)));
+    const rest = filtered.filter(r => !posMap.has(r.p.id) && !(isEloHidden(r.s.elo) && !r.s.calibrating));
+    ordered = chRows.concat(l10, rest);
+  }
+  const leader = isElo ? chRows[0] : filtered[0];
   const regionChips = `<div class="mode-chips"><div class="mode-chip ${rankRegion==='all'?'active':''}" data-region="all">Todas as regiões</div>${REGIONS.map(r => `<div class="mode-chip ${rankRegion===r?'active':''}" data-region="${r}">${regionLabel(r)}</div>`).join('')}</div>`;
-  const chList = cfg.rankBy === 'elo' ? (() => {
-    const list = ranked.filter(r => chIds.has(r.p.id));
-    return `<div class="challenger-box"><div class="challenger-head">${challengerSVG(34)}<div><b>Challenger</b><span>Os melhores de cada região · Nível 10 + Top ${CHALLENGER_SLOTS}</span></div></div>${list.length ? `<div class="challenger-list">${list.map(r => `<span class="challenger-chip">${r.p.name}<i>${r.p.region}</i></span>`).join('')}</div>` : `<p class="empty-note">Ninguém alcançou o Challenger ainda — chegue ao Nível 10 (2001+ ELO) e fique entre os ${CHALLENGER_SLOTS} melhores da sua região.</p>`}</div>`;
+  const myTop = (isElo && posMap.has(currentPlayerId)) ? topBucket(posMap.get(currentPlayerId)) : null;
+  const chList = isElo ? (() => {
+    const shown = chRows.slice(0, 40);
+    const ladder = TOP_STEPS.map(n => `<span class="top-step ${myTop === n ? 'me' : ''}">TOP ${n}</span>`).join('');
+    return `<div class="challenger-box"><div class="challenger-head">${challengerSVG(34)}<div><b>Challenger</b><span>A partir de ${CHALLENGER_ELO} ELO · todos os Challengers do site disputam o TOP</span></div></div>
+      <div class="top-ladder">${ladder}</div>
+      ${shown.length ? `<div class="challenger-list">${shown.map(r => { const ps = posMap.get(r.p.id); return `<span class="challenger-chip"><b>#${ps}</b> ${r.p.name}${topPillHTML(topBucket(ps))}<i>${r.p.region || ''}</i></span>`; }).join('')}${chRows.length > shown.length ? `<span class="challenger-chip">+${chRows.length - shown.length}</span>` : ''}</div>` : `<p class="empty-note">Ninguém alcançou o Challenger ainda — chegue a ${CHALLENGER_ELO} de ELO.</p>`}
+      <p class="top-rule">Quem tem mais ELO, vitórias e desempenho entre os Challengers sobe: TOP 1000 → 500 → 250 → 125 → 100 → 75 → 50 → 25 → 10 → 5 → 3 → 2 → 1.</p></div>`;
   })() : '';
 
   const hero = `
     <div class="hero-stats">
-      <div class="hero-card"><div class="val">${ranked.length}</div><div class="lbl">Jogadores Ranqueados</div></div>
+      <div class="hero-card"><div class="val">${filtered.length}</div><div class="lbl">Jogadores Ranqueados</div></div>
       <div class="hero-card"><div class="val">${approvedCount}</div><div class="lbl">Partidas Aprovadas</div></div>
       <div class="hero-card"><div class="val">${pendingCount}</div><div class="lbl">Em Análise</div></div>
       <div class="hero-card"><div class="val" style="font-size:16px;">${leader ? leader.p.name : '—'}</div><div class="lbl">Líder Atual</div></div>
     </div>
   `;
 
-  if(ranked.length === 0) return `<div class="panel"><h2>Ranking <span class="sub">${cfg.label}</span></h2>${regionChips}${hero}${chList}<p class="empty-note">Nenhum jogador com partidas aprovadas neste modo ainda.</p></div>`;
+  if(filtered.length === 0) return `<div class="panel"><h2>Ranking <span class="sub">${cfg.label}</span></h2>${regionChips}${hero}${chList}<p class="empty-note">Nenhum jogador com partidas aprovadas neste modo ainda.</p></div>`;
 
-  const rows = ranked.map((r, i) => {
-    let metricCols;
-    if(cfg.rankBy === 'elo'){
+  const rows = ordered.map((r, i) => {
+    let metricCols, posCell = i + 1, rowCls = '';
+    if(isElo){
+      const posCh = posMap.get(r.p.id);
+      const locked = !r.s.calibrating && isEloHidden(r.s.elo);
+      const t = r.s.calibrating ? null : playerTier(r.p, r.s, viewMode, posMap);
       const badge = r.s.calibrating
         ? `<span class="mini-badge" style="background:var(--panel2); color:var(--muted); border:1px dashed var(--line);">?</span>`
-        : (() => { const t = playerTier(r.p, r.s, viewMode, chIds); return `<span class="mini-badge" style="background:none">${tierIconSVG(t, 28)}</span>`; })();
-      const tierName = r.s.calibrating ? `Calibrando (${r.s.total}/10)` : playerTier(r.p, r.s, viewMode, chIds).name;
-      metricCols = `<td class="name-cell">${badge}${r.p.name}</td><td>${tierName}</td><td>${r.s.elo}</td><td>${r.p.region || '—'}</td><td>${r.s.total}</td><td>${r.s.winRate.toFixed(0)}%</td>`;
+        : `<span class="mini-badge" style="background:none">${tierIconSVG(t, 28)}</span>`;
+      const tierName = r.s.calibrating ? `Calibrando (${r.s.total}/10)` : (t.challenger ? `Challenger${topPillHTML(t.top)}` : t.name);
+      const eloCell = locked ? (seeAll ? `${r.s.elo} <span class="elo-lock">🔒</span>` : `<span class="elo-lock" title="ELO oculto no Nível 10">🔒</span>`) : r.s.elo;
+      if(posCh){ posCell = '#' + posCh; rowCls = 'is-challenger'; } else if(locked){ posCell = '—'; }
+      metricCols = `<td class="name-cell">${badge}${r.p.name}</td><td>${tierName}</td><td>${eloCell}</td><td>${r.p.region || '—'}</td><td>${r.s.total}</td><td>${r.s.winRate.toFixed(0)}%</td>`;
     } else if(cfg.rankBy === 'winRate'){
       metricCols = `<td class="name-cell">${r.p.name}</td><td>${r.s.winRate.toFixed(0)}%</td><td>${r.s.total}</td><td>${r.s.kills}</td><td>${r.s.pontos}</td>`;
     } else {
       metricCols = `<td class="name-cell">${r.p.name}</td><td>${r.s.kills}</td><td>${r.s.total}</td><td>${r.s.kd.toFixed(2)}</td><td>${r.s.pontos}</td>`;
     }
-    return `<tr><td class="pos">${i+1}</td>${metricCols}</tr>`;
+    return `<tr class="${rowCls}"><td class="pos">${posCell}</td>${metricCols}</tr>`;
   }).join('');
 
   let headCols;
-  if(cfg.rankBy === 'elo') headCols = '<th>Jogador</th><th>Nível</th><th>Elo</th><th>Região</th><th>Partidas</th><th>Vitória %</th>';
+  if(isElo) headCols = '<th>Jogador</th><th>Nível</th><th>Elo</th><th>Região</th><th>Partidas</th><th>Vitória %</th>';
   else if(cfg.rankBy === 'winRate') headCols = '<th>Jogador</th><th>Vitória %</th><th>Partidas</th><th>Kills</th><th>Pontos</th>';
   else headCols = '<th>Jogador</th><th>Kills Totais</th><th>Partidas</th><th>K/D</th><th>Pontos</th>';
 
@@ -3083,6 +3200,7 @@ async function init(){
     if(!user){
       authUser = null;
       userProfile = null;
+      stopChat();
       renderAuthGate();
       return;
     }
@@ -3108,9 +3226,259 @@ async function init(){
     currentPlayerId = user.uid;
     if(activeTab === 'moderacao' && userProfile.role !== 'moderator') activeTab = 'ranking';
     render();
+    startChat();
   });
 }
 
+
+
+// ====================================================================
+//  CHAT da comunidade (tempo real via Firestore) + COMPARTILHAR rank
+// ====================================================================
+function decodeEntities(str){ const t = document.createElement('textarea'); t.innerHTML = String(str == null ? '' : str); return t.value; }
+
+let chatMsgs = [], chatUnsubs = [], chatUnread = 0, chatDay = '', chatLastSend = 0, chatLoaded = false, chatSeenTs = 0, chatDays = {}, chatBadgeCache = {t:0, map:{}};
+const CHAT_MAX_LEN = 280, CHAT_KEEP = 150;
+function chatDayKey(offsetDays){ const d = new Date(Date.now() - (offsetDays||0)*86400000); return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0') + '-' + String(d.getUTCDate()).padStart(2,'0'); }
+function chatSeenKey(){ return 'brcsgo:chatseen:' + (authUser ? authUser.uid : ''); }
+
+function startChat(){
+  if(!db || !authUser || chatUnsubs.length) return;
+  try{ chatSeenTs = Number(localStorage.getItem(chatSeenKey())) || 0; }catch(e){ chatSeenTs = 0; }
+  chatDay = chatDayKey(0); chatDays = {}; chatLoaded = false;
+  [chatDayKey(1), chatDay].forEach(key => {
+    const unsub = db.collection('brcsgo').doc('chat:' + key).onSnapshot(snap => {
+      chatDays[key] = (snap.exists && Array.isArray(snap.data().msgs)) ? snap.data().msgs : [];
+      mergeChat();
+    }, err => { console.warn('Chat indisponível:', err && err.code); });
+    chatUnsubs.push(unsub);
+  });
+}
+function stopChat(){
+  chatUnsubs.forEach(u => { try{ u(); }catch(e){} });
+  chatUnsubs = []; chatMsgs = []; chatDays = {}; chatUnread = 0; chatLoaded = false;
+}
+setInterval(() => { if(chatUnsubs.length && chatDay !== chatDayKey(0)){ stopChat(); startChat(); } }, 60000);   // virou o dia (UTC)
+
+function mergeChat(){
+  const prevLast = chatMsgs.length ? chatMsgs[chatMsgs.length-1].ts : 0;
+  let all = [];
+  Object.keys(chatDays).forEach(k => { all = all.concat(chatDays[k]); });
+  all = all.filter(m => m && typeof m.text === 'string' && typeof m.uid === 'string' && m.ts).sort((a,b) => a.ts - b.ts).slice(-CHAT_KEEP);
+  chatMsgs = all;
+  const mine = authUser ? authUser.uid : '';
+  if(activeTab === 'chat'){
+    chatSeenTs = chatMsgs.length ? chatMsgs[chatMsgs.length-1].ts : chatSeenTs;
+    try{ localStorage.setItem(chatSeenKey(), String(chatSeenTs)); }catch(e){}
+    chatUnread = 0;
+    updateChatList();
+  } else {
+    chatUnread = chatMsgs.filter(m => m.ts > chatSeenTs && m.uid !== mine).length;
+    updateChatPill();
+  }
+  const incoming = chatMsgs.length && chatMsgs[chatMsgs.length-1].ts > prevLast && chatMsgs[chatMsgs.length-1].uid !== mine;
+  if(chatLoaded && incoming && window.SFX) window.SFX.play('notify');
+  if(Object.keys(chatDays).length >= 2) chatLoaded = true;
+}
+function updateChatPill(){
+  document.querySelectorAll('.chat-pill').forEach(el => { el.hidden = chatUnread <= 0; el.textContent = chatUnread > 0 ? (chatUnread > 99 ? '99+' : chatUnread) : ''; });
+}
+function chatBadgeFor(uid){
+  const now = Date.now();
+  if(now - chatBadgeCache.t > 30000){ chatBadgeCache = {t: now, map: {}, pos: null}; }
+  if(chatBadgeCache.map[uid] !== undefined) return chatBadgeCache.map[uid];
+  let html = '';
+  try{
+    const pl = players.find(x => x.id === uid || x.ownerUid === uid);
+    if(pl && MODES.competitivo){
+      const st = computeModeStats(pl.id, 'competitivo');
+      if(!st.calibrating && st.total > 0){
+        if(!chatBadgeCache.pos) chatBadgeCache.pos = challengerPositions('competitivo');
+        const t = playerTier(pl, st, 'competitivo', chatBadgeCache.pos);
+        html = `<span class="chat-badge" title="${t.challenger ? 'Challenger' + (t.top ? ' TOP ' + t.top : '') : t.name}">${tierIconSVG(t, 20)}</span>${t.challenger && t.top ? topPillHTML(t.top) : ''}`;
+      }
+    }
+  }catch(e){}
+  chatBadgeCache.map[uid] = html;
+  return html;
+}
+function chatListHTML(){
+  if(!db) return '<p class="empty-note">Chat indisponível: o banco de dados (Firebase) não está conectado.</p>';
+  if(!chatMsgs.length) return '<p class="empty-note">Nenhuma mensagem ainda — seja o primeiro a falar com a comunidade!</p>';
+  const me = authUser ? authUser.uid : '', isMod = !!(userProfile && userProfile.role === 'moderator');
+  return chatMsgs.map(m => {
+    const time = new Date(m.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const del = isMod ? `<button class="chat-del" type="button" data-chat-del="${escapeUntrustedText(m.id || '')}" title="Apagar mensagem">×</button>` : '';
+    return `<div class="chat-msg ${m.uid === me ? 'mine' : ''}"><div class="chat-meta">${chatBadgeFor(m.uid)}<b>${escapeUntrustedText(String(m.name || 'Jogador').slice(0,24))}</b><span>${time}</span>${del}</div><div class="chat-text">${escapeUntrustedText(String(m.text).slice(0, CHAT_MAX_LEN))}</div></div>`;
+  }).join('');
+}
+function chatHTML(){
+  return `
+    <div class="panel accent-blue chat-panel">
+      <h2>Chat <span class="sub">Comunidade BRCS2 · ao vivo</span></h2>
+      <div class="chat-list" id="chatList">${chatListHTML()}</div>
+      <div class="chat-form">
+        <input id="chatInput" type="text" maxlength="${CHAT_MAX_LEN}" placeholder="Escreva uma mensagem…" autocomplete="off" ${db ? '' : 'disabled'}>
+        <button class="primary" id="chatSend" type="button" ${db ? '' : 'disabled'}>Enviar</button>
+      </div>
+      <div class="chat-note">Mostra as mensagens dos últimos 2 dias. Seja respeitoso — a moderação pode apagar mensagens.</div>
+    </div>`;
+}
+function updateChatList(){
+  const list = document.getElementById('chatList'); if(!list) return;
+  const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 90;
+  list.innerHTML = chatListHTML();
+  if(nearBottom) list.scrollTop = list.scrollHeight;
+}
+async function sendChat(){
+  const input = document.getElementById('chatInput'); if(!input || !db || !authUser || !userProfile) return;
+  const text = input.value.replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX_LEN);
+  if(!text) return;
+  if(Date.now() - chatLastSend < 1500){ showToast('Calma! Espere um instante antes de enviar outra mensagem.'); return; }
+  chatLastSend = Date.now();
+  input.value = '';
+  const day = chatDayKey(0);
+  const msg = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,7), uid: authUser.uid, name: decodeEntities(userProfile.playerName).slice(0,24), text, ts: Date.now(), day };
+  try{
+    await db.collection('brcsgo').doc('chat:' + day).set({ msgs: firebase.firestore.FieldValue.arrayUnion(msg) }, { merge: true });
+  }catch(e){
+    console.error('Erro ao enviar mensagem', e);
+    input.value = text;
+    showToast('Não foi possível enviar a mensagem.');
+  }
+}
+function attachChatEvents(){
+  chatSeenTs = chatMsgs.length ? chatMsgs[chatMsgs.length-1].ts : chatSeenTs;
+  try{ localStorage.setItem(chatSeenKey(), String(chatSeenTs)); }catch(e){}
+  chatUnread = 0; updateChatPill();
+  const list = document.getElementById('chatList'), input = document.getElementById('chatInput'), btn = document.getElementById('chatSend');
+  if(list) list.scrollTop = list.scrollHeight;
+  if(btn) btn.addEventListener('click', sendChat);
+  if(input){
+    input.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } });
+    if(window.matchMedia && matchMedia('(hover:hover)').matches) input.focus();
+  }
+  if(list) list.addEventListener('click', async e => {
+    const b = e.target.closest('[data-chat-del]'); if(!b || !userProfile || userProfile.role !== 'moderator') return;
+    const m = chatMsgs.find(x => x.id === b.dataset.chatDel); if(!m) return;
+    try{ await db.collection('brcsgo').doc('chat:' + (m.day || chatDayKey(0))).update({ msgs: firebase.firestore.FieldValue.arrayRemove(m) }); }
+    catch(err){ showToast('Não foi possível apagar a mensagem.'); }
+  });
+}
+
+// ---------------- Compartilhar ----------------
+function shareRowHTML(cfg, s){
+  if(!cfg.hasPatente || s.calibrating) return '';
+  return `<div class="share-row"><button class="secondary" id="shareBtn" type="button">↗ Compartilhar meu rank</button></div>`;
+}
+function attachShareEvents(){
+  const b = document.getElementById('shareBtn');
+  if(b) b.addEventListener('click', openShareModal);
+}
+function shareUrl(){ return /^https?:$/.test(location.protocol) ? location.origin + location.pathname : ''; }
+function shareInfo(p, s, tier){
+  const hidden = isEloHidden(s.elo);
+  return {
+    name: decodeEntities(p.name), mode: MODES[viewMode].label,
+    rank: tier.challenger ? 'CHALLENGER' : 'NÍVEL ' + tier.level,
+    top: tier.top ? 'TOP ' + tier.top : '', pos: tier.pos || 0,
+    eloLine: hidden ? 'ELO OCULTO' : s.elo + ' ELO',
+    total: s.total, wins: s.wins, winRate: s.winRate, kd: s.kd, color: tier.color, tier
+  };
+}
+function shareText(i){
+  const rk = i.rank === 'CHALLENGER' ? 'Challenger' + (i.top ? ' ' + i.top : '') : 'Nível ' + i.rank.replace('NÍVEL ','');
+  return `Sou ${rk} no BRCS2 (${i.mode})! ${i.eloLine === 'ELO OCULTO' ? '' : i.eloLine + ' · '}${i.wins} vitórias · K/D ${i.kd.toFixed(2)}. Venha me desafiar!`;
+}
+function svgToImage(svg, size){
+  return new Promise(resolve => {
+    const img = new Image(); img.onload = () => resolve(img); img.onerror = () => resolve(null);
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
+  });
+}
+async function drawShareCard(canvas, info){
+  const c = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
+  try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+  const bg = c.createLinearGradient(0,0,W,H); bg.addColorStop(0,'#070818'); bg.addColorStop(.55,'#12090f'); bg.addColorStop(1,'#2b0a0d');
+  c.fillStyle = bg; c.fillRect(0,0,W,H);
+  const glow = c.createRadialGradient(290,315,20,290,315,420); glow.addColorStop(0,'rgba(229,38,43,.38)'); glow.addColorStop(1,'rgba(229,38,43,0)');
+  c.fillStyle = glow; c.fillRect(0,0,W,H);
+  c.strokeStyle = 'rgba(255,255,255,.05)'; c.lineWidth = 1;
+  for(let x=0;x<W;x+=60){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,H); c.stroke(); }
+  for(let y=0;y<H;y+=60){ c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); }
+  c.fillStyle = info.color || '#E5262B'; c.fillRect(0,0,10,H);
+  const img = await svgToImage(tierIconSVG(info.tier, 340), 340);
+  if(img) c.drawImage(img, 120, 145, 340, 340);
+  const X = 520;
+  c.textBaseline = 'alphabetic';
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.font = '600 26px "IBM Plex Mono", monospace'; c.fillText('BRCS2 · COUNTER-STRIKE 2', X, 120);
+  let fs = 96; c.font = '700 ' + fs + 'px Rajdhani, sans-serif';
+  while(c.measureText(info.name).width > W - X - 60 && fs > 40){ fs -= 4; c.font = '700 ' + fs + 'px Rajdhani, sans-serif'; }
+  c.fillStyle = '#fff'; c.fillText(info.name, X, 225);
+  c.fillStyle = info.color || '#E5262B'; c.font = '700 64px Rajdhani, sans-serif';
+  c.fillText(info.rank + (info.top ? ' · ' + info.top : ''), X, 305);
+  c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '500 34px "IBM Plex Mono", monospace';
+  c.fillText(info.eloLine + (info.pos ? ' · #' + info.pos + ' do site' : ''), X, 357);
+  const stats = [['PARTIDAS', info.total], ['VITÓRIAS', info.wins], ['K/D', info.kd.toFixed(2)]];
+  stats.forEach((st, i) => {
+    const x = X + i * 210, y = 410;
+    c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(x, y, 190, 110);
+    c.fillStyle = 'rgba(255,255,255,.5)'; c.font = '600 20px Inter, sans-serif'; c.fillText(st[0], x + 18, y + 36);
+    c.fillStyle = '#fff'; c.font = '700 54px Rajdhani, sans-serif'; c.fillText(String(st[1]), x + 18, y + 92);
+  });
+  c.fillStyle = 'rgba(255,255,255,.45)'; c.font = '500 22px "IBM Plex Mono", monospace';
+  c.fillText(info.mode + (shareUrl() ? ' · ' + location.host : ''), X, 580);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    try{ const t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return ok; }
+    catch(err){ return false; }
+  }
+}
+async function openShareModal(){
+  const p = players.find(x => x.id === currentPlayerId); if(!p) return;
+  const s = computeModeStats(p.id, viewMode); if(!MODES[viewMode].hasPatente || s.calibrating) return;
+  const tier = playerTier(p, s, viewMode), info = shareInfo(p, s, tier);
+  const ov = document.createElement('div'); ov.className = 'modal-overlay'; ov.id = 'shareOverlay';
+  ov.innerHTML = `<div class="modal share-modal" role="dialog" aria-label="Compartilhar meu rank">
+      <h2 style="margin-top:0">Compartilhar meu rank</h2>
+      <canvas id="shareCanvas" width="1200" height="630"></canvas>
+      <div class="share-actions">
+        <button class="primary" id="shNative" type="button">↗ Compartilhar</button>
+        <button class="secondary" id="shWpp" type="button">WhatsApp</button>
+        <button class="secondary" id="shX" type="button">X / Twitter</button>
+        <button class="secondary" id="shDownload" type="button">Baixar imagem</button>
+        <button class="secondary" id="shCopy" type="button">Copiar texto</button>
+        <button class="secondary" id="shClose" type="button">Fechar</button>
+      </div></div>`;
+  document.body.appendChild(ov);
+  const canvas = ov.querySelector('#shareCanvas');
+  drawShareCard(canvas, info);
+  const text = shareText(info), url = shareUrl();
+  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if(e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  ov.addEventListener('click', e => { if(e.target === ov) close(); });
+  ov.querySelector('#shClose').onclick = close;
+  const toBlob = () => new Promise(r => canvas.toBlob(r, 'image/png'));
+  ov.querySelector('#shNative').onclick = async () => {
+    try{
+      const blob = await toBlob(), file = blob ? new File([blob], 'brcs2-rank.png', {type:'image/png'}) : null;
+      if(file && navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file], title:'BRCS2', text: text + (url ? ' ' + url : '')});
+      else if(navigator.share) await navigator.share(url ? {title:'BRCS2', text, url} : {title:'BRCS2', text});
+      else { await copyText(text + (url ? ' ' + url : '')); showToast('Texto copiado — cole onde quiser compartilhar.'); }
+    }catch(e){ if(!e || e.name !== 'AbortError') showToast('Não foi possível compartilhar.'); }
+  };
+  ov.querySelector('#shWpp').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(text + (url ? ' ' + url : '')), '_blank', 'noopener');
+  ov.querySelector('#shX').onclick = () => window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + (url ? '&url=' + encodeURIComponent(url) : ''), '_blank', 'noopener');
+  ov.querySelector('#shDownload').onclick = async () => {
+    const blob = await toBlob(); if(!blob) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'brcs2-rank.png';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  ov.querySelector('#shCopy').onclick = async () => { showToast((await copyText(text + (url ? ' ' + url : ''))) ? 'Texto copiado!' : 'Não foi possível copiar.'); };
+}
 
 // Microinterações do centro de comando.
 document.addEventListener('pointermove', (event) => {
@@ -3129,7 +3497,7 @@ init();
 <script>
 // ====== Idiomas (PT / EN / ES) — traduz a interface em tempo real, sem mexer na lógica ======
 (function(){
-  var DICT = {"en": {"MD10 · Calibração":"MD10 · Calibration","As 10 partidas juntas definem seu ELO inicial.":"The 10 matches together set your starting ELO.","Remover":"Remove","Ação":"Action","Ver histórico de":"View history of","Registrar": "Log match", "Meu Perfil": "My Profile", "Histórico": "History", "Ranking": "Ranking", "Eventos": "Events", "Moderação": "Moderation", "Sair": "Log out", "Perfil": "Profile", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Matches & Ranking", "Rede BRCS2 online": "BRCS2 network online", "Partidas, ranks e": "Matches, ranks and", "níveis.": "levels.", "Operadores": "Players", "Partidas": "Matches", "Eventos ativos": "Active events", "Em revisão": "Under review", "Modo": "Mode", "Staff autorizado": "Authorized staff", "Operador ativo": "Active player", "Todas as regiões": "All regions", "Região": "Region", "Região em que você joga": "Region you play in", "Selecionar região…": "Select region…", "Selecionar…": "Select…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Set your region to join the regional ranking and compete for Challenger.", "Escolha a região em que você joga.": "Choose the region you play in.", "Challenger": "Challenger", "Nível": "Level", "Elo": "Elo", "Jogador": "Player", "Vitória %%": "Win %%", "Jogadores Ranqueados": "Ranked Players", "Partidas Aprovadas": "Approved Matches", "Em Análise": "Under Review", "Líder Atual": "Current Leader", "Nenhum jogador com partidas aprovadas neste modo ainda.": "No players with approved matches in this mode yet.", "Os melhores de cada região · Nível 10 + Top 1000": "The best of each region · Level 10 + Top 1000", "Em calibragem — MD10": "Calibrating — MD10", "Taxa Vitória": "Win Rate", "Vitórias": "Wins", "Derrotas": "Losses", "Kills Totais": "Total Kills", "Pontos Totais": "Total Points", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Points", "Estrelas MVP": "MVP Stars", "Mapa": "Map", "Resultado": "Result", "Vitória": "Win", "Derrota": "Loss", "Empate": "Draw", "Modo de Jogo": "Game Mode", "Competitivo": "Competitive", "Casual": "Casual", "Mata-Mata": "Deathmatch", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Log Match", "Print do placar final": "Final scoreboard screenshot", "Enviar para Análise": "Submit for Review", "Partida enviada! Verificando em segundo plano...": "Match submitted! Verifying in the background...", "Anexe um print do placar final da partida.": "Attach a screenshot of the final scoreboard.", "Envie o print em PNG, JPEG ou WebP.": "Upload the screenshot as PNG, JPEG or WebP.", "O print deve ter no máximo 5 MB.": "The screenshot must be at most 5 MB.", "Selecione um jogador para ver o histórico.": "Select a player to see their history.", "Nenhuma partida registrada neste modo ainda.": "No matches logged in this mode yet.", "Data": "Date", "Status / Δ Elo": "Status / Δ Elo", "🤖 ajustado": "🤖 adjusted", "Aprovar": "Approve", "Rejeitar": "Reject", "Rejeitar esta partida?": "Reject this match?", "Baixar imagem": "Download image", "Nenhuma partida aguardando análise.": "No matches awaiting review.", "Acesso restrito à equipe do BRCS2.": "Access restricted to the BRCS2 staff.", "Eventos & Campeonatos": "Events & Championships", "Copas, torneios e disputas oficiais do BRCS2": "Official BRCS2 cups, tournaments and contests", "+ Novo campeonato": "+ New championship", "Novo Campeonato": "New Championship", "Criar campeonato": "Create championship", "Cancelar": "Cancel", "Nome do campeonato": "Championship name", "Sigla / abreviação": "Acronym / abbreviation", "Descrição": "Description", "Premiação": "Prize", "Data de início": "Start date", "Fases do campeonato": "Championship stages", "Times convocados (um por linha ou separados por vírgula)": "Invited teams (one per line or comma-separated)", "Qualificatórias": "Qualifiers", "16 avos": "Round of 32", "8 avos": "Round of 16", "Quartas de Final": "Quarterfinals", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podium 🏆", "Campeão:": "Champion:", "👑 Campeão:": "👑 Champion:", "Encerrar campeonato 🏆": "End championship 🏆", "Excluir": "Delete", "Campeonato encerrado!": "Championship finished!", "Campeonato excluído.": "Championship deleted.", "Fase avançada!": "Stage advanced!", "Excluir este campeonato? Não dá pra desfazer.": "Delete this championship? This can't be undone.", "Informe o nome do campeonato.": "Enter the championship name.", "Informe pelo menos 2 times.": "Enter at least 2 teams.", "Selecione ao menos uma fase.": "Select at least one stage.", "Sem descrição.": "No description.", "Sem fases configuradas.": "No stages configured.", "← Voltar": "← Back", "Time": "Team", "Times:": "Teams:", "Fases:": "Stages:", "Início:": "Start:", "Acesso autorizado": "Authorized access", "Seu squad.": "Your squad.", "Seu legado.": "Your legacy.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Log every match, track your progress and earn your place in the BRCS2 ranking.", "Complete seu perfil": "Complete your profile", "Falta só escolher seu nick pra entrar.": "Just pick your nickname to get in.", "Seu nick": "Your nickname", "Seu nick (nome de jogador)": "Your nickname (player name)", "Código de moderador": "Moderator code", "Código de moderador (opcional)": "Moderator code (optional)", "(opcional)": "(optional)", "Somente equipe": "Staff only", "Concluir": "Finish", "Email": "Email", "Senha": "Password", "ou continue com": "or continue with", "Acesse seu perfil para registrar a próxima missão.": "Access your profile to log your next match.", "Crie seu perfil e comece sua trajetória no ranking.": "Create your profile and start your ranking journey.", "Entrar no comando": "Sign in", "Criar conta": "Create account", "Já tenho acesso": "I already have an account", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "You can play, log, compete, evolve and lead on BRCS2", "JOGAR.": "PLAY.", "REGISTRAR.": "LOG.", "COMPETIR.": "COMPETE.", "EVOLUIR.": "EVOLVE.", "LIDERAR.": "LEAD.", "VOCÊ PODE": "YOU CAN", "Carregando painel...": "Loading dashboard...", "Reivindicar Jogador Antigo": "Claim Old Player", "Jogador antigo": "Old player", "Transferir histórico pra minha conta": "Transfer history to my account", "Histórico antigo transferido com sucesso!": "Old history transferred successfully!", "Digite um nick.": "Enter a nickname.", "E-mail inválido.": "Invalid email.", "E-mail ou senha incorretos.": "Wrong email or password.", "Senha incorreta.": "Wrong password.", "Não existe conta com esse e-mail.": "No account with this email.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "This email already has an account. Try signing in instead.", "Use um nick entre 3 e 24 caracteres.": "Use a nickname between 3 and 24 characters.", "Use uma senha com pelo menos 12 caracteres.": "Use a password with at least 12 characters.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Include uppercase, lowercase letters and numbers in the password.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Too many attempts — wait a bit and try again.", "Não foi possível concluir. Tente novamente.": "Could not complete. Please try again.", "IA confirmou todas as estatísticas do print.": "AI confirmed all stats in the screenshot.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "The AI couldn't confirm the screenshot data — manual review needed.", "Sincronizado": "Synced", "Sistema": "System", "Objetivo": "Goal", "Registrar resultado": "Log a result", "Subir no ranking": "Climb the ranking", "Ver →": "View →", "Operação selecionada": "Selected mode", "Salvando…": "Saving…", "NA · América do Norte": "NA · North America", "CAM · América Central e Caribe": "CAM · Central America & Caribbean", "SA · América do Sul": "SA · South America", "EU · Europa": "EU · Europe", "CIS · Rússia e CEI": "CIS · Russia & CIS", "ME · Oriente Médio": "ME · Middle East", "AF · África": "AF · Africa", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceania"}, "es": {"MD10 · Calibração":"MD10 · Calibración","As 10 partidas juntas definem seu ELO inicial.":"Las 10 partidas juntas definen tu ELO inicial.","Remover":"Eliminar","Ação":"Acción","Ver histórico de":"Ver historial de","Registrar": "Registrar", "Meu Perfil": "Mi perfil", "Histórico": "Historial", "Ranking": "Ranking", "Eventos": "Eventos", "Moderação": "Moderación", "Sair": "Salir", "Perfil": "Perfil", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Partidas y Ranking", "Rede BRCS2 online": "Red BRCS2 en línea", "Partidas, ranks e": "Partidas, rangos y", "níveis.": "niveles.", "Operadores": "Jugadores", "Partidas": "Partidas", "Eventos ativos": "Eventos activos", "Em revisão": "En revisión", "Modo": "Modo", "Staff autorizado": "Staff autorizado", "Operador ativo": "Jugador activo", "Todas as regiões": "Todas las regiones", "Região": "Región", "Região em que você joga": "Región en la que juegas", "Selecionar região…": "Seleccionar región…", "Selecionar…": "Seleccionar…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Define tu región para entrar al ranking regional y competir por Challenger.", "Escolha a região em que você joga.": "Elige la región en la que juegas.", "Challenger": "Challenger", "Nível": "Nivel", "Elo": "Elo", "Jogador": "Jugador", "Vitória %%": "Victoria %%", "Jogadores Ranqueados": "Jugadores clasificados", "Partidas Aprovadas": "Partidas aprobadas", "Em Análise": "En análisis", "Líder Atual": "Líder actual", "Nenhum jogador com partidas aprovadas neste modo ainda.": "Aún no hay jugadores con partidas aprobadas en este modo.", "Os melhores de cada região · Nível 10 + Top 1000": "Los mejores de cada región · Nivel 10 + Top 1000", "Em calibragem — MD10": "En calibración — MD10", "Taxa Vitória": "Tasa de victorias", "Vitórias": "Victorias", "Derrotas": "Derrotas", "Kills Totais": "Kills totales", "Pontos Totais": "Puntos totales", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Puntos", "Estrelas MVP": "Estrellas MVP", "Mapa": "Mapa", "Resultado": "Resultado", "Vitória": "Victoria", "Derrota": "Derrota", "Empate": "Empate", "Modo de Jogo": "Modo de juego", "Competitivo": "Competitivo", "Casual": "Casual", "Mata-Mata": "Duelo a muerte", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Registrar partida", "Print do placar final": "Captura del marcador final", "Enviar para Análise": "Enviar a revisión", "Partida enviada! Verificando em segundo plano...": "¡Partida enviada! Verificando en segundo plano...", "Anexe um print do placar final da partida.": "Adjunta una captura del marcador final.", "Envie o print em PNG, JPEG ou WebP.": "Sube la captura en PNG, JPEG o WebP.", "O print deve ter no máximo 5 MB.": "La captura debe pesar como máximo 5 MB.", "Selecione um jogador para ver o histórico.": "Selecciona un jugador para ver su historial.", "Nenhuma partida registrada neste modo ainda.": "Aún no hay partidas registradas en este modo.", "Data": "Fecha", "Status / Δ Elo": "Estado / Δ Elo", "🤖 ajustado": "🤖 ajustado", "Aprovar": "Aprobar", "Rejeitar": "Rechazar", "Rejeitar esta partida?": "¿Rechazar esta partida?", "Baixar imagem": "Descargar imagen", "Nenhuma partida aguardando análise.": "Ninguna partida en espera de revisión.", "Acesso restrito à equipe do BRCS2.": "Acceso restringido al equipo de BRCS2.", "Eventos & Campeonatos": "Eventos y campeonatos", "Copas, torneios e disputas oficiais do BRCS2": "Copas, torneos y competiciones oficiales de BRCS2", "+ Novo campeonato": "+ Nuevo campeonato", "Novo Campeonato": "Nuevo campeonato", "Criar campeonato": "Crear campeonato", "Cancelar": "Cancelar", "Nome do campeonato": "Nombre del campeonato", "Sigla / abreviação": "Sigla / abreviatura", "Descrição": "Descripción", "Premiação": "Premio", "Data de início": "Fecha de inicio", "Fases do campeonato": "Fases del campeonato", "Times convocados (um por linha ou separados por vírgula)": "Equipos convocados (uno por línea o separados por coma)", "Qualificatórias": "Clasificatorias", "16 avos": "Dieciseisavos", "8 avos": "Octavos", "Quartas de Final": "Cuartos de final", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podio 🏆", "Campeão:": "Campeón:", "👑 Campeão:": "👑 Campeón:", "Encerrar campeonato 🏆": "Finalizar campeonato 🏆", "Excluir": "Eliminar", "Campeonato encerrado!": "¡Campeonato finalizado!", "Campeonato excluído.": "Campeonato eliminado.", "Fase avançada!": "¡Fase avanzada!", "Excluir este campeonato? Não dá pra desfazer.": "¿Eliminar este campeonato? No se puede deshacer.", "Informe o nome do campeonato.": "Indica el nombre del campeonato.", "Informe pelo menos 2 times.": "Indica al menos 2 equipos.", "Selecione ao menos uma fase.": "Selecciona al menos una fase.", "Sem descrição.": "Sin descripción.", "Sem fases configuradas.": "Sin fases configuradas.", "← Voltar": "← Volver", "Time": "Equipo", "Times:": "Equipos:", "Fases:": "Fases:", "Início:": "Inicio:", "Acesso autorizado": "Acceso autorizado", "Seu squad.": "Tu equipo.", "Seu legado.": "Tu legado.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Registra cada partida, sigue tu evolución y conquista tu lugar en el ranking BRCS2.", "Complete seu perfil": "Completa tu perfil", "Falta só escolher seu nick pra entrar.": "Solo falta elegir tu nick para entrar.", "Seu nick": "Tu nick", "Seu nick (nome de jogador)": "Tu nick (nombre de jugador)", "Código de moderador": "Código de moderador", "Código de moderador (opcional)": "Código de moderador (opcional)", "(opcional)": "(opcional)", "Somente equipe": "Solo equipo", "Concluir": "Finalizar", "Email": "Correo", "Senha": "Contraseña", "ou continue com": "o continúa con", "Acesse seu perfil para registrar a próxima missão.": "Accede a tu perfil para registrar tu próxima partida.", "Crie seu perfil e comece sua trajetória no ranking.": "Crea tu perfil y empieza tu trayectoria en el ranking.", "Entrar no comando": "Iniciar sesión", "Criar conta": "Crear cuenta", "Já tenho acesso": "Ya tengo cuenta", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "Puedes jugar, registrar, competir, evolucionar y liderar en BRCS2", "JOGAR.": "JUGAR.", "REGISTRAR.": "REGISTRAR.", "COMPETIR.": "COMPETIR.", "EVOLUIR.": "EVOLUCIONAR.", "LIDERAR.": "LIDERAR.", "VOCÊ PODE": "PUEDES", "Carregando painel...": "Cargando panel...", "Reivindicar Jogador Antigo": "Reclamar jugador antiguo", "Jogador antigo": "Jugador antiguo", "Transferir histórico pra minha conta": "Transferir historial a mi cuenta", "Histórico antigo transferido com sucesso!": "¡Historial antiguo transferido con éxito!", "Digite um nick.": "Escribe un nick.", "E-mail inválido.": "Correo inválido.", "E-mail ou senha incorretos.": "Correo o contraseña incorrectos.", "Senha incorreta.": "Contraseña incorrecta.", "Não existe conta com esse e-mail.": "No existe una cuenta con este correo.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "Este correo ya tiene una cuenta. Intenta iniciar sesión.", "Use um nick entre 3 e 24 caracteres.": "Usa un nick de entre 3 y 24 caracteres.", "Use uma senha com pelo menos 12 caracteres.": "Usa una contraseña de al menos 12 caracteres.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Incluye mayúsculas, minúsculas y números en la contraseña.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Demasiados intentos seguidos — espera un poco e inténtalo de nuevo.", "Não foi possível concluir. Tente novamente.": "No se pudo completar. Inténtalo de nuevo.", "IA confirmou todas as estatísticas do print.": "La IA confirmó todas las estadísticas de la captura.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "La IA no pudo confirmar los datos de la captura — se requiere revisión manual.", "Sincronizado": "Sincronizado", "Sistema": "Sistema", "Objetivo": "Objetivo", "Registrar resultado": "Registrar resultado", "Subir no ranking": "Subir en el ranking", "Ver →": "Ver →", "Operação selecionada": "Modo seleccionado", "Salvando…": "Guardando…", "NA · América do Norte": "NA · Norteamérica", "CAM · América Central e Caribe": "CAM · Centroamérica y Caribe", "SA · América do Sul": "SA · Sudamérica", "EU · Europa": "EU · Europa", "CIS · Rússia e CEI": "CIS · Rusia y CEI", "ME · Oriente Médio": "ME · Oriente Medio", "AF · África": "AF · África", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceanía"}};
+  var DICT = {"en": {"Chat":"Chat","Compartilhar":"Share","Baixar imagem":"Download image","Copiar texto":"Copy text","Fechar":"Close","Enviar":"Send","Escreva uma mensagem…":"Write a message…","Comunidade BRCS2 · ao vivo":"BRCS2 community · live","Nenhuma mensagem ainda — seja o primeiro a falar com a comunidade!":"No messages yet — be the first to talk to the community!","ELO oculto · Nível 10":"Hidden ELO · Level 10","Rumo ao Challenger — seu progresso é secreto. Continue vencendo.":"On the road to Challenger — your progress is secret. Keep winning.","Challenger alcançado":"Challenger reached","Você agora disputa o TOP do BRCS2":"You now compete for the BRCS2 TOP","Subiu no ranking!":"Ranking up!","Você é o TOP 1 do BRCS2 👑":"You are the BRCS2 TOP 1 👑","Compartilhar meu rank":"Share my rank","Calma! Espere um instante antes de enviar outra mensagem.":"Easy! Wait a moment before sending another message.","Não foi possível enviar a mensagem.":"Could not send the message.","Texto copiado!":"Text copied!","MD10 · Calibração":"MD10 · Calibration","As 10 partidas juntas definem seu ELO inicial.":"The 10 matches together set your starting ELO.","Remover":"Remove","Ação":"Action","Ver histórico de":"View history of","Registrar": "Log match", "Meu Perfil": "My Profile", "Histórico": "History", "Ranking": "Ranking", "Eventos": "Events", "Moderação": "Moderation", "Sair": "Log out", "Perfil": "Profile", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Matches & Ranking", "Rede BRCS2 online": "BRCS2 network online", "Partidas, ranks e": "Matches, ranks and", "níveis.": "levels.", "Operadores": "Players", "Partidas": "Matches", "Eventos ativos": "Active events", "Em revisão": "Under review", "Modo": "Mode", "Staff autorizado": "Authorized staff", "Operador ativo": "Active player", "Todas as regiões": "All regions", "Região": "Region", "Região em que você joga": "Region you play in", "Selecionar região…": "Select region…", "Selecionar…": "Select…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Set your region to join the regional ranking and compete for Challenger.", "Escolha a região em que você joga.": "Choose the region you play in.", "Challenger": "Challenger", "Nível": "Level", "Elo": "Elo", "Jogador": "Player", "Vitória %%": "Win %%", "Jogadores Ranqueados": "Ranked Players", "Partidas Aprovadas": "Approved Matches", "Em Análise": "Under Review", "Líder Atual": "Current Leader", "Nenhum jogador com partidas aprovadas neste modo ainda.": "No players with approved matches in this mode yet.", "Os melhores de cada região · Nível 10 + Top 1000": "The best of each region · Level 10 + Top 1000", "Em calibragem — MD10": "Calibrating — MD10", "Taxa Vitória": "Win Rate", "Vitórias": "Wins", "Derrotas": "Losses", "Kills Totais": "Total Kills", "Pontos Totais": "Total Points", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Points", "Estrelas MVP": "MVP Stars", "Mapa": "Map", "Resultado": "Result", "Vitória": "Win", "Derrota": "Loss", "Empate": "Draw", "Modo de Jogo": "Game Mode", "Competitivo": "Competitive", "Casual": "Casual", "Mata-Mata": "Deathmatch", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Log Match", "Print do placar final": "Final scoreboard screenshot", "Enviar para Análise": "Submit for Review", "Partida enviada! Verificando em segundo plano...": "Match submitted! Verifying in the background...", "Anexe um print do placar final da partida.": "Attach a screenshot of the final scoreboard.", "Envie o print em PNG, JPEG ou WebP.": "Upload the screenshot as PNG, JPEG or WebP.", "O print deve ter no máximo 5 MB.": "The screenshot must be at most 5 MB.", "Selecione um jogador para ver o histórico.": "Select a player to see their history.", "Nenhuma partida registrada neste modo ainda.": "No matches logged in this mode yet.", "Data": "Date", "Status / Δ Elo": "Status / Δ Elo", "🤖 ajustado": "🤖 adjusted", "Aprovar": "Approve", "Rejeitar": "Reject", "Rejeitar esta partida?": "Reject this match?", "Baixar imagem": "Download image", "Nenhuma partida aguardando análise.": "No matches awaiting review.", "Acesso restrito à equipe do BRCS2.": "Access restricted to the BRCS2 staff.", "Eventos & Campeonatos": "Events & Championships", "Copas, torneios e disputas oficiais do BRCS2": "Official BRCS2 cups, tournaments and contests", "+ Novo campeonato": "+ New championship", "Novo Campeonato": "New Championship", "Criar campeonato": "Create championship", "Cancelar": "Cancel", "Nome do campeonato": "Championship name", "Sigla / abreviação": "Acronym / abbreviation", "Descrição": "Description", "Premiação": "Prize", "Data de início": "Start date", "Fases do campeonato": "Championship stages", "Times convocados (um por linha ou separados por vírgula)": "Invited teams (one per line or comma-separated)", "Qualificatórias": "Qualifiers", "16 avos": "Round of 32", "8 avos": "Round of 16", "Quartas de Final": "Quarterfinals", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podium 🏆", "Campeão:": "Champion:", "👑 Campeão:": "👑 Champion:", "Encerrar campeonato 🏆": "End championship 🏆", "Excluir": "Delete", "Campeonato encerrado!": "Championship finished!", "Campeonato excluído.": "Championship deleted.", "Fase avançada!": "Stage advanced!", "Excluir este campeonato? Não dá pra desfazer.": "Delete this championship? This can't be undone.", "Informe o nome do campeonato.": "Enter the championship name.", "Informe pelo menos 2 times.": "Enter at least 2 teams.", "Selecione ao menos uma fase.": "Select at least one stage.", "Sem descrição.": "No description.", "Sem fases configuradas.": "No stages configured.", "← Voltar": "← Back", "Time": "Team", "Times:": "Teams:", "Fases:": "Stages:", "Início:": "Start:", "Acesso autorizado": "Authorized access", "Seu squad.": "Your squad.", "Seu legado.": "Your legacy.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Log every match, track your progress and earn your place in the BRCS2 ranking.", "Complete seu perfil": "Complete your profile", "Falta só escolher seu nick pra entrar.": "Just pick your nickname to get in.", "Seu nick": "Your nickname", "Seu nick (nome de jogador)": "Your nickname (player name)", "Código de moderador": "Moderator code", "Código de moderador (opcional)": "Moderator code (optional)", "(opcional)": "(optional)", "Somente equipe": "Staff only", "Concluir": "Finish", "Email": "Email", "Senha": "Password", "ou continue com": "or continue with", "Acesse seu perfil para registrar a próxima missão.": "Access your profile to log your next match.", "Crie seu perfil e comece sua trajetória no ranking.": "Create your profile and start your ranking journey.", "Entrar no comando": "Sign in", "Criar conta": "Create account", "Já tenho acesso": "I already have an account", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "You can play, log, compete, evolve and lead on BRCS2", "JOGAR.": "PLAY.", "REGISTRAR.": "LOG.", "COMPETIR.": "COMPETE.", "EVOLUIR.": "EVOLVE.", "LIDERAR.": "LEAD.", "VOCÊ PODE": "YOU CAN", "Carregando painel...": "Loading dashboard...", "Reivindicar Jogador Antigo": "Claim Old Player", "Jogador antigo": "Old player", "Transferir histórico pra minha conta": "Transfer history to my account", "Histórico antigo transferido com sucesso!": "Old history transferred successfully!", "Digite um nick.": "Enter a nickname.", "E-mail inválido.": "Invalid email.", "E-mail ou senha incorretos.": "Wrong email or password.", "Senha incorreta.": "Wrong password.", "Não existe conta com esse e-mail.": "No account with this email.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "This email already has an account. Try signing in instead.", "Use um nick entre 3 e 24 caracteres.": "Use a nickname between 3 and 24 characters.", "Use uma senha com pelo menos 12 caracteres.": "Use a password with at least 12 characters.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Include uppercase, lowercase letters and numbers in the password.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Too many attempts — wait a bit and try again.", "Não foi possível concluir. Tente novamente.": "Could not complete. Please try again.", "IA confirmou todas as estatísticas do print.": "AI confirmed all stats in the screenshot.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "The AI couldn't confirm the screenshot data — manual review needed.", "Sincronizado": "Synced", "Sistema": "System", "Objetivo": "Goal", "Registrar resultado": "Log a result", "Subir no ranking": "Climb the ranking", "Ver →": "View →", "Operação selecionada": "Selected mode", "Salvando…": "Saving…", "NA · América do Norte": "NA · North America", "CAM · América Central e Caribe": "CAM · Central America & Caribbean", "SA · América do Sul": "SA · South America", "EU · Europa": "EU · Europe", "CIS · Rússia e CEI": "CIS · Russia & CIS", "ME · Oriente Médio": "ME · Middle East", "AF · África": "AF · Africa", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceania"}, "es": {"Chat":"Chat","Compartilhar meu rank":"Compartir mi rango","Compartilhar":"Compartir","Baixar imagem":"Descargar imagen","Copiar texto":"Copiar texto","Fechar":"Cerrar","Enviar":"Enviar","Escreva uma mensagem…":"Escribe un mensaje…","Comunidade BRCS2 · ao vivo":"Comunidad BRCS2 · en vivo","Nenhuma mensagem ainda — seja o primeiro a falar com a comunidade!":"Aún no hay mensajes — ¡sé el primero en hablar con la comunidad!","ELO oculto · Nível 10":"ELO oculto · Nivel 10","Rumo ao Challenger — seu progresso é secreto. Continue vencendo.":"Rumbo a Challenger — tu progreso es secreto. Sigue ganando.","Challenger alcançado":"Challenger alcanzado","Você agora disputa o TOP do BRCS2":"Ahora compites por el TOP de BRCS2","Subiu no ranking!":"¡Subiste en el ranking!","Você é o TOP 1 do BRCS2 👑":"Eres el TOP 1 de BRCS2 👑","Calma! Espere um instante antes de enviar outra mensagem.":"¡Calma! Espera un momento antes de enviar otro mensaje.","Não foi possível enviar a mensagem.":"No se pudo enviar el mensaje.","Texto copiado!":"¡Texto copiado!","MD10 · Calibração":"MD10 · Calibración","As 10 partidas juntas definem seu ELO inicial.":"Las 10 partidas juntas definen tu ELO inicial.","Remover":"Eliminar","Ação":"Acción","Ver histórico de":"Ver historial de","Registrar": "Registrar", "Meu Perfil": "Mi perfil", "Histórico": "Historial", "Ranking": "Ranking", "Eventos": "Eventos", "Moderação": "Moderación", "Sair": "Salir", "Perfil": "Perfil", "Counter-Strike 2 · Partidas & Ranking": "Counter-Strike 2 · Partidas y Ranking", "Rede BRCS2 online": "Red BRCS2 en línea", "Partidas, ranks e": "Partidas, rangos y", "níveis.": "niveles.", "Operadores": "Jugadores", "Partidas": "Partidas", "Eventos ativos": "Eventos activos", "Em revisão": "En revisión", "Modo": "Modo", "Staff autorizado": "Staff autorizado", "Operador ativo": "Jugador activo", "Todas as regiões": "Todas las regiones", "Região": "Región", "Região em que você joga": "Región en la que juegas", "Selecionar região…": "Seleccionar región…", "Selecionar…": "Seleccionar…", "Defina sua região para entrar no ranking regional e disputar o Challenger.": "Define tu región para entrar al ranking regional y competir por Challenger.", "Escolha a região em que você joga.": "Elige la región en la que juegas.", "Challenger": "Challenger", "Nível": "Nivel", "Elo": "Elo", "Jogador": "Jugador", "Vitória %%": "Victoria %%", "Jogadores Ranqueados": "Jugadores clasificados", "Partidas Aprovadas": "Partidas aprobadas", "Em Análise": "En análisis", "Líder Atual": "Líder actual", "Nenhum jogador com partidas aprovadas neste modo ainda.": "Aún no hay jugadores con partidas aprobadas en este modo.", "Os melhores de cada região · Nível 10 + Top 1000": "Los mejores de cada región · Nivel 10 + Top 1000", "Em calibragem — MD10": "En calibración — MD10", "Taxa Vitória": "Tasa de victorias", "Vitórias": "Victorias", "Derrotas": "Derrotas", "Kills Totais": "Kills totales", "Pontos Totais": "Puntos totales", "Kills": "Kills", "Deaths": "Deaths", "Assists": "Assists", "MVPs": "MVPs", "Pontos": "Puntos", "Estrelas MVP": "Estrellas MVP", "Mapa": "Mapa", "Resultado": "Resultado", "Vitória": "Victoria", "Derrota": "Derrota", "Empate": "Empate", "Modo de Jogo": "Modo de juego", "Competitivo": "Competitivo", "Casual": "Casual", "Mata-Mata": "Duelo a muerte", "Gun Game": "Gun Game", "4Fun": "4Fun", "Registrar Partida": "Registrar partida", "Print do placar final": "Captura del marcador final", "Enviar para Análise": "Enviar a revisión", "Partida enviada! Verificando em segundo plano...": "¡Partida enviada! Verificando en segundo plano...", "Anexe um print do placar final da partida.": "Adjunta una captura del marcador final.", "Envie o print em PNG, JPEG ou WebP.": "Sube la captura en PNG, JPEG o WebP.", "O print deve ter no máximo 5 MB.": "La captura debe pesar como máximo 5 MB.", "Selecione um jogador para ver o histórico.": "Selecciona un jugador para ver su historial.", "Nenhuma partida registrada neste modo ainda.": "Aún no hay partidas registradas en este modo.", "Data": "Fecha", "Status / Δ Elo": "Estado / Δ Elo", "🤖 ajustado": "🤖 ajustado", "Aprovar": "Aprobar", "Rejeitar": "Rechazar", "Rejeitar esta partida?": "¿Rechazar esta partida?", "Baixar imagem": "Descargar imagen", "Nenhuma partida aguardando análise.": "Ninguna partida en espera de revisión.", "Acesso restrito à equipe do BRCS2.": "Acceso restringido al equipo de BRCS2.", "Eventos & Campeonatos": "Eventos y campeonatos", "Copas, torneios e disputas oficiais do BRCS2": "Copas, torneos y competiciones oficiales de BRCS2", "+ Novo campeonato": "+ Nuevo campeonato", "Novo Campeonato": "Nuevo campeonato", "Criar campeonato": "Crear campeonato", "Cancelar": "Cancelar", "Nome do campeonato": "Nombre del campeonato", "Sigla / abreviação": "Sigla / abreviatura", "Descrição": "Descripción", "Premiação": "Premio", "Data de início": "Fecha de inicio", "Fases do campeonato": "Fases del campeonato", "Times convocados (um por linha ou separados por vírgula)": "Equipos convocados (uno por línea o separados por coma)", "Qualificatórias": "Clasificatorias", "16 avos": "Dieciseisavos", "8 avos": "Octavos", "Quartas de Final": "Cuartos de final", "Semifinal": "Semifinal", "Final": "Final", "Pódio 🏆": "Podio 🏆", "Campeão:": "Campeón:", "👑 Campeão:": "👑 Campeón:", "Encerrar campeonato 🏆": "Finalizar campeonato 🏆", "Excluir": "Eliminar", "Campeonato encerrado!": "¡Campeonato finalizado!", "Campeonato excluído.": "Campeonato eliminado.", "Fase avançada!": "¡Fase avanzada!", "Excluir este campeonato? Não dá pra desfazer.": "¿Eliminar este campeonato? No se puede deshacer.", "Informe o nome do campeonato.": "Indica el nombre del campeonato.", "Informe pelo menos 2 times.": "Indica al menos 2 equipos.", "Selecione ao menos uma fase.": "Selecciona al menos una fase.", "Sem descrição.": "Sin descripción.", "Sem fases configuradas.": "Sin fases configuradas.", "← Voltar": "← Volver", "Time": "Equipo", "Times:": "Equipos:", "Fases:": "Fases:", "Início:": "Inicio:", "Acesso autorizado": "Acceso autorizado", "Seu squad.": "Tu equipo.", "Seu legado.": "Tu legado.", "Registre cada partida, acompanhe sua evolução e conquiste espaço no ranking BRCS2.": "Registra cada partida, sigue tu evolución y conquista tu lugar en el ranking BRCS2.", "Complete seu perfil": "Completa tu perfil", "Falta só escolher seu nick pra entrar.": "Solo falta elegir tu nick para entrar.", "Seu nick": "Tu nick", "Seu nick (nome de jogador)": "Tu nick (nombre de jugador)", "Código de moderador": "Código de moderador", "Código de moderador (opcional)": "Código de moderador (opcional)", "(opcional)": "(opcional)", "Somente equipe": "Solo equipo", "Concluir": "Finalizar", "Email": "Correo", "Senha": "Contraseña", "ou continue com": "o continúa con", "Acesse seu perfil para registrar a próxima missão.": "Accede a tu perfil para registrar tu próxima partida.", "Crie seu perfil e comece sua trajetória no ranking.": "Crea tu perfil y empieza tu trayectoria en el ranking.", "Entrar no comando": "Iniciar sesión", "Criar conta": "Crear cuenta", "Já tenho acesso": "Ya tengo cuenta", "Você pode jogar, registrar, competir, evoluir e liderar na BRCS2": "Puedes jugar, registrar, competir, evolucionar y liderar en BRCS2", "JOGAR.": "JUGAR.", "REGISTRAR.": "REGISTRAR.", "COMPETIR.": "COMPETIR.", "EVOLUIR.": "EVOLUCIONAR.", "LIDERAR.": "LIDERAR.", "VOCÊ PODE": "PUEDES", "Carregando painel...": "Cargando panel...", "Reivindicar Jogador Antigo": "Reclamar jugador antiguo", "Jogador antigo": "Jugador antiguo", "Transferir histórico pra minha conta": "Transferir historial a mi cuenta", "Histórico antigo transferido com sucesso!": "¡Historial antiguo transferido con éxito!", "Digite um nick.": "Escribe un nick.", "E-mail inválido.": "Correo inválido.", "E-mail ou senha incorretos.": "Correo o contraseña incorrectos.", "Senha incorreta.": "Contraseña incorrecta.", "Não existe conta com esse e-mail.": "No existe una cuenta con este correo.", "Esse e-mail já tem uma conta. Tente entrar em vez de criar uma nova.": "Este correo ya tiene una cuenta. Intenta iniciar sesión.", "Use um nick entre 3 e 24 caracteres.": "Usa un nick de entre 3 y 24 caracteres.", "Use uma senha com pelo menos 12 caracteres.": "Usa una contraseña de al menos 12 caracteres.", "Inclua letras maiúsculas, minúsculas e números na senha.": "Incluye mayúsculas, minúsculas y números en la contraseña.", "Muitas tentativas seguidas — espere um pouco e tente de novo.": "Demasiados intentos seguidos — espera un poco e inténtalo de nuevo.", "Não foi possível concluir. Tente novamente.": "No se pudo completar. Inténtalo de nuevo.", "IA confirmou todas as estatísticas do print.": "La IA confirmó todas las estadísticas de la captura.", "A IA não conseguiu confirmar os dados no print — revisão manual necessária.": "La IA no pudo confirmar los datos de la captura — se requiere revisión manual.", "Sincronizado": "Sincronizado", "Sistema": "Sistema", "Objetivo": "Objetivo", "Registrar resultado": "Registrar resultado", "Subir no ranking": "Subir en el ranking", "Ver →": "Ver →", "Operação selecionada": "Modo seleccionado", "Salvando…": "Guardando…", "NA · América do Norte": "NA · Norteamérica", "CAM · América Central e Caribe": "CAM · Centroamérica y Caribe", "SA · América do Sul": "SA · Sudamérica", "EU · Europa": "EU · Europa", "CIS · Rússia e CEI": "CIS · Rusia y CEI", "ME · Oriente Médio": "ME · Oriente Medio", "AF · África": "AF · África", "AS · Ásia": "AS · Asia", "OCE · Oceania": "OCE · Oceanía"}};
   var PATTERNS = {
     en: [[/^(\d+) partidas? para revelar seu nível$/,function(m,n){return n+(n==='1'?' match':' matches')+' to reveal your level';}],[/^Nível (\d+)$/,'Level $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Level $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 of 10 approved matches'],[/^Calibrando \((\d+)\/10\)$/,'Calibrating ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% to '+t(b);}],[/^Região atualizada: (.+)$/,'Region updated: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 active']],
     es: [[/^(\d+) partidas? para revelar seu nível$/,function(m,n){return n+(n==='1'?' partida':' partidas')+' para revelar tu nivel';}],[/^Nível (\d+)$/,'Nivel $1'],[/^(\d+) ELO · Nível (\d+)$/,'$1 ELO · Nivel $2'],[/^(\d+) de 10 partidas aprovadas$/,'$1 de 10 partidas aprobadas'],[/^Calibrando \((\d+)\/10\)$/,'Calibrando ($1/10)'],[/^(\d+)% até (.+)$/,function(m,a,b,t){return a+'% hasta '+t(b);}],[/^Região atualizada: (.+)$/,'Región actualizada: $1'],[/^Challenger · Top (\d+) (.*)$/,'Challenger · Top $1 $2'],[/^(\d+) ativo\(s\)$/,'$1 activos']]
@@ -3266,6 +3634,31 @@ init();
     n.buffer = noiseBuf; n.loop = true; fl.type = 'lowpass'; fl.frequency.value = lp||90; g.gain.setValueAtTime(0.0001,t);
     if(rise){ g.gain.exponentialRampToValueAtTime(pk,t+d); } else { g.gain.exponentialRampToValueAtTime(pk,t+d*0.15); g.gain.exponentialRampToValueAtTime(0.0001,t+d); }
     n.connect(fl); fl.connect(g); out(g,0,0.3); n.start(t); n.stop(t+d+0.2); return {g:g}; }
+  // sub-grave com queda de tom e sustain curto (o "corpo" da explosão)
+  function sub(f0,f1,d,pk,w,type,sL){ if(!ok()) return; var t = T(w), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type||'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+d*0.8);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk,t+0.012); g.gain.setValueAtTime(pk,t+d*0.16); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); out(g,0.04,sL||0.3); o.start(t); o.stop(t+d+0.1); }
+  // onda de choque: ruído que despenca em frequência até virar só sub
+  function blast(d,pk,w,f0,f1){ if(!ok()) return; var t = T(w), n = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = noiseBuf; n.loop = true; fl.type = 'lowpass'; fl.Q.value = 0.8; fl.frequency.setValueAtTime(f0,t); fl.frequency.exponentialRampToValueAtTime(f1,t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    n.connect(fl); fl.connect(g); out(g,0.1,0.5); n.start(t); n.stop(t+d+0.1); }
+  // EXPLOSÃO bem grave — Nível 10 (big=true no Challenger: ainda mais longa e pesada)
+  function boom(big){ if(!ok()) return; var k = big ? 1.15 : 1;
+    hit('lowpass',1400,0.8,0.09,0.9*k,0);                       // estalo inicial
+    blast(2.8,1.0*k,0,1800,45);                                 // massa de ruído caindo pro sub
+    blast(1.3,0.8*k,0.01,520,60);
+    sub(70,17,4.4,1.0*k,0,'sine',0.5);                          // sub-grave principal (~17 Hz no fim)
+    sub(46,14,5.0,0.95*k,0.015,'sine',0.5);
+    sub(120,30,1.7,0.55*k,0,'triangle',0.4);                    // harmônicos pra caixas pequenas/celular
+    sub(92,26,2.4,0.4*k,0.02,'triangle',0.35);
+    sub(58,16,3.4,0.6*k,0.34,'sine',0.6);                       // eco da explosão
+    body(80,24,1.5,0.5*k,0.64,0.6);
+    rumble(4.8,0.55*k,0.05,85);                                 // rumble de escombros
+    if(big){ sub(38,12,5.4,0.9,0.5,'sine',0.6); blast(3.6,0.6,0.35,900,40); body(66,20,1.8,0.6,0.95,0.6); }
+    try{ if(navigator.vibrate) navigator.vibrate(big ? [260,70,420,90,300] : [220,60,360]); }catch(e){}
+  }
   function startDrone(){ if(drone || !ok()) return; var bg = ctx.createGain(); bg.gain.value = 1; bg.connect(master); bus = bg;
     rumble(9,0.45,0,170,true);
     var t = 0; while(t < 8.3){ var k = t/8.3, pk = 0.32+0.58*k; body(78+k*30,32,0.3,pk,t); hit('lowpass',320,1,0.1,0.25+0.3*k,t); body(66,30,0.2,pk*0.6,t+0.13); t += 0.95-0.68*k; }
@@ -3291,7 +3684,8 @@ init();
     intro:function(){ whoosh(70,1200,1.4,0.4,0,0.7); body(70,28,1.7,0.85,0.04,0.4); hit('lowpass',260,1,1.0,0.5,0.04,0.4); hiss(0.5,0.25,0.3); chunk(0.7,1.0); chunk(0.5,1.06); startDrone(); },
     step:function(i){ i = i||0; body(170-i*5,38,0.4,0.9,0); hit('lowpass',400,1,0.14,0.45,0); ring(150+i*26,0.65,0.16+i*0.01,0.01,0.45,[1,2.76,5.4,8.93]); pop(260,0.42,0.06); hiss(0.2,0.12+i*0.012,0.02); whoosh(120,900+i*220,0.34,0.14+i*0.012,0,0.9); ratchet(3,0.02,0.1,0.14,2400); if(i>=4) splash(0.16+i*0.02,0.05); if(i>=8) body(60,26,0.6,0.5,0.08,0.3); },
     riser:function(){ ratchet(16,0,0.95,0.2,2200); whoosh(100,6500,0.95,0.5,0,0.7); rumble(0.95,0.55,0,260,true); body(80,34,0.3,0.5,0.35); body(84,34,0.3,0.6,0.6); body(90,34,0.3,0.75,0.8); hiss(0.9,0.18,0.05); },
-    slam:function(){ stopDrone(0.8); body(120,20,3.0,1.0,0,0.5); body(70,18,3.2,0.9,0.03,0.5); hit('lowpass',600,1,1.8,0.9,0,0.6); ring(98,2.8,0.3,0,0.8,[1,2.76,5.4,8.93,11.3]); ring(49,3.4,0.3,0,0.9,[1,2.1,3.7,5.2]); ring(196,2.2,0.2,0.01,0.8); chunk(0.9,0); chunk(0.7,0.09); splash(0.7,0.02); hit('highpass',3000,1,0.2,0.4,0); hiss(1.2,0.35,0.05); whoosh(7000,140,1.2,0.4,0.02,0.7); rumble(3,0.65,0,100); body(90,30,0.5,0.45,0.55,0.3); body(80,28,0.5,0.35,0.9,0.3); ring(320,0.4,0.1,0.35,0.5); ring(240,0.5,0.08,0.7,0.5); },
+    boom:function(b){ boom(b); },
+    slam:function(big){ boom(big); stopDrone(0.8); body(120,20,3.0,1.0,0,0.5); body(70,18,3.2,0.9,0.03,0.5); hit('lowpass',600,1,1.8,0.9,0,0.6); ring(98,2.8,0.3,0,0.8,[1,2.76,5.4,8.93,11.3]); ring(49,3.4,0.3,0,0.9,[1,2.1,3.7,5.2]); ring(196,2.2,0.2,0.01,0.8); chunk(0.9,0); chunk(0.7,0.09); splash(0.7,0.02); hit('highpass',3000,1,0.2,0.4,0); hiss(1.2,0.35,0.05); whoosh(7000,140,1.2,0.4,0.02,0.7); rumble(3,0.65,0,100); body(90,30,0.5,0.45,0.55,0.3); body(80,28,0.5,0.35,0.9,0.3); ring(320,0.4,0.1,0.35,0.5); ring(240,0.5,0.08,0.7,0.5); },
     reveal:function(){ chunk(0.6,0); ring(330,1.6,0.14,0.02,0.9,[1,2.76,5.4]); pop(300,0.4,0.1); hiss(0.4,0.15,0.1); whoosh(150,1800,0.6,0.1,0,0.8); body(100,45,0.4,0.5,0.05,0.3); },
     out:function(){ whoosh(1800,100,0.7,0.2,0); body(100,45,0.2,0.4,0.25); hiss(0.4,0.12,0.1); }
   };
@@ -3345,9 +3739,9 @@ init();
 (function(){
   var active = false;
   var TXT = {
-    pt:{up:'Subiu de nível!', reach:'Nível alcançado', lv:'NÍVEL', done:'Nível 10 alcançado', elo:'ELO', go:'Continuar', skip:'Pular ›', ch:'Challenger — Top 1000 da região', sub:'Você está entre a elite do BRCS2'},
-    en:{up:'Level up!', reach:'Level reached', lv:'LEVEL', done:'Level 10 reached', elo:'ELO', go:'Continue', skip:'Skip ›', ch:'Challenger — Top 1000 of the region', sub:'You are among the BRCS2 elite'},
-    es:{up:'¡Subiste de nivel!', reach:'Nivel alcanzado', lv:'NIVEL', done:'Nivel 10 alcanzado', elo:'ELO', go:'Continuar', skip:'Saltar ›', ch:'Challenger — Top 1000 de la región', sub:'Estás en la élite de BRCS2'}
+    pt:{up:'Subiu de nível!', topUp:'Subiu no ranking!', reach:'Nível alcançado', lv:'NÍVEL', done:'Nível 10 alcançado', doneCh:'Challenger alcançado', elo:'ELO', go:'Continuar', skip:'Pular ›', ch:'Você agora disputa o TOP do BRCS2', sub:'Você está entre a elite do BRCS2', hid:'ELO oculto — rumo ao Challenger'},
+    en:{up:'Level up!', topUp:'Ranking up!', reach:'Level reached', lv:'LEVEL', done:'Level 10 reached', doneCh:'Challenger reached', elo:'ELO', go:'Continue', skip:'Skip ›', ch:'You now compete for the BRCS2 TOP', sub:'You are among the BRCS2 elite', hid:'Hidden ELO — on the road to Challenger'},
+    es:{up:'¡Subiste de nivel!', topUp:'¡Subiste en el ranking!', reach:'Nivel alcanzado', lv:'NIVEL', done:'Nivel 10 alcanzado', doneCh:'Challenger alcanzado', elo:'ELO', go:'Continuar', skip:'Saltar ›', ch:'Ahora compites por el TOP de BRCS2', sub:'Estás en la élite de BRCS2', hid:'ELO oculto — rumbo a Challenger'}
   };
   function L(){ var k=(document.documentElement.lang||'pt').slice(0,2); return TXT[k]||TXT.pt; }
   var S = window.SFX;
@@ -3355,7 +3749,7 @@ init();
   function sfxIntro(){ S.play('intro'); }
   function sfxStep(i){ S.play('step', i); }
   function sfxRiser(){ S.play('riser'); }
-  function sfxSlam(){ S.play('slam'); }
+  function sfxSlam(big){ S.play('slam', !!big); }
   function sfxReveal(){ S.play('reveal'); }
   function sfxOut(){ S.play('out'); }
 
@@ -3391,7 +3785,7 @@ init();
         '<div class="cs10-iconwrap"><i class="cs10-streak"></i><i class="cs10-beam"></i><div class="cs10-icon"></div></div>'+
         '<div class="cs10-title"></div>'+
         '<div class="cs10-track"><div class="cs10-rail"><div class="cs10-fill"></div></div><div class="cs10-nodes">'+nodes+'</div></div>'+
-        '<div class="cs10-final"><div class="cs10-name"></div><h3>'+T.done+'</h3><p><b>'+(info.elo||'')+' '+T.elo+'</b>'+(info.region?' · '+info.region:'')+'<br>'+(info.challenger?T.ch:T.sub)+'</p><button class="cs10-go" type="button">'+T.go+'</button></div>'+
+        '<div class="cs10-final"><div class="cs10-name"></div><h3>'+(info.challenger?T.doneCh:T.done)+'</h3><p><b>'+(info.challenger ? (info.elo||'')+' '+T.elo : T.hid)+'</b>'+(info.region?' · '+info.region:'')+'<br>'+(info.challenger?T.ch:T.sub)+'</p><button class="cs10-go" type="button">'+T.go+'</button></div>'+
       '</div><div class="cs10-flash"></div>';
     el.querySelector('.cs10-kicker').textContent = (info.mode||'')+(info.name?' · '+info.name:'');
     el.querySelector('.cs10-name').textContent = info.name || '';
@@ -3425,12 +3819,21 @@ init();
     };
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('on'); }); });
     var t = reduce ? 500 : 1500;
+    var from = info.from10 ? 9 : 0;       // já era Nível 10 → só o último degrau até o Challenger
+    if(from > 0){
+      fill.style.transitionDuration = '0ms,0ms'; fill.style.width = ((from-1)/(LEVELS.length-1)*100)+'%';
+      nodeEls.forEach(function(n,k){ n.classList.toggle('lit',k<from); });
+    }
     LEVELS.forEach(function(lv,i){
+      if(i < from) return;
       t += delays[i];
       (function(i){ later(function(){ if(!closed) setLevel(i); }, t); })(i);
     });
-    // clímax no Nível 10
-    later(function(){ if(closed) return; el.classList.add('slam'); sfxSlam(); sparks(el); }, t + (reduce?200:750));
+    // clímax: explosão grave no Nível 10 (mais pesada ainda no Challenger)
+    later(function(){
+      if(closed) return; el.classList.add('slam'); sfxSlam(info.challenger); sparks(el);
+      if(info.challenger){ el.style.setProperty('--c', CHALLENGER_TIER.color); icon.innerHTML = tierIconSVG(CHALLENGER_TIER,170); title.textContent = 'CHALLENGER'; }
+    }, t + (reduce?200:750));
     later(function(){ if(!closed){ el.classList.add('done'); sfxReveal(); } }, t + (reduce?500:1900));
   }
   // ---- popup verde de subida de nível ----
@@ -3447,6 +3850,17 @@ init();
     upTimer = setTimeout(function(){ el.classList.remove('on'); setTimeout(function(){ el.remove(); if(upEl===el) upEl=null; }, 600); }, 4000);
   }
   window.playLevelUpPopup = function(n){ levelUpPopup({level:n||4, elo:1000, mode:'Competitivo'}); };
+  function topPopup(info){
+    var T = L();
+    if(upEl){ upEl.remove(); clearTimeout(upTimer); }
+    var el = document.createElement('div'); upEl = el; el.className = 'lvlup'; el.setAttribute('role','status'); el.setAttribute('aria-live','polite');
+    el.style.borderColor = CHALLENGER_TIER.color; el.style.setProperty('--lv', CHALLENGER_TIER.color);
+    el.innerHTML = tierIconSVG(CHALLENGER_TIER,48)+'<div><b style="color:'+CHALLENGER_TIER.color+'">▲ '+T.topUp+'</b><span>TOP '+info.top+'</span><small>#'+info.pos+(info.mode?' · '+info.mode:'')+'</small></div>';
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('on'); }); });
+    S.play('levelup');
+    upTimer = setTimeout(function(){ el.classList.remove('on'); setTimeout(function(){ el.remove(); if(upEl===el) upEl=null; }, 600); }, 4200);
+  }
 
   window.playLevel10Cutscene = play;
 
@@ -3460,13 +3874,28 @@ init();
       var p = players.find(function(x){ return x.id === currentPlayerId; }); if(!p) return;
       Object.keys(MODES).forEach(function(mode){
         if(active || !MODES[mode].hasPatente) return;
-        var st = computeModeStats(p.id, mode), lvl = st.calibrating ? 0 : getTier(st.elo).level;
+        var st = computeModeStats(p.id, mode), t0 = getTier(st.elo);
+        var lvl = st.calibrating ? 0 : (t0.challenger ? 11 : t0.level);       // 11 = Challenger
         var key = 'brcsgo:lvlseen:'+authUser.uid+':'+mode, seen = null;
         try{ seen = localStorage.getItem(key); }catch(e){}
         try{ localStorage.setItem(key, String(lvl)); }catch(e){}
-        if(seen !== null && Number(seen) < 10 && lvl >= 10){
-          var tier = playerTier(p, st, mode);
-          play({mode: MODES[mode].label, name: p.name, elo: st.elo, region: p.region || '', challenger: !!tier.challenger});
+        // TOP dentro do Challenger (1000 → 500 → ... → 1)
+        var topInfo = null;
+        if(lvl === 11){
+          var pm = challengerPositions(mode), pos = pm.get(p.id) || 0, tb = topBucket(pos);
+          topInfo = {pos: pos, top: tb};
+          var tkey = 'brcsgo:topseen:'+authUser.uid+':'+mode, tseen = null;
+          try{ tseen = localStorage.getItem(tkey); }catch(e){}
+          try{ localStorage.setItem(tkey, String(tb || 99999)); }catch(e){}
+          if(seen !== null && Number(seen) === 11 && tseen !== null && tb && tb < Number(tseen)){
+            topPopup({top: tb, pos: pos, mode: MODES[mode].label});
+            return;
+          }
+        }
+        if(seen !== null && Number(seen) < 11 && lvl === 11){
+          play({mode: MODES[mode].label, name: p.name, elo: st.elo, region: p.region || '', challenger: true, from10: Number(seen) === 10});
+        } else if(seen !== null && Number(seen) < 10 && lvl === 10){
+          play({mode: MODES[mode].label, name: p.name, elo: st.elo, region: p.region || '', challenger: false});
         } else if(seen !== null && lvl > Number(seen) && lvl < 10){
           levelUpPopup({level: lvl, elo: st.elo, mode: MODES[mode].label});   // subiu de nível (inclui sair da calibragem)
         }
@@ -3476,7 +3905,8 @@ init();
   setInterval(check, 1200);
   // pré-visualização: abra o site com #cutscene10 no final do endereço (ou use playLevel10Cutscene() no console)
   function preview(){ if(location.hash === '#levelup'){ window.playLevelUpPopup(4); history.replaceState(null,'',location.pathname+location.search); } if(location.hash === '#cutscene10'){ var n=document.querySelector('.name-cell'); play({mode:'Competitivo', name:(typeof userProfile!=='undefined'&&userProfile&&userProfile.playerName)||'Player', elo:2034, region:'', challenger:false}); history.replaceState(null,'',location.pathname+location.search); } }
-  window.addEventListener('hashchange', preview); setTimeout(preview, 2500);
+  function previewCh(){ if(location.hash === '#challenger'){ play({mode:'Competitivo', name:(typeof userProfile!=='undefined'&&userProfile&&userProfile.playerName)||'Player', elo:7012, region:'', challenger:true, from10:true}); history.replaceState(null,'',location.pathname+location.search); } }
+  window.addEventListener('hashchange', function(){ preview(); previewCh(); }); setTimeout(function(){ preview(); previewCh(); }, 2500);
 })();
 </script>
 </body>
