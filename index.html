@@ -1679,8 +1679,6 @@ async function saveShared(key, val){
   }
 }
   
-async function saveShared(key, val){
-  await setDoc(key, JSON.stringify(val));
 }
 async function loadLocal(key){
   try{ return localStorage.getItem(key); }catch(e){ return null; }
