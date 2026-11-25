@@ -1633,9 +1633,52 @@ async function deleteDoc(key){
 }
 
 async function loadShared(key){
-  const v = await getDoc(key);
-  return v ? JSON.parse(v) : [];
+  const SHARED_CHUNK_SIZE = 250000; // 250 mil caracteres por bloco (bem abaixo de 1 MB)
+
+async function loadShared(key){
+  if(!db) return [];
+  try{
+    const snap = await db.collection('brcsgo').doc(key).get();
+    if(!snap.exists) return [];
+    const data = snap.data();
+    if(data.chunks && data.chunks > 0){
+      const snaps = await Promise.all(
+        Array.from({ length: data.chunks }, (_, i) =>
+          db.collection('brcsgo').doc(key + ':part:' + i).get()
+        )
+      );
+      const full = snaps.map(s => (s.exists && s.data().value) ? s.data().value : '').join('');
+      return full ? JSON.parse(full) : [];
+    }
+    return data.value ? JSON.parse(data.value) : [];
+  }catch(e){
+    console.error('Erro ao ler', key, e);
+    return [];
+  }
 }
+
+async function saveShared(key, val){
+  if(!db){ storageAvailable = false; return; }
+  try{
+    const raw = JSON.stringify(val);
+    if(raw.length <= SHARED_CHUNK_SIZE){
+      await db.collection('brcsgo').doc(key).set({ value: raw, chunks: 0 });
+      return;
+    }
+    const total = Math.ceil(raw.length / SHARED_CHUNK_SIZE);
+    const writes = [];
+    for(let i = 0; i < total; i++){
+      const part = raw.slice(i * SHARED_CHUNK_SIZE, (i + 1) * SHARED_CHUNK_SIZE);
+      writes.push(db.collection('brcsgo').doc(key + ':part:' + i).set({ value: part }));
+    }
+    await Promise.all(writes);
+    await db.collection('brcsgo').doc(key).set({ chunks: total, value: null });
+  }catch(e){
+    storageAvailable = false;
+    console.error('Erro ao salvar', key, e);
+  }
+}
+  
 async function saveShared(key, val){
   await setDoc(key, JSON.stringify(val));
 }
