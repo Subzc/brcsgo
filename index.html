@@ -3158,7 +3158,7 @@ init();
 <script>
 // ====== SFX — efeitos sonoros mecânicos e graves do site inteiro ======
 (function(){
-  var on = true, ctx = null, master = null, wetS = null, wetL = null, noiseBuf = null, drone = null, bus = null, lastUi = 0, lastHover = 0;
+  var on = true, ctx = null, master = null, wetS = null, wetL = null, noiseBuf = null, drone = null, bus = null, lastPlay = {}, lastUi = 0, lastHover = 0;
   try{ on = localStorage.getItem('brcsgo:cs10sound') !== '0'; }catch(e){}
   function ac(){
     if(!ctx){ try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
@@ -3228,10 +3228,10 @@ init();
     g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk*2.4,t+d*0.18); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
     out(g,0.1,0.5); n.start(t); lfo.start(t); n.stop(t+d+0.1); lfo.stop(t+d+0.1); }
   // trovão: rumble longo + pancadas que vão morrendo
-  function thunder(w,d,pk){ rumble(d,pk,w,110); for(var i=0;i<5;i++) body(64-i*4,22,0.7,pk*(0.75-i*0.14),w+0.45+i*0.5,0.4); }
+  function thunder(w,d,pk){ rumble(d,pk,w,110); body(60,22,0.8,pk*0.6,w+0.6,0.3); body(52,20,0.9,pk*0.4,w+1.3,0.3); }
   function startDrone(){ if(drone || !ok()) return; var bg = ctx.createGain(); bg.gain.value = 1; bg.connect(master); bus = bg;
     rumble(9,0.5,0,150,true);
-    var t = 0; while(t < 8.3){ var k = t/8.3; roar(0.95-0.4*k,0.1+0.3*k,t,110,70,6+k*8,10+k*10); bodyD(90+k*25,30,0.4,0.35+0.55*k,t,0.2); bodyD(70,26,0.3,(0.35+0.55*k)*0.6,t+0.14,0.2); t += 1.15-0.8*k; }
+    var t = 0; while(t < 8.3){ var k = t/8.3; roar(1.0-0.4*k,0.1+0.3*k,t,110,70,6+k*8,10+k*10); t += 1.15-0.5*k; }
     bus = null; drone = {g:bg}; }
   function stopDrone(f){ if(!drone || !ctx) return; var t = ctx.currentTime, d = drone; drone = null; f = f||0.5;
     d.g.gain.cancelScheduledValues(t); d.g.gain.setValueAtTime(Math.max(d.g.gain.value,0.0001),t); d.g.gain.exponentialRampToValueAtTime(0.0001,t+f); }
@@ -3251,16 +3251,16 @@ init();
     warn:function(){ body(82,36,0.3,0.65,0); hit('lowpass',600,1,0.14,0.4,0); ring(150,0.3,0.06,0,0.2,[1,2.4]); },
     levelup:function(){ bodyD(100,32,0.55,0.9,0,0.3); body(110,38,0.4,0.7,0); roar(0.55,0.4,0.03,170,85,22,12); pop(190,0.45,0.07); whoosh(70,800,0.4,0.14,0,0.8); hit('lowpass',300,1,0.2,0.45,0); },
     intro:function(){ whoosh(60,700,1.5,0.45,0,0.6); bodyD(80,28,1.8,0.9,0.05,0.4); thunder(0.1,2.2,0.35); bodyD(70,26,1.6,0.8,1.0,0.4); startDrone(); },
-    step:function(i){ i = i||0; var k = i/9; bodyD(118-i*4,30,0.5,0.7+0.2*k,0,0.3); body(100-i*3,28,0.55,0.8,0); roar(0.45,0.3+0.3*k,0.02,170-i*6,80,18,34); pop(170-i*4,0.45,0.07); whoosh(70,520+i*110,0.38,0.16+0.012*i,0,0.8); hit('lowpass',260,1,0.18,0.5,0); if(i>=4) bodyD(55,20,0.8,0.5,0.1,0.4); if(i>=7) thunder(0.15,1.2,0.3); },
-    riser:function(){ roar(0.95,0.8,0,90,380,12,46); whoosh(60,3500,0.95,0.5,0,0.6); rumble(0.95,0.7,0,200,true); bodyD(90,30,0.4,0.55,0.3,0.3); bodyD(90,30,0.4,0.7,0.58,0.3); bodyD(90,30,0.4,0.9,0.8,0.3); },
-    slam:function(){ stopDrone(0.6); bodyD(75,15,4.2,1.0,0,0.6); bodyD(52,14,4.6,0.95,0.02,0.6); body(120,20,3.0,1.0,0,0.5); roar(2.8,1.0,0.02,150,48,26,7); roar(2.2,0.8,0.15,95,40,18,6); hit('lowpass',520,1,1.8,0.9,0,0.7); whoosh(1100,50,1.5,0.5,0,0.6); thunder(0.1,4.6,0.8); bodyD(66,20,0.9,0.7,0.55,0.5); bodyD(58,18,0.9,0.55,1.05,0.5); bodyD(50,16,1.0,0.4,1.7,0.5); splash(0.35,0.03); },
+    step:function(i){ i = i||0; var k = i/9; bodyD(118-i*4,30,0.5,0.8+0.2*k,0,0.3); roar(0.45,0.3+0.3*k,0.02,170-i*6,80,18,34); pop(170-i*4,0.4,0); whoosh(70,520+i*110,0.38,0.16+0.012*i,0,0.8); hit('lowpass',260,1,0.18,0.45,0); if(i>=7) thunder(0.15,1.2,0.3); },
+    riser:function(){ roar(0.95,0.8,0,90,380,12,46); whoosh(60,3500,0.95,0.5,0,0.6); rumble(0.95,0.7,0,200,true); },
+    slam:function(){ stopDrone(0.6); bodyD(75,15,4.2,1.0,0,0.35); bodyD(52,14,4.6,0.9,0,0.35); roar(2.8,1.0,0.02,150,48,26,7); hit('lowpass',520,1,1.8,0.9,0,0.4); whoosh(1100,50,1.5,0.5,0,0.6); thunder(0.1,4.6,0.7); splash(0.3,0.03); },
     reveal:function(){ whoosh(120,900,0.7,0.14,0,0.7); roar(0.9,0.35,0,140,70,10,6); bodyD(90,36,0.6,0.55,0.05,0.4); pop(190,0.4,0.12); },
     out:function(){ whoosh(900,60,0.8,0.22,0); body(90,36,0.3,0.4,0.3); }
   };
   window.SFX = {
     enabled:function(){ return on; },
     toggle:function(){ on = !on; try{ localStorage.setItem('brcsgo:cs10sound', on?'1':'0'); }catch(e){} sync(); if(on) A.confirm(); return on; },
-    play:function(n,a){ if(on && A[n]){ try{ A[n](a); }catch(e){} } },
+    play:function(n,a){ if(!on || !A[n]) return; var now = Date.now(); if(n !== 'step' && n !== 'hover' && lastPlay[n] && now - lastPlay[n] < 70) return; lastPlay[n] = now; try{ A[n](a); }catch(e){} },
     stopDrone:stopDrone
   };
 
@@ -3285,6 +3285,7 @@ init();
   }, true);
   document.addEventListener('change', function(e){ var t = e.target; if(t && /^(SELECT|INPUT)$/.test(t.tagName) && t.type !== 'text' && t.type !== 'password' && t.type !== 'email') ui('tick'); }, true);
   document.addEventListener('mouseover', function(e){
+    if(!(window.matchMedia && matchMedia('(hover:hover)').matches)) return;
     var b = e.target.closest && e.target.closest('.tab-btn,.dock-btn,.mode-chip,.event-card,button.primary'); if(!b || (e.relatedTarget && b.contains(e.relatedTarget))) return;
     var now = Date.now(); if(now - lastHover < 90) return; lastHover = now; window.SFX.play('hover');
   }, true);
