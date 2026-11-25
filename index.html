@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://brcsgoia.ttyfit518.workers.dev; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://brcsgoia.ttyfit518.workers.dev; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <title>BRCS2 — Counter-Strike 2 · Partidas &amp; Ranking</title>
@@ -1223,6 +1223,123 @@ tr.is-challenger td.pos{color:var(--orange-2);font-weight:700}
 .chat-note{font-size:11px;color:var(--muted-2);margin-top:8px}
 @media (max-width:640px){.chat-msg{max-width:92%}.share-actions button{flex:1 1 45%}}
 .chat-pill[hidden]{display:none!important}
+
+/* ================= MAP CHOOSER ================= */
+.panel.mc-panel{position:relative;overflow:hidden;min-height:540px;background-color:#07080f}
+.mc-panel>.mc-bg{position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.mc-bg-l{position:absolute;inset:-3%;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity 1.6s ease;will-change:opacity,transform}
+.mc-bg-l.on{opacity:1;animation:mcDrift 18s ease-in-out infinite alternate}
+@keyframes mcDrift{from{transform:scale(1.02) translate3d(-.8%,0,0)}to{transform:scale(1.09) translate3d(.8%,-.6%,0)}}
+.mc-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(900px 420px at 50% -10%,rgba(229,38,43,.20),transparent 60%),linear-gradient(180deg,rgba(5,6,12,.80) 0%,rgba(5,6,12,.70) 45%,rgba(5,6,12,.92) 100%)}
+.mc-panel.is-done .mc-bg::after{background:linear-gradient(180deg,rgba(5,6,12,.38) 0%,rgba(5,6,12,.52) 50%,rgba(5,6,12,.90) 100%)}
+.mc-body{position:relative;z-index:1}
+
+.mc-lead{margin:6px 0 18px;color:var(--muted);font-size:13.5px;line-height:1.55;max-width:60ch}
+.mc-section{margin:0 0 22px}
+.mc-label{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;font:700 13px 'Rajdhani',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--white)}
+.mc-count{font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:var(--muted);text-transform:none}
+.mc-warn{margin-top:4px;padding:10px 14px;border-radius:8px;border:1px solid rgba(235,75,107,.5);background:rgba(235,75,107,.12);font-size:13px}
+.mc-presets{margin-bottom:12px}
+
+/* cards / tiles com a imagem real do mapa */
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:16px 0}
+.mc-grid-pool{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-top:0}
+.mc-grid-sm{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.mc-card,.mc-tile,.mc-result{position:relative;overflow:hidden;isolation:isolate;border:1px solid var(--line-strong);background:linear-gradient(135deg,#171a33,#0b0d1a)}
+.mc-card,.mc-tile{aspect-ratio:16/9;border-radius:10px;display:flex;flex-direction:column;justify-content:flex-end;padding:10px 12px;text-align:left;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.mc-img{position:absolute;inset:0;z-index:-2;background-position:center;background-size:cover;background-repeat:no-repeat;transition:filter .45s ease,transform .6s ease,opacity .5s ease}
+.mc-img:not(.has-img){opacity:.9}
+.mc-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.86) 100%)}
+.mc-info{position:relative;display:flex;flex-direction:column;gap:3px}
+.mc-name{font:700 22px/1 'Rajdhani',sans-serif;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.mc-tag,.mc-ban-by{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+
+.mc-tile{cursor:pointer;opacity:.55;filter:saturate(.6)}
+.mc-tile:hover{opacity:.85;transform:translateY(-2px);border-color:rgba(229,38,43,.5)}
+.mc-tile.on{opacity:1;filter:none;border-color:rgba(229,38,43,.75);box-shadow:0 0 0 1px rgba(229,38,43,.35),0 10px 30px -14px rgba(229,38,43,.6)}
+.mc-tile-check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:6px;border:1.5px solid rgba(255,255,255,.55);background:rgba(0,0,0,.45);display:grid;place-items:center}
+.mc-tile.on .mc-tile-check{background:var(--orange);border-color:var(--orange)}
+.mc-tile.on .mc-tile-check::after{content:"";width:10px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.mc-tile:focus-visible,.mc-card:focus-visible{outline:2px solid var(--purple-2);outline-offset:2px}
+
+/* times */
+.mc-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+.mc-team{position:relative;display:grid;gap:12px;padding:16px;border-radius:10px;border:1px solid var(--tc);background:linear-gradient(160deg,var(--tcs),rgba(8,10,20,.72));backdrop-filter:blur(6px)}
+.mc-team-badge{position:absolute;top:-1px;right:-1px;width:34px;height:34px;display:grid;place-items:center;border-radius:0 10px 0 10px;background:var(--tc);color:#07080f;font:700 18px 'Rajdhani',sans-serif}
+.mc-team label{display:grid;gap:6px;font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mc-team input{width:100%;text-transform:none;letter-spacing:0;font:500 14px 'Inter',sans-serif;color:#fff;background:rgba(5,6,12,.7)}
+.mc-vs-mid{align-self:center;font:700 20px 'Rajdhani',sans-serif;letter-spacing:.2em;color:var(--muted)}
+
+/* barra de times (veto / resultado) */
+.mc-vsline{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:6px 0 16px}
+.mc-side{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 18px;border-radius:8px;border:1px solid var(--tc);background:rgba(5,6,12,.6);min-width:130px}
+.mc-side b{font:700 17px 'Rajdhani',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--tc)}
+.mc-side small{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
+.mc-vsmark{font:700 16px 'Rajdhani',sans-serif;letter-spacing:.2em;color:var(--muted)}
+
+/* vez atual */
+.mc-turn{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:16px 20px;border-radius:12px;border:1px solid var(--tc);background:linear-gradient(135deg,var(--tcs),rgba(8,10,20,.82));box-shadow:0 14px 40px -20px var(--tc);animation:mcTurnIn .35s ease both}
+@keyframes mcTurnIn{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+.mc-turn-k{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.mc-turn-team{font:700 clamp(26px,4.6vw,40px)/1.05 'Rajdhani',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--tc);text-shadow:0 0 24px var(--tcs)}
+.mc-turn-sub{margin-top:4px;font-size:13px;color:var(--muted)}
+.mc-turn-sub b{color:#fff;font-weight:600}
+.mc-progress{display:grid;gap:8px;justify-items:end;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mc-dots{display:flex;gap:5px}
+.mc-dots i{width:18px;height:6px;border-radius:3px;background:rgba(255,255,255,.14)}
+.mc-dots i.done{background:rgba(255,255,255,.55)}
+.mc-dots i.now{background:var(--tc);box-shadow:0 0 10px var(--tc)}
+
+/* cards no veto */
+.mc-card.avail{cursor:pointer}
+.mc-card.avail:hover,.mc-card.avail:focus-visible{transform:translateY(-4px) scale(1.015);border-color:var(--tc);box-shadow:0 0 0 1px var(--tc),0 16px 36px -14px var(--tc)}
+.mc-card.avail:hover .mc-img{transform:scale(1.07)}
+.mc-hint{position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:999px;background:var(--tc,#E5262B);color:#07080f;font:700 11px 'Rajdhani',sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease}
+.mc-card.avail:hover .mc-hint,.mc-card.avail:focus-visible .mc-hint{opacity:1;transform:none}
+.mc-card.banned{border-color:rgba(255,255,255,.08)}
+.mc-card.banned .mc-img{filter:grayscale(1) brightness(.42)}
+.mc-card.banned .mc-name{color:rgba(255,255,255,.55);text-decoration:line-through;text-decoration-color:var(--bc);text-decoration-thickness:2px}
+.mc-x{position:absolute;inset:0;pointer-events:none}
+.mc-x::before,.mc-x::after{content:"";position:absolute;left:14%;right:14%;top:50%;height:3px;border-radius:2px;background:var(--bc,#E5262B);box-shadow:0 0 14px var(--bc,#E5262B);transform:rotate(28deg)}
+.mc-x::after{transform:rotate(-28deg)}
+.mc-card.just-banned .mc-x{animation:mcStamp .45s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes mcStamp{0%{transform:scale(1.7);opacity:0}60%{transform:scale(.94);opacity:1}100%{transform:scale(1)}}
+.mc-card.picked{border-color:#FFD35A;box-shadow:0 0 0 1px #FFD35A,0 14px 40px -14px rgba(255,190,60,.7)}
+.mc-picked-tag{position:absolute;top:8px;left:8px;padding:3px 9px;border-radius:999px;background:linear-gradient(135deg,#FFD35A,#FF9A1F);color:#1a0d00;font:700 10px 'Rajdhani',sans-serif;letter-spacing:.14em;text-transform:uppercase}
+
+/* log */
+.mc-log{list-style:none;margin:6px 0 0;padding:12px 14px;display:grid;gap:6px;border-radius:10px;border:1px solid var(--line);background:rgba(5,6,12,.62);font-size:13px}
+.mc-log li{display:flex;align-items:center;gap:10px}
+.mc-log li i{width:8px;height:8px;border-radius:50%;background:var(--tc);box-shadow:0 0 8px var(--tc);flex:none}
+.mc-log li span{flex:1;color:var(--muted)}
+.mc-log li b{color:#fff;font-weight:600}
+.mc-log li em{font:600 11px 'IBM Plex Mono',monospace;color:var(--muted-2);font-style:normal}
+
+/* resultado */
+.mc-result{min-height:300px;border-radius:14px;display:flex;align-items:flex-end;padding:26px;border-color:rgba(255,255,255,.2);box-shadow:0 30px 70px -30px #000;animation:mcReveal .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mcReveal{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.mc-result .mc-shade{background:linear-gradient(180deg,rgba(0,0,0,0) 25%,rgba(0,0,0,.88) 100%)}
+.mc-result-in{display:grid;gap:6px}
+.mc-result-k{display:inline-block;justify-self:start;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#FFD35A,#FF9A1F);color:#1a0d00;font:700 12px 'Rajdhani',sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.mc-result-name{font:700 clamp(46px,10vw,96px)/.95 'Rajdhani',sans-serif;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 4px 30px rgba(0,0,0,.8)}
+.mc-result-sub{font:500 12px 'IBM Plex Mono',monospace;color:rgba(255,255,255,.75);letter-spacing:.06em}
+
+.mc-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 4px}
+.mc-actions button{min-height:44px}
+
+@media (max-width:760px){
+  .mc-teams{grid-template-columns:1fr}
+  .mc-vs-mid{justify-self:center}
+  .mc-turn{grid-template-columns:1fr}
+  .mc-progress{justify-items:start}
+  .mc-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .mc-name{font-size:18px}
+  .mc-result{min-height:230px;padding:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mc-bg-l,.mc-bg-l.on,.mc-turn,.mc-result,.mc-card.just-banned .mc-x{animation:none!important}
+  .mc-bg-l{transition:none}
+}
 </style>
 </head>
 <body>
@@ -1504,6 +1621,7 @@ const ICONS = {
   eventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/></svg>'
 };
+ICONS.mapchooser = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6.5v13L9 17l6 3 6-2.5v-13L15 7 9 4z"/><path d="M9 4v13M15 7v13"/></svg>';
 const FIELD_LABELS = { kills:'Kills', deaths:'Deaths', assists:'Assists', pontos:'Pontos', mvps:'Estrelas MVP', result:'Resultado', map:'Mapa' };
 
 let players = [];
@@ -1913,6 +2031,7 @@ function render(){
       <button class="tab-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}Histórico</button>
       <button class="tab-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}Ranking</button>
       <button class="tab-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}Eventos ${(function(){const n=events.filter(ev=>!seenEventIds.includes(ev.id)&&ev.status!=='finished').length;return n>0?`<span class="pill">${n}</span>`:'';})()}</button>
+      <button class="tab-btn ${activeTab==='mapchooser'?'active':''}" data-tab="mapchooser">${ICONS.mapchooser}Map Chooser</button>
       <button class="tab-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}Chat <span class="pill chat-pill" ${chatUnread>0?'':'hidden'}>${chatUnread>0?chatUnread:''}</span></button>
       ${isMod ? `<button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>` : ''}
     </div>
@@ -1966,6 +2085,7 @@ function render(){
       <button class="dock-btn ${activeTab==='historico'?'active':''}" data-tab="historico">${ICONS.historico}<span>Histórico</span></button>
       <button class="dock-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}<span>Ranking</span></button>
       <button class="dock-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}<span>Eventos</span></button>
+      <button class="dock-btn ${activeTab==='mapchooser'?'active':''}" data-tab="mapchooser">${ICONS.mapchooser}<span>Mapas</span></button>
       <button class="dock-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}<span>Chat</span></button>
     </nav>
   `;
@@ -1996,9 +2116,11 @@ function renderTab(){
   else if(activeTab === 'eventos') el.innerHTML = eventosHTML();
   else if(activeTab === 'moderacao') el.innerHTML = moderacaoHTML();
   else if(activeTab === 'chat') el.innerHTML = chatHTML();
+  else if(activeTab === 'mapchooser') el.innerHTML = mapChooserHTML();
   attachTabEvents();
   attachShareEvents();
   if(activeTab === 'chat') attachChatEvents();
+  if(activeTab === 'mapchooser') attachMapChooserEvents();
   document.querySelectorAll('[data-region]').forEach(chip => chip.addEventListener('click', () => { rankRegion = chip.dataset.region; renderTab(); }));
   const regionSel = document.getElementById('regionSelect');
   if(regionSel) regionSel.addEventListener('change', async () => {
@@ -3312,6 +3434,351 @@ function chatListHTML(){
     return `<div class="chat-msg ${m.uid === me ? 'mine' : ''}"><div class="chat-meta">${chatBadgeFor(m.uid)}<b>${escapeUntrustedText(String(m.name || 'Jogador').slice(0,24))}</b><span>${time}</span>${del}</div><div class="chat-text">${escapeUntrustedText(String(m.text).slice(0, CHAT_MAX_LEN))}</div></div>`;
   }).join('');
 }
+/* ================= MAP CHOOSER (veto de mapas estilo Premier / FACEIT / GC) =================
+   Imagens: screenshots reais do CS2 extraídos do depot da Valve (repo MurkyYT/cs2-map-icons).
+   O host raw.githubusercontent.com está liberado em img-src no CSP lá no <head>.
+   Para adicionar/remover mapas do pool, edite a lista MC_MAPS abaixo (duty:true = Active Duty). */
+const MC_BASE = 'https://raw.githubusercontent.com/MurkyYT/cs2-map-icons/main/images/';
+const MC_MAPS = [
+  {id:'de_ancient',  name:'Ancient',  duty:true},
+  {id:'de_anubis',   name:'Anubis',   duty:true},
+  {id:'de_cache',    name:'Cache',    duty:true},
+  {id:'de_dust2',    name:'Dust II',  duty:true},
+  {id:'de_inferno',  name:'Inferno',  duty:true},
+  {id:'de_mirage',   name:'Mirage',   duty:true},
+  {id:'de_nuke',     name:'Nuke',     duty:true},
+  {id:'de_overpass', name:'Overpass'},
+  {id:'de_train',    name:'Train'},
+  {id:'de_vertigo',  name:'Vertigo'},
+  {id:'cs_office',   name:'Office'},
+  {id:'cs_italy',    name:'Italy'},
+  {id:'de_boulder',  name:'Boulder'},
+  {id:'de_fachwerk', name:'Fachwerk'},
+  {id:'cs_shelter',  name:'Shelter'}
+];
+const MC_TEAM = {
+  A: {color:'#E5262B', soft:'rgba(229,38,43,.24)'},
+  B: {color:'#5AA9FF', soft:'rgba(90,169,255,.22)'}
+};
+let mc = {
+  pool: MC_MAPS.filter(m => m.duty).map(m => m.id),
+  teams: { A:{name:'Time A', leader:''}, B:{name:'Time B', leader:''} },
+  first: 'random',      // 'random' | 'A' | 'B'
+  phase: 'setup',       // 'setup' | 'veto' | 'done'
+  start: 'A',           // time que bane primeiro nesta rodada de veto
+  bans: [],             // [{id, team}]
+  leaderInit: false,
+  bgId: null
+};
+const mcImgCache = {};   // id -> url carregada | false (todas as fontes falharam)
+const mcPending = {};
+let mcBgTimer = null, mcBgFront = 0;
+
+function mcMap(id){ return MC_MAPS.find(m => m.id === id); }
+function mcRemaining(){ const banned = new Set(mc.bans.map(b => b.id)); return mc.pool.filter(id => !banned.has(id)); }
+function mcTurn(){ return (mc.bans.length % 2 === 0) ? mc.start : (mc.start === 'A' ? 'B' : 'A'); }
+function mcTeamLabel(t){ return mc.teams[t].name.trim() || ('Time ' + t); }
+function mcLeaderLabel(t){ return mc.teams[t].leader.trim(); }
+function mcTeamStyle(t){ return '--tc:' + MC_TEAM[t].color + ';--tcs:' + MC_TEAM[t].soft; }
+function mcPresetKey(){
+  const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  if(same(mc.pool, MC_MAPS.filter(m => m.duty).map(m => m.id))) return 'duty';
+  if(same(mc.pool, MC_MAPS.map(m => m.id))) return 'all';
+  return 'custom';
+}
+
+/* ---------- carregamento das imagens (tenta thumbnail -> thumbnail alternativa -> ícone) ---------- */
+function mcLoad(id){
+  if(mcImgCache[id] !== undefined) return Promise.resolve(mcImgCache[id]);
+  if(mcPending[id]) return mcPending[id];
+  mcPending[id] = new Promise(resolve => {
+    const srcs = [MC_BASE + 'thumbs/' + id + '_1_png.png', MC_BASE + 'thumbs/' + id + '_png.png', MC_BASE + id + '.png'];
+    let i = 0;
+    const next = () => {
+      if(i >= srcs.length){ mcImgCache[id] = false; delete mcPending[id]; resolve(false); return; }
+      const url = srcs[i++], img = new Image();
+      img.onload = () => { mcImgCache[id] = url; delete mcPending[id]; resolve(url); };
+      img.onerror = next;
+      img.src = url;
+    };
+    next();
+  });
+  return mcPending[id];
+}
+function mcSetImg(el, url){ el.style.backgroundImage = 'url("' + url + '")'; el.classList.add('has-img'); }
+function mcApplyImages(root){
+  const els = root.querySelectorAll('[data-mc-img]');
+  const apply = el => mcLoad(el.dataset.mcImg).then(url => { if(url && el.isConnected) mcSetImg(el, url); });
+  let io = null;
+  if('IntersectionObserver' in window){
+    io = new IntersectionObserver(entries => {
+      entries.forEach(en => { if(en.isIntersecting){ io.unobserve(en.target); apply(en.target); } });
+    }, {rootMargin:'240px'});
+  }
+  els.forEach(el => {
+    const c = mcImgCache[el.dataset.mcImg];
+    if(c){ mcSetImg(el, c); return; }
+    if(c === false) return;
+    if(io) io.observe(el); else apply(el);
+  });
+}
+
+/* ---------- fundo animado com os mapas reais ---------- */
+function mcBgStop(){ if(mcBgTimer){ clearInterval(mcBgTimer); mcBgTimer = null; } }
+function mcBgShow(id, instant){
+  const bg = document.getElementById('mcBg'); if(!bg || !id) return;
+  mc.bgId = id;
+  const show = url => {
+    const b = document.getElementById('mcBg'); if(!url || !b) return;
+    const layers = b.querySelectorAll('.mc-bg-l'); if(layers.length < 2) return;
+    mcBgFront = 1 - mcBgFront;
+    const front = layers[mcBgFront], back = layers[1 - mcBgFront];
+    if(instant){ front.style.transition = 'none'; back.style.transition = 'none'; }
+    front.style.backgroundImage = 'url("' + url + '")';
+    front.classList.add('on'); back.classList.remove('on');
+    if(instant){ void front.offsetWidth; front.style.transition = ''; back.style.transition = ''; }
+  };
+  if(mcImgCache[id]) show(mcImgCache[id]); else mcLoad(id).then(show);
+}
+function mcBgStart(){
+  mcBgStop();
+  if(!document.getElementById('mcBg')) return;
+  if(mc.phase === 'done'){ const p = mcRemaining()[0]; if(p){ mcBgShow(p, true); return; } }
+  const ids = mc.phase === 'veto' ? mcRemaining() : mc.pool;
+  const list = ids.length ? ids : MC_MAPS.map(m => m.id);
+  let idx = Math.max(0, list.indexOf(mc.bgId));
+  if(mc.bgId && list.includes(mc.bgId)) mcBgShow(mc.bgId, true); else { idx = Math.floor(Math.random() * list.length); mcBgShow(list[idx], true); }
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  mcBgTimer = setInterval(() => {
+    if(!document.getElementById('mcBg') || activeTab !== 'mapchooser'){ mcBgStop(); return; }
+    const cur = (mc.phase === 'veto' ? mcRemaining() : mc.pool);
+    const l = cur.length ? cur : list;
+    idx = (l.indexOf(mc.bgId) + 1) % l.length;
+    mcBgShow(l[idx]);
+  }, 6500);
+}
+
+/* ---------- HTML ---------- */
+function mapChooserHTML(){
+  if(!mc.leaderInit){
+    mc.leaderInit = true;
+    if(userProfile && userProfile.playerName) mc.teams.A.leader = decodeEntities(userProfile.playerName).slice(0, 24);
+  }
+  const body = mc.phase === 'setup' ? mcSetupHTML() : (mc.phase === 'veto' ? mcVetoHTML() : mcDoneHTML());
+  return `
+    <div class="panel accent-red mc-panel ${mc.phase === 'done' ? 'is-done' : ''}">
+      <div class="mc-bg" id="mcBg" aria-hidden="true"><i class="mc-bg-l"></i><i class="mc-bg-l"></i></div>
+      <div class="mc-body">${body}</div>
+    </div>`;
+}
+
+function mcSetupHTML(){
+  const key = mcPresetKey();
+  const names = Array.from(new Set(players.map(p => decodeEntities(p.name)).filter(Boolean)));
+  const tiles = MC_MAPS.map(m => {
+    const on = mc.pool.includes(m.id);
+    return `<div class="mc-tile ${on ? 'on' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-mc-toggle="${m.id}">
+      <div class="mc-img" data-mc-img="${m.id}"></div><div class="mc-shade"></div>
+      <span class="mc-tile-check" aria-hidden="true"></span>
+      <div class="mc-info"><span class="mc-name">${m.name}</span><span class="mc-tag">${m.duty ? 'Active Duty' : 'Reserva'}</span></div>
+    </div>`;
+  }).join('');
+  const teamCard = t => `
+    <div class="mc-team" style="${mcTeamStyle(t)}">
+      <div class="mc-team-badge">${t}</div>
+      <label>Nome do time
+        <input type="text" maxlength="24" data-mc-team="${t}" data-mc-field="name" value="${escapeUntrustedText(mc.teams[t].name)}" placeholder="Time ${t}" autocomplete="off">
+      </label>
+      <label>Líder
+        <input type="text" maxlength="24" list="mcPlayers" data-mc-team="${t}" data-mc-field="leader" value="${escapeUntrustedText(mc.teams[t].leader)}" placeholder="Nick do líder" autocomplete="off">
+      </label>
+    </div>`;
+  const firstChip = (v, l) => `<div class="mode-chip ${mc.first === v ? 'active' : ''}" data-mc-first="${v}">${l}</div>`;
+  const bansTotal = Math.max(mc.pool.length - 1, 0);
+  return `
+    <h2>Map Chooser <span class="sub">Veto de mapas · estilo Premier / FACEIT / GC</span></h2>
+    <p class="mc-lead">Os líderes dos dois times se revezam banindo mapas até sobrar só um — esse é o mapa da partida.</p>
+
+    <div class="mc-section">
+      <div class="mc-label"><span>1 · Pool de mapas</span><span class="mc-count">${mc.pool.length} selecionados · ${bansTotal} ban${bansTotal === 1 ? '' : 's'}${key === 'custom' ? ' · personalizado' : ''}</span></div>
+      <div class="mode-chips mc-presets">
+        <div class="mode-chip ${key === 'duty' ? 'active' : ''}" data-mc-preset="duty">Active Duty (${MC_MAPS.filter(m => m.duty).length})</div>
+        <div class="mode-chip ${key === 'all' ? 'active' : ''}" data-mc-preset="all">Todos os mapas (${MC_MAPS.length})</div>
+      </div>
+      <div class="mc-grid mc-grid-pool">${tiles}</div>
+      ${mc.pool.length < 2 ? '<div class="mc-warn">Selecione pelo menos 2 mapas para iniciar o veto.</div>' : ''}
+    </div>
+
+    <div class="mc-section">
+      <div class="mc-label"><span>2 · Times e líderes</span></div>
+      <div class="mc-teams">${teamCard('A')}<div class="mc-vs-mid">VS</div>${teamCard('B')}</div>
+      <datalist id="mcPlayers">${names.map(n => `<option value="${escapeUntrustedText(n)}"></option>`).join('')}</datalist>
+    </div>
+
+    <div class="mc-section">
+      <div class="mc-label"><span>3 · Quem bane primeiro</span></div>
+      <div class="mode-chips">${firstChip('random', 'Sortear')}${firstChip('A', 'Time A')}${firstChip('B', 'Time B')}</div>
+    </div>
+
+    <div class="mc-actions"><button type="button" id="mcStart" ${mc.pool.length < 2 ? 'disabled' : ''}>Iniciar veto</button></div>`;
+}
+
+function mcCardHTML(id, opt){
+  const m = mcMap(id); if(!m) return '';
+  const ban = mc.bans.find(b => b.id === id);
+  const bi = ban ? mc.bans.indexOf(ban) : -1;
+  const isLast = ban && bi === mc.bans.length - 1;
+  const picked = mc.phase === 'done' && mcRemaining()[0] === id;
+  const canBan = opt.interactive && !ban;
+  const cls = ['mc-card', ban ? 'banned' : '', isLast ? 'just-banned' : '', picked ? 'picked' : '', canBan ? 'avail' : ''].filter(Boolean).join(' ');
+  const attrs = canBan ? `role="button" tabindex="0" data-mc-ban="${id}" aria-label="Banir ${m.name}"` : '';
+  const style = ban ? `style="--bc:${MC_TEAM[ban.team].color}"` : '';
+  return `<div class="${cls}" ${attrs} ${style}>
+      <div class="mc-img" data-mc-img="${id}"></div><div class="mc-shade"></div>
+      ${ban ? '<div class="mc-x" aria-hidden="true"></div>' : ''}
+      ${canBan ? '<span class="mc-hint">Banir</span>' : ''}
+      ${picked ? '<span class="mc-picked-tag">Mapa da partida</span>' : ''}
+      <div class="mc-info">
+        <span class="mc-name">${m.name}</span>
+        ${ban ? `<span class="mc-ban-by" style="color:${MC_TEAM[ban.team].color}">Ban #${bi + 1} · ${escapeUntrustedText(mcTeamLabel(ban.team))}</span>` : `<span class="mc-tag">${m.duty ? 'Active Duty' : 'Reserva'}</span>`}
+      </div>
+    </div>`;
+}
+
+function mcLogHTML(){
+  if(!mc.bans.length) return '';
+  return `<ol class="mc-log">${mc.bans.map((b, i) => `
+    <li style="--tc:${MC_TEAM[b.team].color}"><i></i><span><b>${escapeUntrustedText(mcTeamLabel(b.team))}</b> baniu <b>${mcMap(b.id).name}</b></span><em>#${i + 1}</em></li>`).join('')}</ol>`;
+}
+
+function mcVsLine(){
+  const side = t => {
+    const l = mcLeaderLabel(t);
+    return `<span class="mc-side" style="--tc:${MC_TEAM[t].color}"><b>${escapeUntrustedText(mcTeamLabel(t))}</b>${l ? `<small>${escapeUntrustedText(l)}</small>` : ''}</span>`;
+  };
+  return `<div class="mc-vsline">${side('A')}<span class="mc-vsmark">VS</span>${side('B')}</div>`;
+}
+
+function mcVetoHTML(){
+  const turn = mcTurn(), total = mc.pool.length - 1, n = mc.bans.length;
+  const leader = mcLeaderLabel(turn);
+  const dots = Array.from({length: total}, (_, i) => `<i class="${i < n ? 'done' : (i === n ? 'now' : '')}"></i>`).join('');
+  return `
+    <h2>Map Chooser <span class="sub">Veto em andamento</span></h2>
+    ${mcVsLine()}
+    <div class="mc-turn" style="${mcTeamStyle(turn)}" aria-live="polite">
+      <div>
+        <div class="mc-turn-k">Vez de</div>
+        <div class="mc-turn-team">${escapeUntrustedText(mcTeamLabel(turn))}</div>
+        <div class="mc-turn-sub">${leader ? `Líder <b>${escapeUntrustedText(leader)}</b> — ` : ''}clique em um mapa para banir</div>
+      </div>
+      <div class="mc-progress"><span>Ban ${n + 1} de ${total}</span><div class="mc-dots">${dots}</div></div>
+    </div>
+    <div class="mc-grid" style="${mcTeamStyle(turn)}">${mc.pool.map(id => mcCardHTML(id, {interactive:true})).join('')}</div>
+    ${mcLogHTML()}
+    <div class="mc-actions">
+      <button type="button" class="secondary" id="mcUndo" ${n ? '' : 'disabled'}>Desfazer último ban</button>
+      <button type="button" class="secondary" id="mcBack">Voltar à configuração</button>
+    </div>`;
+}
+
+function mcDoneHTML(){
+  const pid = mcRemaining()[0], m = mcMap(pid);
+  const canUse = m && MAPS.includes(m.name);
+  return `
+    <h2>Map Chooser <span class="sub">Veto concluído</span></h2>
+    ${mcVsLine()}
+    <div class="mc-result">
+      <div class="mc-img" data-mc-img="${pid}"></div><div class="mc-shade"></div>
+      <div class="mc-result-in">
+        <span class="mc-result-k">Mapa da partida</span>
+        <div class="mc-result-name">${m ? m.name : ''}</div>
+        <span class="mc-result-sub">Sobrou após ${mc.bans.length} ban${mc.bans.length === 1 ? '' : 's'}</span>
+      </div>
+    </div>
+    <div class="mc-actions">
+      <button type="button" id="mcCopy">Copiar resultado</button>
+      ${canUse ? '<button type="button" class="secondary" id="mcUse">Usar no Registrar</button>' : ''}
+      <button type="button" class="secondary" id="mcUndo">Desfazer último ban</button>
+      <button type="button" class="secondary" id="mcNew">Novo veto</button>
+    </div>
+    <div class="mc-grid mc-grid-sm">${mc.pool.map(id => mcCardHTML(id, {interactive:false})).join('')}</div>
+    ${mcLogHTML()}`;
+}
+
+/* ---------- ações ---------- */
+function mcResultText(){
+  const pid = mcRemaining()[0];
+  const side = t => mcTeamLabel(t) + (mcLeaderLabel(t) ? ' (' + mcLeaderLabel(t) + ')' : '');
+  const lines = ['MAP CHOOSER — BRCS2', side('A') + ' x ' + side('B'), '', 'Bans:'];
+  mc.bans.forEach((b, i) => lines.push((i + 1) + '. ' + mcTeamLabel(b.team) + ' baniu ' + mcMap(b.id).name));
+  lines.push('', 'Mapa da partida: ' + (mcMap(pid) ? mcMap(pid).name : '-'));
+  return lines.join('\n');
+}
+function mcSetPool(ids){ const set = new Set(ids); mc.pool = MC_MAPS.filter(m => set.has(m.id)).map(m => m.id); }
+function mcBan(id){
+  if(mc.phase !== 'veto' || !mcRemaining().includes(id)) return;
+  mc.bans.push({id, team: mcTurn()});
+  if(mcRemaining().length === 1){
+    mc.phase = 'done';
+    const m = mcMap(mcRemaining()[0]);
+    if(m) showToast('Mapa da partida: ' + m.name);
+  }
+  renderTab();
+}
+function mcUndo(){
+  if(!mc.bans.length) return;
+  mc.bans.pop(); mc.phase = 'veto'; renderTab();
+}
+function mcStart(){
+  if(mc.pool.length < 2) return;
+  mc.bans = []; mc.phase = 'veto';
+  mc.start = mc.first === 'random' ? (Math.random() < 0.5 ? 'A' : 'B') : mc.first;
+  if(mc.first === 'random') showToast('Sorteio: ' + mcTeamLabel(mc.start) + ' bane primeiro');
+  renderTab();
+}
+function mcToSetup(){
+  mc.bans = []; mc.phase = 'setup';
+  Object.keys(mcImgCache).forEach(k => { if(mcImgCache[k] === false) delete mcImgCache[k]; });
+  renderTab();
+}
+
+function attachMapChooserEvents(){
+  const root = document.getElementById('tabContent'); if(!root) return;
+  mcApplyImages(root);
+  mcBgStart();
+  const on = (sel, fn) => root.querySelectorAll(sel).forEach(el => {
+    el.addEventListener('click', e => fn(el, e));
+    if(el.getAttribute('role') === 'button') el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fn(el, e); } });
+  });
+  on('[data-mc-preset]', el => { mcSetPool(el.dataset.mcPreset === 'all' ? MC_MAPS.map(m => m.id) : MC_MAPS.filter(m => m.duty).map(m => m.id)); renderTab(); });
+  on('[data-mc-toggle]', el => {
+    const id = el.dataset.mcToggle;
+    mcSetPool(mc.pool.includes(id) ? mc.pool.filter(x => x !== id) : mc.pool.concat(id));
+    renderTab();
+  });
+  on('[data-mc-first]', el => { mc.first = el.dataset.mcFirst; renderTab(); });
+  root.querySelectorAll('[data-mc-field]').forEach(inp => inp.addEventListener('input', () => {
+    const t = inp.dataset.mcTeam, f = inp.dataset.mcField;
+    if(mc.teams[t] && (f === 'name' || f === 'leader')) mc.teams[t][f] = inp.value.slice(0, 24);
+  }));
+  on('[data-mc-ban]', el => mcBan(el.dataset.mcBan));
+  const click = (id, fn) => { const b = document.getElementById(id); if(b) b.addEventListener('click', fn); };
+  click('mcStart', mcStart);
+  click('mcUndo', mcUndo);
+  click('mcBack', mcToSetup);
+  click('mcNew', mcToSetup);
+  click('mcCopy', async () => {
+    try{ await navigator.clipboard.writeText(mcResultText()); showToast('Resultado copiado'); }
+    catch(e){ showToast('Não foi possível copiar automaticamente'); }
+  });
+  click('mcUse', () => {
+    const m = mcMap(mcRemaining()[0]);
+    if(m && MAPS.includes(m.name)){ lastUsedMap = m.name; activeTab = 'registrar'; render(); showToast('Mapa ' + m.name + ' selecionado no Registrar'); }
+  });
+}
+
+
 function chatHTML(){
   return `
     <div class="panel accent-blue chat-panel">
