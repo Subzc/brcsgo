@@ -1628,12 +1628,7 @@ async function setDoc(key, rawValue){
   catch(e){ storageAvailable = false; console.error('Erro ao salvar', key, e); }
 }
 async function deleteDoc(key){
-  if(!db) return;
-  try{ await db.collection('brcsgo').doc(key).delete(); }catch(e){}
-}
-
-async function loadShared(key){
-  const SHARED_CHUNK_SIZE = 250000; // 250 mil caracteres por bloco (bem abaixo de 1 MB)
+const SHARED_CHUNK_SIZE = 250000;
 
 async function loadShared(key){
   if(!db) return [];
@@ -1677,8 +1672,6 @@ async function saveShared(key, val){
     storageAvailable = false;
     console.error('Erro ao salvar', key, e);
   }
-}
-  
 }
 async function loadLocal(key){
   try{ return localStorage.getItem(key); }catch(e){ return null; }
