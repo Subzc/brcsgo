@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://raw.githubusercontent.com https://*.googleapis.com https://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://brcsgoia.ttyfit518.workers.dev; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://raw.githubusercontent.com https://steamcdn-a.akamaihd.net https://community.cloudflare.steamstatic.com https://community.akamai.steamstatic.com; connect-src 'self' https://raw.githubusercontent.com https://*.googleapis.com https://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://brcsgoia.ttyfit518.workers.dev; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <title>BRCS2 — Counter-Strike 2 · Partidas &amp; Ranking</title>
@@ -1084,6 +1084,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .mk-sub{display:flex;gap:4px;margin-bottom:16px}.mk-sub button{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--muted);padding:8px 14px;letter-spacing:.08em;text-transform:uppercase;font-size:12px}.mk-sub button.on{color:var(--white);border-bottom-color:var(--red)}
 .mk-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.mk-filters input{flex:1;min-width:180px}
 .mk-count{font-size:12px;color:var(--muted);margin-bottom:12px}
+.mk-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.mk-chips button{background:var(--panel2);border:1px solid var(--line);border-radius:999px;color:var(--muted);padding:6px 12px;font-size:12px;cursor:pointer}.mk-chips button.on{color:var(--white);border-color:var(--red);background:var(--panel3)}
 .mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .mk-card,.mk-item{position:relative;display:flex;flex-direction:column;gap:4px;padding:10px;text-align:left;background:var(--panel2);border:1px solid var(--line);border-top:2px solid var(--rc,#555);border-radius:6px;color:var(--white);cursor:pointer}
 .mk-card:hover,.mk-item:hover,.mk-card.sel,.mk-item.sel{border-color:var(--rc,#888);background:var(--panel3)}
@@ -3450,10 +3451,104 @@ let wallet = { tokens:0, spent:0, inv:[] };
 let mk = { tab:'loja', q:'', cat:'', rar:'', sort:'asc', n:48, up:[], tq:'', tid:null, tw:2, spin:false, res:null };
 const mkE = v => escapeUntrustedText(v == null ? '' : v);
 const mkFmt = n => (Math.round(n*100)/100).toLocaleString('pt-BR');
-const mkImg = u => (typeof u === 'string' && u.indexOf('https://raw.githubusercontent.com/') === 0) ? u : '';
+const MK_IMG_HOSTS = ['https://raw.githubusercontent.com/','https://steamcdn-a.akamaihd.net/','https://community.cloudflare.steamstatic.com/','https://community.akamai.steamstatic.com/'];
+const mkImg = u => (typeof u === 'string' && MK_IMG_HOSTS.some(h => u.indexOf(h) === 0)) ? u : '';
 function mkRand(){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]/4294967296; }
 function mkHash(s){ let h = 2166136261; for(let i=0;i<s.length;i++){ h = Math.imul(h ^ s.charCodeAt(i), 16777619); } return h >>> 0; }
 function mkSeeded(seed){ return function(){ seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14) >>> 0)/4294967296; }; }
+
+// ---- catálogo offline: skins de TODAS as armas (complementa/substitui a API online) ----
+// código de raridade: c=Consumer i=Industrial m=Mil-Spec r=Restricted l=Classified v=Covert e=Extraordinary x=Contraband
+const MK_RC = { c:['Consumer Grade','#b0c3d9'], i:['Industrial Grade','#5e98d9'], m:['Mil-Spec Grade','#4b69ff'], r:['Restricted','#8847ff'], l:['Classified','#d32ee6'], v:['Covert','#eb4b4b'], e:['Extraordinary','#eb4b4b'], x:['Contraband','#e4ae39'] };
+const MK_FL = { 'Asiimov':[.18,1], 'Fade':[0,.08], 'Doppler':[0,.08], 'Gamma Doppler':[0,.08], 'Marble Fade':[0,.08], 'Tiger Tooth':[0,.08], 'Slaughter':[0,.08], 'Dragon Lore':[0,.7], 'Medusa':[0,.7], 'Gungnir':[0,.7], 'Howl':[0,.4], 'Fire Serpent':[0,.7] };
+const MK_LOCAL = [
+ ['Rifles','AK-47','Redline:l|Vulcan:v|Asiimov:v|Fire Serpent:v|Neon Revolution:v|Bloodsport:v|Fuel Injector:v|Wasteland Rebel:v|Case Hardened:r|Jaguar:v|Hydroponic:v|The Empress:v|Frontside Misty:l|Point Disarray:l|Elite Build:m|Safari Mesh:c|Slate:m|Blue Laminate:r|Orbit Mk01:l|Neon Rider:v|Aquamarine Revenge:v|Head Shot:l|Legion of Anubis:l|Nightwish:l|Cartel:l|Phantom Disruptor:l'],
+ ['Rifles','M4A4','Howl:x|Asiimov:v|Desolate Space:l|Neo-Noir:l|The Emperor:v|Buzz Kill:l|Hellfire:v|Poseidon:v|Cyber Security:l|Evil Daimyo:l|Griffin:l|Royal Paladin:l|Dragon King:l|Magnesium:m|Tooth Fairy:l|Radiation Hazard:r|Zirka:m'],
+ ['Rifles','M4A1-S','Hyper Beast:v|Cyrex:l|Printstream:v|Golden Coil:v|Knight:v|Atomic Alloy:r|Chantico\'s Fire:v|Decimator:v|Guardian:r|Master Piece:v|Mecha Industries:l|Nightmare:l|Blue Phosphor:l|Control Panel:l|Basilisk:r|Hot Rod:l|Leaded Glass:l|Dark Water:r|Flashback:r|Player Two:l|Welcome to the Jungle:v|Imminent Danger:l'],
+ ['Rifles','Galil AR','Chatterbox:l|Cerberus:l|Eco:r|Sugar Rush:r|Kami:r|Rocket Pop:r|Stone Cold:m|Orange DDPAT:m|Tuxedo:m'],
+ ['Rifles','FAMAS','Roll Cage:l|Afterimage:l|Mecha Industries:l|Djinn:r|Neural Net:r|Sergeant:r|Survivor Z:r|Hexane:m'],
+ ['Rifles','AUG','Akihabara Accept:v|Bengal Tiger:l|Hot Rod:l|Syd Mead:l|Stymphalian:l|Torque:r|Wings:l|Aristocrat:r|Chameleon:r|Random Access:m'],
+ ['Rifles','SG 553','Cyrex:l|Integrale:r|Danger Close:l|Bulldozer:r|Tiger Moth:r|Ultraviolet:r|Pulse:m'],
+ ['Sniper Rifles','AWP','Dragon Lore:v|Medusa:v|Gungnir:v|Asiimov:v|Hyper Beast:v|Lightning Strike:l|Neo-Noir:l|Containment Breach:v|Wildfire:l|Fade:v|Redline:r|Electric Hive:l|Man-o\'-war:r|Graphite:l|Oni Taiji:v|Boom:v|Elite Build:r|Atheris:m|Worm God:m|Safari Mesh:c|Phobos:m|Corticera:l|Mortis:l|Desert Hydra:v|Exoskeleton:m|Sun in Leo:m|Capillary:r'],
+ ['Sniper Rifles','SSG 08','Blood in the Water:v|Dragonfire:l|Big Iron:l|Death\'s Head:l|Abyss:r|Detour:r|Ghost Crusader:l|Dark Water:r|Tropical Storm:m'],
+ ['Sniper Rifles','SCAR-20','Cyrex:l|Cardiac:r|Splash Jam:r|Bloodsport:l|Powercore:r|Contractor:c|Sand Mesh:c|Storm:m'],
+ ['Sniper Rifles','G3SG1','The Executioner:l|Flux:r|Chronos:l|Orange Kimono:l|Demeter:r|Stinger:r|Safari Mesh:c|Arctic Camo:c'],
+ ['Pistols','Glock-18','Fade:l|Water Elemental:l|Bunsen Burner:r|Twilight Galaxy:l|Neo-Noir:l|Vogue:l|Gamma Doppler:l|Wasteland Rebel:l|Moonrise:r|Royal Legion:r|Dragon Tattoo:l|Off World:l|Candy Apple:m|Steel Disruption:r|Catacombs:r|Weasel:r|Sand Dune:c|Groundwater:c|Night:m|Reactor:r'],
+ ['Pistols','USP-S','Kill Confirmed:v|Neo-Noir:v|Orion:l|Printstream:v|Caiman:l|Cortex:l|Guardian:r|Dark Water:r|Serum:r|Overgrowth:l|Torque:r|Stainless:r|Night Ops:m|Forest Leaves:c'],
+ ['Pistols','P2000','Fire Elemental:l|Ocean Foam:l|Corticera:r|Amber Fade:r|Imperial Dragon:l|Ivory:m|Scorpion:r|Pulse:r|Red FragCam:m|Granite Marbleized:c|Grassland:c'],
+ ['Pistols','P250','Asiimov:l|See Ya Later:l|Nevermore:r|Muertos:r|Whiteout:r|Cartel:r|Franklin:r|Supernova:r|Sand Dune:c'],
+ ['Pistols','Desert Eagle','Blaze:l|Printstream:v|Code Red:v|Kumicho Dragon:l|Hypnotic:r|Conspiracy:l|Cobalt Disruption:l|Oxide Blaze:m|Mecha Industries:l|Light Rail:r|Directive:r|Ocean Drive:l|Night:m|Crimson Web:l'],
+ ['Pistols','Five-SeveN','Hyper Beast:v|Monkey Business:r|Case Hardened:r|Fowl Play:r|Copper Galaxy:l|Angry Mob:l|Triumvirate:l|Retrobution:l|Kami:m|Candy Apple:m|Nightshade:m|Orange Peel:c|Forest Night:c'],
+ ['Pistols','Tec-9','Fuel Injector:l|Isaac:r|Nuclear Threat:l|Avalanche:r|Re-Entry:l|Toxic:m|Bamboozle:r'],
+ ['Pistols','CZ75-Auto','Victoria:l|Xiphos:r|The Fuschia Is Now:r|Pole Position:r|Tuxedo:m|Yellow Jacket:m|Poison Dart:r|Chalice:r|Emerald:l'],
+ ['Pistols','Dual Berettas','Cartel:r|Dualing Dragons:r|Hemoglobin:r|Black Limba:m|Urban Shock:r|Royal Consorts:l|Marina:r'],
+ ['Pistols','R8 Revolver','Fade:l|Bone Mask:m|Crimson Web:r|Reboot:r|Llama Cannon:l'],
+ ['SMGs','MP9','Hot Rod:l|Rose Iron:r|Starlight Protector:l|Airlock:l|Deadly Poison:r|Setting Sun:r|Storm:m|Sand Dashed:c'],
+ ['SMGs','MAC-10','Neon Rider:l|Curse:l|Fade:l|Tatter:r|Malachite:m|Ultraviolet:r|Heat:r'],
+ ['SMGs','MP7','Bloodsport:l|Nemesis:l|Ocean Foam:l|Skulls:r|Whiteout:r|Special Delivery:r|Anodized Navy:m|Forest DDPAT:c'],
+ ['SMGs','MP5-SD','Phosphor:r|Lab Rats:l|Gauss:m|Agent:l|Co-Processor:m'],
+ ['SMGs','UMP-45','Primal Saber:l|Momentum:r|Blaze:l|Arctic Wolf:l|Corporal:r|Metal Flowers:r|Carbon Fiber:m|Bone Pile:c'],
+ ['SMGs','P90','Asiimov:l|Death by Kitty:l|Emerald Dragon:v|Trigon:l|Cold Blooded:l|Shallow Grave:r|Module:r|Blind Spot:m|Scorched:c'],
+ ['SMGs','PP-Bizon','Judgement of Anubis:l|Fuel Rod:r|Osiris:r|Antique:r|Night Riot:l|Water Sigil:m|Blue Streak:m|Sand Dashed:c|Irradiated Alert:m'],
+ ['Shotguns','Nova','Hyper Beast:l|Bloomstick:r|Antique:r|Gila:l|Rising Skull:r|Toy Soldier:m|Graphite:l|Wild Six:r|Polar Mesh:m|Sand Dune:c'],
+ ['Shotguns','XM1014','Tranquility:l|Heaven Guard:r|Red Python:r|Teclu Burner:r|Quicksilver:r|Blaze Orange:m|Scumbria:m|Bone Machine:r'],
+ ['Shotguns','MAG-7','Bulldozer:r|Praetorian:l|Cinquedea:r|Hard Water:r|Heat:r|Counter Terrace:m'],
+ ['Shotguns','Sawed-Off','The Kraken:l|Wasteland Princess:l|Origami:r|Yorick:r|Highwayman:l|Limelight:r|Serenity:m|Orange DDPAT:m|Forest DDPAT:c'],
+ ['Machineguns','M249','Nebula Crusader:l|Emerald Poison Dart:m|Magma:r|System Lock:r|Spectre:r|Impact Drill:m|Gator Mesh:c'],
+ ['Machineguns','Negev','Power Loader:l|Man-o\'-war:r|Loudmouth:r|Bratatat:r|Terrain:m|Dazzle:m|Desert-Strike:r|Anodized Navy:m'],
+ ['Gloves','★ Sport Gloves','Pandora\'s Box:e|Vice:e|Superconductor:e|Hedge Maze:e|Amphibious:e|Arid:e'],
+ ['Gloves','★ Specialist Gloves','Crimson Kimono:e|Fade:e|Emerald Web:e|Foundation:e|Mogul:e|Forest DDPAT:e'],
+ ['Gloves','★ Driver Gloves','King Snake:e|Crimson Weave:e|Lunar Weave:e|Convoy:e|Overtake:e|Diamondback:e'],
+ ['Gloves','★ Hand Wraps','Cobalt Skulls:e|Slaughter:e|Badlands:e|Leather:e|Spruce DDPAT:e|Duct Tape:e'],
+ ['Gloves','★ Moto Gloves','Spearmint:e|Cool Mint:e|Boom!:e|Eclipse:e|POW!:e|Polygon:e'],
+ ['Gloves','★ Bloodhound Gloves','Bronzed:e|Charred:e|Guerrilla:e|Snakebite:e'],
+ ['Gloves','★ Hydra Gloves','Emerald:e|Case Hardened:e|Rattler:e|Mangrove:e'],
+ ['Gloves','★ Broken Fang Gloves','Jade:e|Yellow-banded:e|Needle Point:e|Unhinged:e']
+];
+const MK_KNIVES_A = ['Karambit','M9 Bayonet','Butterfly Knife','Bayonet','Flip Knife','Gut Knife','Huntsman Knife','Falchion Knife','Bowie Knife','Shadow Daggers','Navaja Knife','Stiletto Knife','Talon Knife','Ursus Knife'];
+const MK_KNIVES_B = ['Paracord Knife','Survival Knife','Nomad Knife','Skeleton Knife'];
+function mkNorm(n){ return String(n).toLowerCase().replace(/\s+/g, ' ').trim(); }
+function mkLocalCatalog(){
+  const out = [], push = (cat, name, code) => {
+    const rc = MK_RC[code] || MK_RC.m, fl = MK_FL[name.split(' | ')[1] || ''] || [0,1];
+    const s = { id:'loc_' + mkHash(name).toString(36), name, img:'', cat, rar:rc[0], col:rc[1], min:fl[0], max:fl[1], st: cat !== 'Gloves' };
+    s.base = mkBase({ name, rarity:{ name:rc[0] }, category:{ name:cat } });
+    out.push(s);
+  };
+  MK_LOCAL.forEach(([cat, weapon, list]) => list.split('|').forEach(t => { const i = t.lastIndexOf(':'); push(cat, weapon + ' | ' + t.slice(0, i), t.slice(i+1)); }));
+  MK_KNIVES_A.forEach(k => ['Fade','Doppler','Marble Fade','Tiger Tooth','Slaughter','Crimson Web'].forEach(f => push('Knives', '★ ' + k + ' | ' + f, 'v')));
+  MK_KNIVES_B.forEach(k => { push('Knives', '★ ' + k, 'v'); ['Stained','Blue Steel','Safari Mesh','Forest DDPAT'].forEach(f => push('Knives', '★ ' + k + ' | ' + f, 'v')); });
+  return out;
+}
+
+// ---- imagem: usa a foto da API; se falhar/for bloqueada, mostra silhueta da arma ----
+const MK_SIL = {
+  'Rifles':'<rect x="30" y="44" width="120" height="12"/><rect x="150" y="46" width="40" height="5"/><rect x="8" y="42" width="24" height="16" rx="3"/><rect x="88" y="56" width="12" height="26"/><rect x="60" y="56" width="10" height="14"/>',
+  'Sniper Rifles':'<rect x="30" y="46" width="110" height="10"/><rect x="140" y="48" width="56" height="4"/><rect x="8" y="42" width="24" height="18" rx="3"/><rect x="70" y="34" width="44" height="9" rx="3"/><rect x="92" y="56" width="10" height="18"/>',
+  'Pistols':'<rect x="52" y="36" width="82" height="14" rx="2"/><rect x="62" y="50" width="18" height="34" rx="2"/><rect x="134" y="40" width="12" height="6"/>',
+  'SMGs':'<rect x="40" y="42" width="90" height="14"/><rect x="130" y="45" width="32" height="5"/><rect x="78" y="56" width="10" height="28"/><rect x="56" y="56" width="10" height="16"/><rect x="18" y="44" width="24" height="10"/>',
+  'Shotguns':'<rect x="20" y="44" width="70" height="12"/><rect x="90" y="45" width="98" height="5"/><rect x="90" y="52" width="80" height="5"/><rect x="60" y="56" width="10" height="14"/>',
+  'Machineguns':'<rect x="40" y="40" width="90" height="18"/><rect x="130" y="45" width="52" height="6"/><rect x="80" y="58" width="32" height="24" rx="2"/><rect x="12" y="42" width="30" height="14" rx="3"/>',
+  'Knives':'<polygon points="40,70 140,25 162,33 72,78"/><polygon points="26,76 70,78 62,92 22,88"/>',
+  'Gloves':'<rect x="62" y="40" width="72" height="44" rx="14"/><rect x="62" y="14" width="12" height="32" rx="6"/><rect x="78" y="8" width="12" height="38" rx="6"/><rect x="94" y="8" width="12" height="38" rx="6"/><rect x="110" y="14" width="12" height="32" rx="6"/>'
+};
+const MK_PHS = {};
+function mkPh(cat, col){
+  const c = /^#[0-9a-f]{3,8}$/i.test(col || '') ? col : '#888', k = (cat||'') + c;
+  if(!MK_PHS[k]) MK_PHS[k] = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><g fill="' + c + '" fill-opacity=".85">' + (MK_SIL[cat] || MK_SIL['Rifles']) + '</g></svg>');
+  return MK_PHS[k];
+}
+function mkImgTag(src, n, cat, col){
+  return `<img loading="lazy" src="${mkE(mkImg(src) || mkPh(cat, col))}" data-fc="${mkE(cat || '')}" data-fr="${mkE(col || '')}" alt="">`;
+}
+document.addEventListener('error', e => {
+  const t = e.target;
+  if(t && t.tagName === 'IMG' && t.dataset && t.dataset.fc !== undefined && !t.dataset.fb){ t.dataset.fb = '1'; t.src = mkPh(t.dataset.fc, t.dataset.fr); }
+}, true);
+const MK_CATS = [['Rifles','Rifles'],['Sniper Rifles','Snipers'],['Pistols','Pistolas'],['SMGs','SMGs'],['Shotguns','Escopetas'],['Machineguns','Metralhadoras'],['Knives','Facas'],['Gloves','Luvas']];
+const mkCatLabel = c => { const f = MK_CATS.find(x => x[0] === c); return f ? f[1] : c; };
+let mkOffline = false;
+
 
 // ---- pontos → Tokens ----
 function mkPoints(){
@@ -3486,16 +3581,22 @@ function mkBase(s){
 }
 async function mkEnsureDB(){
   if(skinDB || skinLoading) return;
-  skinLoading = true; skinErr = false;
+  skinLoading = true; skinErr = false; mkOffline = false;
+  let api = [];
   try{
     const r = await fetch(MK.URL); if(!r.ok) throw new Error('http ' + r.status);
     const raw = await r.json();
-    skinDB = raw.filter(s => s && s.name && s.image).map(s => ({
+    api = raw.filter(s => s && s.name).map(s => ({
       id: String(s.id), name: s.name, img: mkImg(s.image),
       cat: (s.category && s.category.name) || 'Outros', rar: (s.rarity && s.rarity.name) || '',
       col: (s.rarity && s.rarity.color) || '#888', min: s.min_float != null ? +s.min_float : 0, max: s.max_float != null ? +s.max_float : 1,
       st: !!s.stattrak, base: mkBase(s)
-    })).filter(s => s.img);
+    }));
+  }catch(e){ console.error('Skins (API):', e); mkOffline = true; }
+  try{
+    const seen = new Set(api.map(s => mkNorm(s.name)));
+    skinDB = api.concat(mkLocalCatalog().filter(s => !seen.has(mkNorm(s.name))));
+    skinMap = {};
     skinDB.forEach(s => { s.low = mkPrice(s.base, s.name, s.max, 0, false); skinMap[s.id] = s; });
   }catch(e){ console.error('Skins:', e); skinErr = true; }
   skinLoading = false;
@@ -3545,13 +3646,15 @@ function mkSkinGrid(){
   let list = skinDB.filter(s => (!q || s.name.toLowerCase().indexOf(q) >= 0) && (!mk.cat || s.cat === mk.cat) && (!mk.rar || s.rar === mk.rar));
   list.sort((a,b) => mk.sort === 'asc' ? a.low - b.low : b.low - a.low);
   const cats = Array.from(new Set(skinDB.map(s => s.cat))).sort(), rars = Array.from(new Set(skinDB.map(s => s.rar))).filter(Boolean).sort();
-  const opt = (arr, cur) => arr.map(v => `<option value="${mkE(v)}" ${cur === v ? 'selected' : ''}>${mkE(v)}</option>`).join('');
-  return `<div class="mk-filters"><input id="mkQ" placeholder="Buscar skin (ex: AK-47 Vulcan)" value="${mkE(mk.q)}">
-    <select id="mkCat"><option value="">Todas as armas</option>${opt(cats, mk.cat)}</select>
+  const opt = (arr, cur, lab) => arr.map(v => `<option value="${mkE(v)}" ${cur === v ? 'selected' : ''}>${mkE(lab ? lab(v) : v)}</option>`).join('');
+  const known = MK_CATS.map(c => c[0]).filter(c => cats.indexOf(c) >= 0), chipCats = known.concat(cats.filter(c => known.indexOf(c) < 0));
+  const chips = `<div class="mk-chips"><button type="button" data-mkchip="" class="${!mk.cat ? 'on' : ''}">Todas</button>${chipCats.map(c => `<button type="button" data-mkchip="${mkE(c)}" class="${mk.cat === c ? 'on' : ''}">${mkE(mkCatLabel(c))}</button>`).join('')}</div>`;
+  return `${mkOffline ? '<div class="mk-count">Catálogo online indisponível — exibindo o catálogo offline (sem fotos oficiais).</div>' : ''}${chips}<div class="mk-filters"><input id="mkQ" placeholder="Buscar skin (ex: AK-47 Vulcan)" value="${mkE(mk.q)}">
+    <select id="mkCat"><option value="">Todas as armas</option>${opt(cats, mk.cat, mkCatLabel)}</select>
     <select id="mkRar"><option value="">Toda raridade</option>${opt(rars, mk.rar)}</select>
     <select id="mkSort"><option value="asc" ${mk.sort==='asc'?'selected':''}>Menor preço</option><option value="desc" ${mk.sort==='desc'?'selected':''}>Maior preço</option></select></div>
     <div class="mk-count">${list.length} skins</div>
-    <div class="mk-grid">${list.slice(0, mk.n).map(s => `<button class="mk-card" data-skin="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}"><img loading="lazy" src="${s.img}" alt=""><span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('')}</div>
+    <div class="mk-grid">${list.slice(0, mk.n).map(s => `<button class="mk-card" data-skin="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}">${mkImgTag(s.img, s.name, s.cat, s.col)}<span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('')}</div>
     ${list.length > mk.n ? '<div style="text-align:center;margin-top:14px"><button class="secondary" id="mkMore" type="button">Carregar mais</button></div>' : ''}`;
 }
 function mercadoHTML(){
@@ -3561,7 +3664,7 @@ function mercadoHTML(){
 }
 function mkItemCard(it, extra, cls){
   const p = mkPat(it.n, it.sd);
-  return `<div class="mk-item ${cls||''}" style="--rc:${mkE(it.col)}" ${extra||''}><img loading="lazy" src="${mkImg(it.img)}" alt=""><span class="mk-n">${mkE(it.n)}${it.st ? ' <em>ST™</em>' : ''}</span>
+  return `<div class="mk-item ${cls||''}" style="--rc:${mkE(it.col)}" ${extra||''}>${mkImgTag(it.img, it.n, it.cat, it.col)}<span class="mk-n">${mkE(it.n)}${it.st ? ' <em>ST™</em>' : ''}</span>
     <span class="mk-meta">${mkWearName(it.f)} · ${it.f.toFixed(4)}</span><span class="mk-meta">Pattern #${it.sd} · ${p.n}</span><span class="mk-p"><b>${mkFmt(mkItemVal(it))}</b> T</span></div>`;
 }
 function inventarioHTML(){
@@ -3596,13 +3699,13 @@ function upgraderHTML(){
       <div class="up-res" id="upRes">${mk.res ? (mk.res.win ? `<b class="win">Você ganhou ${mkE(mk.res.name)}!</b>` : '<b class="loss">Não foi dessa vez.</b>') : ''}</div></div>
     <div><h4 class="mk-h">2 · Escolha o alvo</h4><input id="upQ" placeholder="Buscar alvo" value="${mkE(mk.tq)}">
       ${u.t ? `<div class="up-pick">${mkE(u.t.name)} <select id="upW">${wopts}</select></div>` : ''}
-      <div class="up-list">${tl.map(s => `<button class="mk-card ${mk.tid===s.id?'sel':''}" data-target="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}"><img loading="lazy" src="${s.img}" alt=""><span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('') || '<p class="mk-empty">Nenhum alvo mais valioso que a aposta.</p>'}</div></div></div>`;
+      <div class="up-list">${tl.map(s => `<button class="mk-card ${mk.tid===s.id?'sel':''}" data-target="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}">${mkImgTag(s.img, s.name, s.cat, s.col)}<span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('') || '<p class="mk-empty">Nenhum alvo mais valioso que a aposta.</p>'}</div></div></div>`;
 }
 function mkOpenSkin(id){
   const s = skinMap[id]; if(!s) return;
   const old = document.getElementById('mkModal'); if(old) old.remove();
   const m = document.createElement('div'); m.id = 'mkModal'; m.className = 'mk-modal';
-  m.innerHTML = `<div class="mk-dlg" style="--rc:${mkE(s.col)}"><button class="mk-x" type="button" aria-label="Fechar">×</button><img src="${s.img}" alt=""><h3>${mkE(s.name)}</h3><div class="mk-meta">${mkE(s.rar)} · ${mkE(s.cat)}</div>
+  m.innerHTML = `<div class="mk-dlg" style="--rc:${mkE(s.col)}"><button class="mk-x" type="button" aria-label="Fechar">×</button>${mkImgTag(s.img, s.name, s.cat, s.col)}<h3>${mkE(s.name)}</h3><div class="mk-meta">${mkE(s.rar)} · ${mkE(s.cat)}</div>
     <table class="mk-tbl"><tr><th>Desgaste</th><th>Float</th><th>Pattern</th><th>Tokens</th><th></th></tr>${mkListings(s).map((l,i) => { const p = mkPat(s.name, l.sd); return `<tr><td>${mkWearName(l.f)}${l.st ? ' <em>ST™</em>' : ''}</td><td>${l.f.toFixed(4)}</td><td>#${l.sd} · ${p.n}</td><td><b>${mkFmt(l.price)}</b></td><td><button class="primary small" data-buy="${i}" type="button">Comprar</button></td></tr>`; }).join('')}</table></div>`;
   document.body.appendChild(m);
   const close = () => m.remove();
@@ -3649,6 +3752,7 @@ function attachMarketEvents(){
   on('[data-skin]', 'click', e => mkOpenSkin(e.currentTarget.dataset.skin));
   on('#mkMore', 'click', () => { mk.n += 48; renderTab(); });
   on('#mkQ', 'input', e => { mk.q = e.target.value; mk.n = 48; renderTab(); mkRefocus('mkQ'); });
+  on('[data-mkchip]', 'click', e => { mk.cat = e.currentTarget.dataset.mkchip; mk.n = 48; renderTab(); });
   on('#mkCat', 'change', e => { mk.cat = e.target.value; mk.n = 48; renderTab(); });
   on('#mkRar', 'change', e => { mk.rar = e.target.value; mk.n = 48; renderTab(); });
   on('#mkSort', 'change', e => { mk.sort = e.target.value; renderTab(); });
