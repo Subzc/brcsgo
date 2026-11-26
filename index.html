@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://brcsgoia.ttyfit518.workers.dev; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://raw.githubusercontent.com https://*.googleapis.com https://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://brcsgoia.ttyfit518.workers.dev; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <title>BRCS2 — Counter-Strike 2 · Partidas &amp; Ranking</title>
@@ -1075,6 +1075,33 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .lang-switch button.active{background:var(--orange);color:#fff}
 @media (max-width:820px){.lang-switch{bottom:88px;right:10px}}
 
+
+/* ===== Mercado · Inventário · Upgrader (minimalista) ===== */
+.mk-bar{display:flex;gap:28px;align-items:flex-end;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.mk-bar span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mk-bar b{font-size:26px;font-weight:600;color:var(--white)}
+.mk-buy{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.mk-buy input{width:74px}.mk-buy small{color:var(--muted);font-size:11px}
+.mk-sub{display:flex;gap:4px;margin-bottom:16px}.mk-sub button{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--muted);padding:8px 14px;letter-spacing:.08em;text-transform:uppercase;font-size:12px}.mk-sub button.on{color:var(--white);border-bottom-color:var(--red)}
+.mk-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.mk-filters input{flex:1;min-width:180px}
+.mk-count{font-size:12px;color:var(--muted);margin-bottom:12px}
+.mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.mk-card,.mk-item{position:relative;display:flex;flex-direction:column;gap:4px;padding:10px;text-align:left;background:var(--panel2);border:1px solid var(--line);border-top:2px solid var(--rc,#555);border-radius:6px;color:var(--white);cursor:pointer}
+.mk-card:hover,.mk-item:hover,.mk-card.sel,.mk-item.sel{border-color:var(--rc,#888);background:var(--panel3)}
+.mk-card img,.mk-item img{width:100%;height:92px;object-fit:contain}
+.mk-n{font-size:12px;line-height:1.3}.mk-p{font-size:11px;color:var(--muted)}.mk-p b{color:var(--white);font-size:13px}
+.mk-meta{font-size:10px;color:var(--muted);letter-spacing:.03em}.mk-item em,.mk-tbl em{font-style:normal;color:#ff9d3d;font-size:10px}
+.mk-item button{margin-top:6px}.mk-h{margin:18px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mk-empty{color:var(--muted);font-size:13px}
+.mk-modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:rgba(0,0,0,.72);padding:16px}
+.mk-dlg{position:relative;width:100%;max-width:620px;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line-strong);border-top:2px solid var(--rc,#888);border-radius:8px;padding:20px;text-align:center}
+.mk-dlg img{max-width:260px;width:60%;height:auto}.mk-x{position:absolute;top:8px;right:10px;background:transparent;border:0;font-size:22px;color:var(--muted)}
+.mk-tbl{width:100%;margin-top:14px;border-collapse:collapse;font-size:12px;text-align:left}.mk-tbl th{color:var(--muted);font-weight:500;font-size:10px;letter-spacing:.08em;text-transform:uppercase}.mk-tbl td,.mk-tbl th{padding:7px 6px;border-bottom:1px solid var(--line)}
+.up-grid{display:grid;grid-template-columns:1fr 260px 1fr;gap:18px;align-items:start}
+.up-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:460px;overflow:auto}
+.up-mid{text-align:center}.up-ring{width:210px;height:210px}.up-pct{font-size:30px;font-weight:600;margin:-122px 0 86px}
+.up-res{min-height:24px;margin-top:10px}.up-pick{margin:8px 0;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:900px){.up-grid{grid-template-columns:1fr}.mk-buy{margin-left:0}}
+
 /* ===== Eventos: modo automático ===== */
 .auto-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(229,38,43,.35);border-radius:8px;background:rgba(229,38,43,.06)}
 .auto-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px}
@@ -1611,6 +1638,8 @@ let rankRegion = 'all';
 const MAPS = ["Dust II","Mirage","Inferno","Nuke","Overpass","Ancient","Anubis","Vertigo","Train","Cache","Cobblestone"];
 
 const ICONS = {
+  mercado: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16l-1.5 12h-13L4 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>',
+  inventario: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V5h8v3M3 13h18"/></svg>',
   registrar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>',
   perfil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>',
   historico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
@@ -2031,6 +2060,8 @@ function render(){
       <button class="tab-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}Ranking</button>
       <button class="tab-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}Eventos ${(function(){const n=events.filter(ev=>!seenEventIds.includes(ev.id)&&ev.status!=='finished').length;return n>0?`<span class="pill">${n}</span>`:'';})()}</button>
       <button class="tab-btn ${activeTab==='mapchooser'?'active':''}" data-tab="mapchooser">${ICONS.mapchooser}Map Chooser</button>
+      <button class="tab-btn ${activeTab==='mercado'?'active':''}" data-tab="mercado">${ICONS.mercado}Mercado</button>
+      <button class="tab-btn ${activeTab==='inventario'?'active':''}" data-tab="inventario">${ICONS.inventario}Inventário</button>
       <button class="tab-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}Chat <span class="pill chat-pill" ${chatUnread>0?'':'hidden'}>${chatUnread>0?chatUnread:''}</span></button>
       ${isMod ? `<button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>` : ''}
     </div>
@@ -2085,6 +2116,8 @@ function render(){
       <button class="dock-btn ${activeTab==='ranking'?'active':''}" data-tab="ranking">${ICONS.ranking}<span>Ranking</span></button>
       <button class="dock-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}<span>Eventos</span></button>
       <button class="dock-btn ${activeTab==='mapchooser'?'active':''}" data-tab="mapchooser">${ICONS.mapchooser}<span>Mapas</span></button>
+      <button class="dock-btn ${activeTab==='mercado'?'active':''}" data-tab="mercado">${ICONS.mercado}<span>Mercado</span></button>
+      <button class="dock-btn ${activeTab==='inventario'?'active':''}" data-tab="inventario">${ICONS.inventario}<span>Inventário</span></button>
       <button class="dock-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}<span>Chat</span></button>
     </nav>
   `;
@@ -2116,10 +2149,13 @@ function renderTab(){
   else if(activeTab === 'moderacao') el.innerHTML = moderacaoHTML();
   else if(activeTab === 'chat') el.innerHTML = chatHTML();
   else if(activeTab === 'mapchooser') el.innerHTML = mapChooserHTML();
+  else if(activeTab === 'mercado') el.innerHTML = mercadoHTML();
+  else if(activeTab === 'inventario') el.innerHTML = inventarioHTML();
   attachTabEvents();
   attachShareEvents();
   if(activeTab === 'chat') attachChatEvents();
   if(activeTab === 'mapchooser') attachMapChooserEvents();
+  if(activeTab === 'mercado' || activeTab === 'inventario') attachMarketEvents();
   document.querySelectorAll('[data-region]').forEach(chip => chip.addEventListener('click', () => { rankRegion = chip.dataset.region; renderTab(); }));
   const regionSel = document.getElementById('regionSelect');
   if(regionSel) regionSel.addEventListener('change', async () => {
@@ -3402,6 +3438,232 @@ function attachModAndActionEvents(){
   });
 }
 
+// ====================================================================
+//  MERCADO DE SKINS · INVENTÁRIO · UPGRADER (moeda: Tokens)
+// ====================================================================
+const MK = { TOKEN_POINTS:100, WIN:3, LOSS:-5, KILL:0.01, SELL:0.8, EDGE:0.05,
+  URL:'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json' };
+const MK_WEARS = [['Nova de Fábrica',0,.07],['Pouco Usada',.07,.15],['Testada em Campo',.15,.38],['Bem Desgastada',.38,.45],['Veterana de Guerra',.45,1]];
+const MK_XS = [0,.07,.15,.38,.45,1], MK_YS = [1.6,1,.82,.6,.5,.38];
+let skinDB = null, skinMap = {}, skinLoading = false, skinErr = false;
+let wallet = { tokens:0, spent:0, inv:[] };
+let mk = { tab:'loja', q:'', cat:'', rar:'', sort:'asc', n:48, up:[], tq:'', tid:null, tw:2, spin:false, res:null };
+const mkE = v => escapeUntrustedText(v == null ? '' : v);
+const mkFmt = n => (Math.round(n*100)/100).toLocaleString('pt-BR');
+const mkImg = u => (typeof u === 'string' && u.indexOf('https://raw.githubusercontent.com/') === 0) ? u : '';
+function mkRand(){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]/4294967296; }
+function mkHash(s){ let h = 2166136261; for(let i=0;i<s.length;i++){ h = Math.imul(h ^ s.charCodeAt(i), 16777619); } return h >>> 0; }
+function mkSeeded(seed){ return function(){ seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14) >>> 0)/4294967296; }; }
+
+// ---- pontos → Tokens ----
+function mkPoints(){
+  let p = 0;
+  matches.filter(m => m.playerId === currentPlayerId && m.status === 'aprovada').forEach(m => {
+    p += (m.kills||0) * MK.KILL;
+    if(m.result === 'vitoria') p += MK.WIN; else if(m.result === 'derrota') p += MK.LOSS;
+  });
+  return Math.round(p*100)/100;
+}
+function mkAvail(){ return Math.max(0, Math.round((mkPoints() - wallet.spent)*100)/100); }
+async function mkLoadWallet(){
+  const w = await loadShared('brcsgo:wallet:' + authUser.uid);
+  wallet = (w && !Array.isArray(w) && typeof w === 'object') ? { tokens:+w.tokens||0, spent:+w.spent||0, inv:Array.isArray(w.inv) ? w.inv : [] } : { tokens:0, spent:0, inv:[] };
+}
+async function mkSave(){ await saveShared('brcsgo:wallet:' + authUser.uid, wallet); }
+
+// ---- catálogo (todas as skins do CS2, com fotos) ----
+function mkBase(s){
+  const n = ((s.rarity && s.rarity.name) || '').toLowerCase(), c = ((s.category && s.category.name) || '').toLowerCase(), nm = s.name || '';
+  if(/glove/.test(c)) return 600;
+  if(/knife|knives/.test(c) || nm.charAt(0) === '★') return 1200;
+  if(n.indexOf('contraband') >= 0) return 2500;
+  if(n.indexOf('covert') >= 0) return 250;
+  if(n.indexOf('classified') >= 0) return 100;
+  if(n.indexOf('restricted') >= 0) return 40;
+  if(n.indexOf('mil-spec') >= 0) return 15;
+  if(n.indexOf('industrial') >= 0) return 8;
+  return 5;
+}
+async function mkEnsureDB(){
+  if(skinDB || skinLoading) return;
+  skinLoading = true; skinErr = false;
+  try{
+    const r = await fetch(MK.URL); if(!r.ok) throw new Error('http ' + r.status);
+    const raw = await r.json();
+    skinDB = raw.filter(s => s && s.name && s.image).map(s => ({
+      id: String(s.id), name: s.name, img: mkImg(s.image),
+      cat: (s.category && s.category.name) || 'Outros', rar: (s.rarity && s.rarity.name) || '',
+      col: (s.rarity && s.rarity.color) || '#888', min: s.min_float != null ? +s.min_float : 0, max: s.max_float != null ? +s.max_float : 1,
+      st: !!s.stattrak, base: mkBase(s)
+    })).filter(s => s.img);
+    skinDB.forEach(s => { s.low = mkPrice(s.base, s.name, s.max, 0, false); skinMap[s.id] = s; });
+  }catch(e){ console.error('Skins:', e); skinErr = true; }
+  skinLoading = false;
+  if(activeTab === 'mercado' || activeTab === 'inventario') renderTab();
+}
+
+// ---- preço em Tokens: desgaste + pattern + StatTrak ----
+function mkWearMult(f){
+  for(let i=1;i<MK_XS.length;i++) if(f <= MK_XS[i]) return MK_YS[i-1] + (MK_YS[i]-MK_YS[i-1]) * (f-MK_XS[i-1])/(MK_XS[i]-MK_XS[i-1]);
+  return MK_YS[MK_YS.length-1];
+}
+function mkWearName(f){ for(const w of MK_WEARS) if(f <= w[2]) return w[0]; return MK_WEARS[4][0]; }
+function mkPat(name, seed){
+  const sens = /Case Hardened|Heat Treated|Fade|Doppler|Crimson Web|Slaughter|Tiger Tooth|Lore|Gamma|Autotronic|Freehand/i.test(name);
+  if(/Case Hardened|Heat Treated/i.test(name) && [661,670,321,955,387,179,151,168].indexOf(seed) >= 0) return { n:'Blue Gem', m:9 };
+  const h = ((seed * 2654435761) >>> 0) % 1000 / 10;
+  if(h < 1.5) return { n:'Pattern raro', m: sens ? 3.2 : 1.7 };
+  if(h < 12)  return { n:'Bom pattern', m: sens ? 1.8 : 1.25 };
+  if(h > 92)  return { n:'Pattern fraco', m: sens ? 0.8 : 0.92 };
+  return { n:'Padrão', m:1 };
+}
+function mkPrice(base, name, f, seed, st){
+  return Math.max(1, Math.round(base * mkWearMult(f) * mkPat(name, seed).m * (st ? 1.6 : 1)));
+}
+function mkItemVal(it){ return mkPrice(it.b, it.n, it.f, it.sd, it.st); }
+function mkListings(s){
+  const out = [];
+  for(let i=0;i<8;i++){
+    const r = mkSeeded(mkHash(s.id + ':' + i));
+    const f = Math.min(s.max, s.min + (s.max - s.min) * Math.pow(i/7, 1.4) * (0.9 + r()*0.1));
+    const sd = 1 + Math.floor(r()*1000), st = s.st && i % 3 === 0;
+    out.push({ f, sd, st, price: mkPrice(s.base, s.name, f, sd, st) });
+  }
+  return out;
+}
+function mkNewItem(s, f, sd, st){ return { u:'i_' + Date.now() + '_' + Math.floor(Math.random()*1e6), id:s.id, n:s.name, img:s.img, col:s.col, cat:s.cat, b:s.base, f, sd, st }; }
+
+// ---- telas ----
+function mkBar(){
+  return `<div class="mk-bar"><div><span>Tokens</span><b>${mkFmt(wallet.tokens)}</b></div><div><span>Pontos disponíveis</span><b>${mkFmt(mkAvail())}</b></div>
+  <div class="mk-buy"><input type="number" id="mkQty" min="1" value="1" aria-label="Quantidade de Tokens"><button class="primary small" id="mkBuyTok" type="button">Comprar Tokens</button><small>1 Token = ${MK.TOKEN_POINTS} pontos</small></div></div>`;
+}
+function mkSkinGrid(){
+  if(skinErr) return `<div class="panel"><p>Não foi possível carregar o catálogo de skins.</p><button class="secondary small" id="mkRetry" type="button">Tentar de novo</button></div>`;
+  if(!skinDB) return `<div class="panel"><p>Carregando todas as skins do CS2…</p></div>`;
+  const q = mk.q.trim().toLowerCase();
+  let list = skinDB.filter(s => (!q || s.name.toLowerCase().indexOf(q) >= 0) && (!mk.cat || s.cat === mk.cat) && (!mk.rar || s.rar === mk.rar));
+  list.sort((a,b) => mk.sort === 'asc' ? a.low - b.low : b.low - a.low);
+  const cats = Array.from(new Set(skinDB.map(s => s.cat))).sort(), rars = Array.from(new Set(skinDB.map(s => s.rar))).filter(Boolean).sort();
+  const opt = (arr, cur) => arr.map(v => `<option value="${mkE(v)}" ${cur === v ? 'selected' : ''}>${mkE(v)}</option>`).join('');
+  return `<div class="mk-filters"><input id="mkQ" placeholder="Buscar skin (ex: AK-47 Vulcan)" value="${mkE(mk.q)}">
+    <select id="mkCat"><option value="">Todas as armas</option>${opt(cats, mk.cat)}</select>
+    <select id="mkRar"><option value="">Toda raridade</option>${opt(rars, mk.rar)}</select>
+    <select id="mkSort"><option value="asc" ${mk.sort==='asc'?'selected':''}>Menor preço</option><option value="desc" ${mk.sort==='desc'?'selected':''}>Maior preço</option></select></div>
+    <div class="mk-count">${list.length} skins</div>
+    <div class="mk-grid">${list.slice(0, mk.n).map(s => `<button class="mk-card" data-skin="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}"><img loading="lazy" src="${s.img}" alt=""><span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('')}</div>
+    ${list.length > mk.n ? '<div style="text-align:center;margin-top:14px"><button class="secondary" id="mkMore" type="button">Carregar mais</button></div>' : ''}`;
+}
+function mercadoHTML(){
+  return `<div class="panel mk-wrap">${mkBar()}
+    <div class="mk-sub"><button class="${mk.tab==='loja'?'on':''}" data-mktab="loja" type="button">Loja</button><button class="${mk.tab==='upgrader'?'on':''}" data-mktab="upgrader" type="button">Upgrader</button></div>
+    ${mk.tab === 'loja' ? mkSkinGrid() : upgraderHTML()}</div>`;
+}
+function mkItemCard(it, extra, cls){
+  const p = mkPat(it.n, it.sd);
+  return `<div class="mk-item ${cls||''}" style="--rc:${mkE(it.col)}" ${extra||''}><img loading="lazy" src="${mkImg(it.img)}" alt=""><span class="mk-n">${mkE(it.n)}${it.st ? ' <em>ST™</em>' : ''}</span>
+    <span class="mk-meta">${mkWearName(it.f)} · ${it.f.toFixed(4)}</span><span class="mk-meta">Pattern #${it.sd} · ${p.n}</span><span class="mk-p"><b>${mkFmt(mkItemVal(it))}</b> T</span></div>`;
+}
+function inventarioHTML(){
+  const inv = wallet.inv.slice().sort((a,b) => mkItemVal(b) - mkItemVal(a));
+  const total = inv.reduce((s,i) => s + mkItemVal(i), 0), groups = {};
+  inv.forEach(i => { (groups[i.cat] = groups[i.cat] || []).push(i); });
+  return `<div class="panel mk-wrap">${mkBar()}<div class="mk-count">${inv.length} skins · valor total ${mkFmt(total)} Tokens</div>
+    ${inv.length ? Object.keys(groups).sort().map(c => `<h4 class="mk-h">${mkE(c)}</h4><div class="mk-grid">${groups[c].map(i => mkItemCard(i, '', '') .replace('</div>', `<button class="secondary small" data-sell="${mkE(i.u)}" type="button">Vender por ${mkFmt(mkItemVal(i)*MK.SELL)} T</button></div>`)).join('')}</div>`).join('') : '<p class="mk-empty">Seu inventário está vazio. Compre Tokens e escolha skins na aba Mercado.</p>'}</div>`;
+}
+function mkTarget(){ return skinMap[mk.tid] || null; }
+function mkTargetVal(s){ const wb = MK_WEARS[mk.tw]; const lo = Math.max(s.min, wb[1]), hi = Math.min(s.max, wb[2]); return mkPrice(s.base, s.name, (lo+hi)/2, 0, false); }
+function mkUpState(){
+  const stake = wallet.inv.filter(i => mk.up.indexOf(i.u) >= 0), sv = stake.reduce((a,i) => a + mkItemVal(i), 0);
+  const t = mkTarget(), tv = t ? mkTargetVal(t) : 0;
+  const chance = (t && tv > sv && sv > 0) ? Math.min(0.75, Math.max(0.01, sv/tv * (1 - MK.EDGE))) : 0;
+  return { stake, sv, t, tv, chance };
+}
+function upgraderHTML(){
+  if(!skinDB) return mkSkinGrid();
+  const u = mkUpState(), circ = 2*Math.PI*88;
+  const q = mk.tq.trim().toLowerCase();
+  let tl = skinDB.filter(s => s.base * mkWearMult(s.min) > u.sv && (!q || s.name.toLowerCase().indexOf(q) >= 0));
+  tl.sort((a,b) => a.low - b.low); tl = tl.slice(0, 24);
+  const wopts = u.t ? MK_WEARS.map((w,i) => (u.t.max >= w[1] && u.t.min <= w[2]) ? `<option value="${i}" ${mk.tw===i?'selected':''}>${w[0]}</option>` : '').join('') : '';
+  return `<div class="up-grid">
+    <div><h4 class="mk-h">1 · Escolha o que apostar</h4><div class="up-list">${wallet.inv.length ? wallet.inv.map(i => mkItemCard(i, `data-upitem="${mkE(i.u)}"`, mk.up.indexOf(i.u) >= 0 ? 'sel' : '')).join('') : '<p class="mk-empty">Sem skins no inventário.</p>'}</div></div>
+    <div class="up-mid"><svg viewBox="0 0 200 200" class="up-ring"><circle cx="100" cy="100" r="88" fill="none" stroke="#26262c" stroke-width="10"/>
+      <circle cx="100" cy="100" r="88" fill="none" stroke="var(--red)" stroke-width="10" stroke-dasharray="${u.chance*circ} ${circ}" transform="rotate(-90 100 100)"/>
+      <g id="upPtr" style="transform-origin:100px 100px"><line x1="100" y1="6" x2="100" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g></svg>
+      <div class="up-pct">${(u.chance*100).toFixed(2)}%</div><div class="mk-meta">${u.t && u.sv ? 'Aposta ' + mkFmt(u.sv) + ' T → ' + mkFmt(u.tv) + ' T (x' + (u.tv/u.sv).toFixed(2) + ')' : 'Escolha apostas e um alvo'}</div>
+      <button class="primary" id="upGo" type="button" ${u.chance && !mk.spin ? '' : 'disabled'}>Upgrade</button>
+      <div class="up-res" id="upRes">${mk.res ? (mk.res.win ? `<b class="win">Você ganhou ${mkE(mk.res.name)}!</b>` : '<b class="loss">Não foi dessa vez.</b>') : ''}</div></div>
+    <div><h4 class="mk-h">2 · Escolha o alvo</h4><input id="upQ" placeholder="Buscar alvo" value="${mkE(mk.tq)}">
+      ${u.t ? `<div class="up-pick">${mkE(u.t.name)} <select id="upW">${wopts}</select></div>` : ''}
+      <div class="up-list">${tl.map(s => `<button class="mk-card ${mk.tid===s.id?'sel':''}" data-target="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}"><img loading="lazy" src="${s.img}" alt=""><span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('') || '<p class="mk-empty">Nenhum alvo mais valioso que a aposta.</p>'}</div></div></div>`;
+}
+function mkOpenSkin(id){
+  const s = skinMap[id]; if(!s) return;
+  const old = document.getElementById('mkModal'); if(old) old.remove();
+  const m = document.createElement('div'); m.id = 'mkModal'; m.className = 'mk-modal';
+  m.innerHTML = `<div class="mk-dlg" style="--rc:${mkE(s.col)}"><button class="mk-x" type="button" aria-label="Fechar">×</button><img src="${s.img}" alt=""><h3>${mkE(s.name)}</h3><div class="mk-meta">${mkE(s.rar)} · ${mkE(s.cat)}</div>
+    <table class="mk-tbl"><tr><th>Desgaste</th><th>Float</th><th>Pattern</th><th>Tokens</th><th></th></tr>${mkListings(s).map((l,i) => { const p = mkPat(s.name, l.sd); return `<tr><td>${mkWearName(l.f)}${l.st ? ' <em>ST™</em>' : ''}</td><td>${l.f.toFixed(4)}</td><td>#${l.sd} · ${p.n}</td><td><b>${mkFmt(l.price)}</b></td><td><button class="primary small" data-buy="${i}" type="button">Comprar</button></td></tr>`; }).join('')}</table></div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e => { if(e.target === m || e.target.closest('.mk-x')) close(); });
+  const ls = mkListings(s);
+  m.querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', async () => {
+    const l = ls[+b.dataset.buy];
+    if(wallet.tokens < l.price){ showToast('Tokens insuficientes: faltam ' + mkFmt(l.price - wallet.tokens) + ' Tokens.'); return; }
+    wallet.tokens = Math.round((wallet.tokens - l.price)*100)/100;
+    wallet.inv.push(mkNewItem(s, l.f, l.sd, l.st));
+    await mkSave(); showToast(s.name + ' foi para o seu Inventário!'); close(); renderTab();
+  }));
+}
+function mkRefocus(id){ const el = document.getElementById(id); if(el){ el.focus(); try{ el.setSelectionRange(el.value.length, el.value.length); }catch(e){} } }
+async function mkUpgrade(){
+  const u = mkUpState(); if(mk.spin || !u.chance) return;
+  mk.spin = true; mk.res = null;
+  const roll = mkRand(), win = roll < u.chance;
+  wallet.inv = wallet.inv.filter(i => mk.up.indexOf(i.u) < 0);
+  let name = '';
+  if(win){
+    const wb = MK_WEARS[mk.tw], lo = Math.max(u.t.min, wb[1]), hi = Math.min(u.t.max, wb[2]);
+    const it = mkNewItem(u.t, lo + (hi-lo)*mkRand(), 1 + Math.floor(mkRand()*1000), false); wallet.inv.push(it); name = u.t.name;
+  }
+  await mkSave();
+  const ptr = document.getElementById('upPtr'), btn = document.getElementById('upGo'); if(btn) btn.disabled = true;
+  if(ptr){ ptr.style.transition = 'transform 4.2s cubic-bezier(.12,.7,.1,1)'; requestAnimationFrame(() => requestAnimationFrame(() => { ptr.style.transform = 'rotate(' + (360*6 + roll*360) + 'deg)'; })); }
+  setTimeout(() => { mk.spin = false; mk.up = []; mk.res = { win, name }; renderTab(); }, 4500);
+}
+function attachMarketEvents(){
+  const root = document.getElementById('tabContent'); if(!root) return;
+  if(activeTab === 'mercado' || activeTab === 'inventario') mkEnsureDB();
+  const on = (sel, ev, fn) => root.querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn));
+  on('#mkBuyTok', 'click', async () => {
+    const q = Math.floor(+document.getElementById('mkQty').value);
+    if(!(q >= 1)) return;
+    const cost = q * MK.TOKEN_POINTS;
+    if(mkAvail() < cost){ showToast('Pontos insuficientes: você tem ' + mkFmt(mkAvail()) + ' e precisa de ' + mkFmt(cost) + '.'); return; }
+    wallet.tokens += q; wallet.spent = Math.round((wallet.spent + cost)*100)/100;
+    await mkSave(); showToast(q + ' Token(s) comprado(s)!'); renderTab();
+  });
+  on('[data-mktab]', 'click', e => { mk.tab = e.currentTarget.dataset.mktab; mk.res = null; renderTab(); });
+  on('#mkRetry', 'click', () => { skinErr = false; mkEnsureDB(); renderTab(); });
+  on('[data-skin]', 'click', e => mkOpenSkin(e.currentTarget.dataset.skin));
+  on('#mkMore', 'click', () => { mk.n += 48; renderTab(); });
+  on('#mkQ', 'input', e => { mk.q = e.target.value; mk.n = 48; renderTab(); mkRefocus('mkQ'); });
+  on('#mkCat', 'change', e => { mk.cat = e.target.value; mk.n = 48; renderTab(); });
+  on('#mkRar', 'change', e => { mk.rar = e.target.value; mk.n = 48; renderTab(); });
+  on('#mkSort', 'change', e => { mk.sort = e.target.value; renderTab(); });
+  on('[data-sell]', 'click', async e => {
+    const it = wallet.inv.find(i => i.u === e.currentTarget.dataset.sell); if(!it) return;
+    wallet.tokens = Math.round((wallet.tokens + mkItemVal(it)*MK.SELL)*100)/100;
+    wallet.inv = wallet.inv.filter(i => i.u !== it.u); await mkSave(); showToast('Skin vendida.'); renderTab();
+  });
+  on('[data-upitem]', 'click', e => { if(mk.spin) return; const u = e.currentTarget.dataset.upitem, i = mk.up.indexOf(u); if(i >= 0) mk.up.splice(i,1); else mk.up.push(u); mk.res = null; renderTab(); });
+  on('[data-target]', 'click', e => { if(mk.spin) return; mk.tid = e.currentTarget.dataset.target; const t = mkTarget(); mk.tw = MK_WEARS.findIndex((w,i) => t.max >= w[1] && t.min <= w[2]); mk.res = null; renderTab(); });
+  on('#upQ', 'input', e => { mk.tq = e.target.value; renderTab(); mkRefocus('upQ'); });
+  on('#upW', 'change', e => { mk.tw = +e.target.value; renderTab(); });
+  on('#upGo', 'click', mkUpgrade);
+}
+
 async function init(){
   if(!db){
     storageAvailable = false;
@@ -3446,6 +3708,7 @@ async function init(){
       return;
     }
     currentPlayerId = user.uid;
+    try{ await mkLoadWallet(); }catch(e){ console.error(e); }
     if(activeTab === 'moderacao' && userProfile.role !== 'moderator') activeTab = 'ranking';
     render();
     startChat();
