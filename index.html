@@ -2156,7 +2156,7 @@ function renderTab(){
   attachShareEvents();
   if(activeTab === 'chat') attachChatEvents();
   if(activeTab === 'mapchooser') attachMapChooserEvents();
-  if(activeTab === 'mercado' || activeTab === 'inventario') attachMarketEvents();
+  if(activeTab === 'mercado' || activeTab === 'inventario'){ attachMarketEvents(); mkSyncPrizes(); }
   document.querySelectorAll('[data-region]').forEach(chip => chip.addEventListener('click', () => { rankRegion = chip.dataset.region; renderTab(); }));
   const regionSel = document.getElementById('regionSelect');
   if(regionSel) regionSel.addEventListener('change', async () => {
@@ -2569,6 +2569,7 @@ const STAGE_DEFS = [
 function newEventDraft(){
   return {
     name:'', sigla:'', description:'', reward:'', startDate:'',
+    tokenOn:false, tokenAmount:'',
     teamsRaw:'',
     format: { openGroup:false, closedGroup:false, qualifier:false, r32:false, r16:false, quarters:true, semis:true, final:true }
   };
@@ -2818,6 +2819,7 @@ function eventsListHTML(){
           ${ev.startDate ? `<span>Início: <b>${ev.startDate}</b></span>` : ''}
           ${ev.winner ? `<span>Campeão: <b>${teamName(ev, ev.winner)}</b></span>` : ''}
         </div>
+        ${evTokenPrizeOn(ev) ? `<div class="ev-reward">🪙 Tokens ao campeão: <b>${mkFmt(ev.tokenPrize.amount)}</b></div>` : ''}
         ${ev.reward ? `<div class="ev-reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/></svg>Premiação: ${ev.reward}</div>` : ''}
       </div>
     `;
@@ -2892,6 +2894,7 @@ function eventDetailHTML(ev){
             <span>🎯 <b>${stages.length}</b> fases</span>
             ${ev.startDate ? `<span>📅 <b>${ev.startDate}</b></span>` : ''}
             ${ev.reward ? `<span>🏆 ${ev.reward}</span>` : ''}
+            ${evTokenPrizeOn(ev) ? `<span>🪙 Tokens ao campeão: <b>${mkFmt(ev.tokenPrize.amount)}</b></span>` : ''}
             ${ev.winner ? `<span>👑 Campeão: <b>${teamName(ev, ev.winner)}</b></span>` : ''}
           </div>
         </div>
@@ -2909,6 +2912,7 @@ function eventDetailHTML(ev){
       ${isMod && stage && stageComplete && isLastStage && ev.status !== 'finished' ? `<div style="margin-top:16px;"><button class="primary" id="btnFinishEvent">Encerrar campeonato 🏆</button></div>` : ''}
     </div>
     ${podium}
+    ${tokenPrizePanelHTML(ev)}
   `;
 }
 
@@ -3012,6 +3016,17 @@ function eventModalHTML(){
           <div class="field"><label>Premiação</label><input id="ev_reward" value="${d.reward}" placeholder="Ex: R$ 500 + skin AWP"></div>
         </div>
         <div class="field" style="margin-top:14px;">
+          <label class="fmt-chip ${d.tokenOn?'on':''}" id="ev_tokenChip" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="ev_tokenOn" ${d.tokenOn?'checked':''}>
+            🪙 Dar Tokens ao vencedor do campeonato
+          </label>
+          <div id="ev_tokenBox" style="display:${d.tokenOn?'block':'none'};margin-top:10px;">
+            <label>Quantidade de Tokens por jogador vencedor</label>
+            <input type="number" id="ev_tokenAmt" min="1" step="1" value="${escapeUntrustedText(d.tokenAmount)}" placeholder="Ex: 50">
+            <small style="color:var(--muted);display:block;margin-top:6px;">Entregues ao fim do campeonato e usados no Mercado (1 Token = ${MK.TOKEN_POINTS} pontos).</small>
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px;">
           <label>Descrição</label>
           <textarea id="ev_desc" rows="2" placeholder="Regras rápidas, contexto, formato...">${d.description}</textarea>
         </div>
@@ -3064,6 +3079,10 @@ async function saveNewEvent(){
   d.reward = document.getElementById('ev_reward').value.trim();
   d.startDate = document.getElementById('ev_start').value;
   d.teamsRaw = document.getElementById('ev_teams').value;
+  d.tokenOn = document.getElementById('ev_tokenOn').checked;
+  d.tokenAmount = document.getElementById('ev_tokenAmt').value;
+  const tokenAmt = Math.floor(Number(d.tokenAmount));
+  if(d.tokenOn && !(tokenAmt >= 1 && tokenAmt <= 1000000)){ alert('Informe quantos Tokens o vencedor vai ganhar (mínimo 1).'); return; }
   if(!d.name){ alert('Informe o nome do campeonato.'); return; }
   const teams = parseTeamsList(d.teamsRaw);
   if(teams.length < 2){ alert('Informe pelo menos 2 times.'); return; }
@@ -3074,7 +3093,8 @@ async function saveNewEvent(){
     name: d.name, sigla: d.sigla, description: d.description, reward: d.reward,
     startDate: d.startDate, teams, format: d.format,
     stages: buildStagesFromFormat(d.format, teams),
-    status: 'upcoming', createdBy: userProfile.playerName, createdAt: Date.now(), winner: null
+    status: 'upcoming', createdBy: userProfile.playerName, createdAt: Date.now(), winner: null,
+    tokenPrize: d.tokenOn ? { enabled:true, amount:tokenAmt, winners:[], released:false } : null
   };
   events.push(ev);
   await saveShared('brcsgo:events', events);
@@ -3084,6 +3104,80 @@ async function saveNewEvent(){
   eventDetailStage = 0;
   markEventSeen(ev.id);
   renderTab();
+}
+
+
+// ---------- Tokens para o vencedor do campeonato ----------
+function evTokenPrizeOn(ev){ return !!(ev && ev.tokenPrize && ev.tokenPrize.enabled && +ev.tokenPrize.amount >= 1); }
+function evNorm(v){ return String(v == null ? '' : v).trim().toLowerCase(); }
+function evUserName(uid){ const u = (users||[]).find(x => x.uid === uid); return u ? u.playerName : '(jogador removido)'; }
+// jogadores cadastrados cujo nick bate EXATAMENTE com o nome do time campeão
+function evExactWinners(ev){
+  const champ = evNorm(teamName(ev, ev.winner));
+  if(!champ) return [];
+  return (users||[]).filter(u => evNorm(u.playerName) === champ).map(u => u.uid);
+}
+// sugestão para o painel manual: nick igual OU nick aparece como palavra no nome do time
+function evSuggestedWinners(ev){
+  const champ = evNorm(teamName(ev, ev.winner));
+  const words = champ.split(/[^\p{L}\p{N}_]+/u).filter(Boolean);
+  return (users||[]).filter(u => { const n = evNorm(u.playerName); return n && (n === champ || words.includes(n)); }).map(u => u.uid);
+}
+function releaseEventTokens(ev, uids){
+  ev.tokenPrize.winners = Array.from(new Set(uids));
+  ev.tokenPrize.released = true;
+  ev.tokenPrize.releasedAt = Date.now();
+  ev.tokenPrize.releasedBy = userProfile ? userProfile.playerName : '';
+}
+function tokenPrizePanelHTML(ev){
+  if(!evTokenPrizeOn(ev) || ev.status !== 'finished') return '';
+  const tp = ev.tokenPrize, amt = mkFmt(tp.amount);
+  const isMod = userProfile && userProfile.role === 'moderator';
+  if(tp.released){
+    const names = (tp.winners||[]).map(uid => escapeUntrustedText(evUserName(uid))).join(', ') || '—';
+    const mine = authUser && (tp.winners||[]).includes(authUser.uid);
+    return `<div class="panel"><h2>🪙 Tokens do campeonato</h2>
+      <p style="margin:0 0 6px;"><b>${amt}</b> Token(s) por jogador entregues a: <b>${names}</b>.</p>
+      ${mine ? '<p style="margin:0;color:var(--orange-2);">Você ganhou ' + amt + ' Token(s)! Confira no Mercado.</p>' : ''}</div>`;
+  }
+  if(!isMod) return `<div class="panel"><h2>🪙 Tokens do campeonato</h2><p style="margin:0;">O campeão ganha <b>${amt}</b> Token(s). A staff vai entregar em breve.</p></div>`;
+  const sug = evSuggestedWinners(ev);
+  const rows = (users||[]).slice().sort((a,b) => String(a.playerName).localeCompare(String(b.playerName))).map(u => `
+    <label class="ev-tk-row" data-name="${escapeUntrustedText(evNorm(u.playerName))}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;">
+      <input type="checkbox" class="ev-tk-cb" value="${escapeUntrustedText(u.uid)}" ${sug.includes(u.uid)?'checked':''}> ${escapeUntrustedText(u.playerName)}
+    </label>`).join('');
+  return `<div class="panel"><h2>🪙 Entregar Tokens ao campeão</h2>
+    <p style="margin:0 0 10px;">Campeão: <b>${escapeUntrustedText(teamName(ev, ev.winner))}</b> · cada jogador marcado recebe <b>${amt}</b> Token(s).</p>
+    <input id="evTkSearch" placeholder="Buscar jogador..." style="margin-bottom:8px;">
+    <div style="max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;">${rows || '<p class="empty-note">Nenhum jogador cadastrado.</p>'}</div>
+    <div style="margin-top:12px;"><button class="primary" id="btnReleaseTokens" type="button">Entregar Tokens</button></div></div>`;
+}
+// cada jogador credita o próprio prêmio na própria carteira (idempotente por campeonato)
+async function claimEventTokens(list){
+  if(!authUser) return 0;
+  const evs = Array.isArray(list) ? list : events;
+  if(!Array.isArray(wallet.claimed)) wallet.claimed = [];
+  let total = 0;
+  evs.forEach(ev => {
+    if(!evTokenPrizeOn(ev) || !ev.tokenPrize.released) return;
+    if(!(ev.tokenPrize.winners||[]).includes(authUser.uid)) return;
+    if(wallet.claimed.includes(ev.id)) return;
+    const amt = Math.floor(+ev.tokenPrize.amount);
+    wallet.tokens = Math.round((wallet.tokens + amt)*100)/100;
+    wallet.claimed.push(ev.id);
+    total += amt;
+  });
+  if(total > 0){ await mkSave(); showToast('🪙 Você ganhou ' + mkFmt(total) + ' Token(s) de campeonato!'); }
+  return total;
+}
+let mkPrizeSyncAt = 0;
+async function mkSyncPrizes(){
+  if(Date.now() - mkPrizeSyncAt < 30000) return;
+  mkPrizeSyncAt = Date.now();
+  try{
+    const fresh = await loadShared('brcsgo:events');
+    if(Array.isArray(fresh) && await claimEventTokens(fresh) > 0) renderTab();
+  }catch(e){ console.error(e); }
 }
 
 function attachEventosEvents(){
@@ -3132,8 +3226,33 @@ function attachEventosEvents(){
   if(fin) fin.addEventListener('click', async () => {
     const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
     advanceStage(ev, ev.stages.length - 1);
+    let autoMsg = '';
+    if(evTokenPrizeOn(ev) && ev.status === 'finished' && ev.winner){
+      const exact = evExactWinners(ev);
+      if(exact.length){ releaseEventTokens(ev, exact); autoMsg = ' 🪙 ' + mkFmt(ev.tokenPrize.amount) + ' Token(s) entregues ao campeão.'; }
+      else autoMsg = ' 🪙 Escolha quem recebe os Tokens no painel abaixo.';
+    }
     await saveShared('brcsgo:events', events);
-    showToast('Campeonato encerrado!');
+    showToast('Campeonato encerrado!' + autoMsg);
+    await claimEventTokens(events);
+    renderTab();
+  });
+
+  const evTkSearch = document.getElementById('evTkSearch');
+  if(evTkSearch) evTkSearch.addEventListener('input', () => {
+    const q = evNorm(evTkSearch.value);
+    document.querySelectorAll('.ev-tk-row').forEach(r => { r.style.display = (!q || r.dataset.name.includes(q)) ? 'flex' : 'none'; });
+  });
+  const relTk = document.getElementById('btnReleaseTokens');
+  if(relTk) relTk.addEventListener('click', async () => {
+    const ev = events.find(e => e.id === selectedEventId); if(!evTokenPrizeOn(ev) || ev.tokenPrize.released) return;
+    const uids = Array.from(document.querySelectorAll('.ev-tk-cb:checked')).map(c => c.value);
+    if(!uids.length){ alert('Marque pelo menos um jogador.'); return; }
+    if(!confirm('Entregar ' + mkFmt(ev.tokenPrize.amount) + ' Token(s) para cada um dos ' + uids.length + ' jogador(es) marcado(s)? Não dá pra desfazer.')) return;
+    releaseEventTokens(ev, uids);
+    await saveShared('brcsgo:events', events);
+    showToast('Tokens entregues!');
+    await claimEventTokens(events);
     renderTab();
   });
 
@@ -3232,6 +3351,13 @@ function attachEventosEvents(){
     const closeBtn = document.getElementById('btnCloseModal'); if(closeBtn) closeBtn.addEventListener('click', closeEventModal);
     const cancelBtn = document.getElementById('btnCancelEvent'); if(cancelBtn) cancelBtn.addEventListener('click', closeEventModal);
     const saveBtn = document.getElementById('btnSaveEvent'); if(saveBtn) saveBtn.addEventListener('click', saveNewEvent);
+    const tkOn = document.getElementById('ev_tokenOn');
+    if(tkOn) tkOn.addEventListener('change', () => {
+      eventModalDraft.tokenOn = tkOn.checked;
+      document.getElementById('ev_tokenChip').classList.toggle('on', tkOn.checked);
+      document.getElementById('ev_tokenBox').style.display = tkOn.checked ? 'block' : 'none';
+      if(tkOn.checked) document.getElementById('ev_tokenAmt').focus();
+    });
     document.querySelectorAll('[data-fmt-cb]').forEach(cb => {
       cb.addEventListener('change', () => {
         eventModalDraft.format[cb.dataset.fmtCb] = cb.checked;
@@ -3447,7 +3573,7 @@ const MK = { TOKEN_POINTS:100, WIN:3, LOSS:-5, KILL:0.01, SELL:0.8, EDGE:0.05,
 const MK_WEARS = [['Nova de Fábrica',0,.07],['Pouco Usada',.07,.15],['Testada em Campo',.15,.38],['Bem Desgastada',.38,.45],['Veterana de Guerra',.45,1]];
 const MK_XS = [0,.07,.15,.38,.45,1], MK_YS = [1.6,1,.82,.6,.5,.38];
 let skinDB = null, skinMap = {}, skinLoading = false, skinErr = false;
-let wallet = { tokens:0, spent:0, inv:[] };
+let wallet = { tokens:0, spent:0, inv:[], claimed:[] };
 let mk = { tab:'loja', q:'', cat:'', rar:'', sort:'asc', n:48, up:[], tq:'', tid:null, tw:2, spin:false, res:null };
 const mkE = v => escapeUntrustedText(v == null ? '' : v);
 const mkFmt = n => (Math.round(n*100)/100).toLocaleString('pt-BR');
@@ -3562,7 +3688,7 @@ function mkPoints(){
 function mkAvail(){ return Math.max(0, Math.round((mkPoints() - wallet.spent)*100)/100); }
 async function mkLoadWallet(){
   const w = await loadShared('brcsgo:wallet:' + authUser.uid);
-  wallet = (w && !Array.isArray(w) && typeof w === 'object') ? { tokens:+w.tokens||0, spent:+w.spent||0, inv:Array.isArray(w.inv) ? w.inv : [] } : { tokens:0, spent:0, inv:[] };
+  wallet = (w && !Array.isArray(w) && typeof w === 'object') ? { tokens:+w.tokens||0, spent:+w.spent||0, inv:Array.isArray(w.inv) ? w.inv : [], claimed:Array.isArray(w.claimed) ? w.claimed : [] } : { tokens:0, spent:0, inv:[], claimed:[] };
 }
 async function mkSave(){ await saveShared('brcsgo:wallet:' + authUser.uid, wallet); }
 
@@ -3812,7 +3938,7 @@ async function init(){
       return;
     }
     currentPlayerId = user.uid;
-    try{ await mkLoadWallet(); }catch(e){ console.error(e); }
+    try{ await mkLoadWallet(); await claimEventTokens(events); }catch(e){ console.error(e); }
     if(activeTab === 'moderacao' && userProfile.role !== 'moderator') activeTab = 'ranking';
     render();
     startChat();
