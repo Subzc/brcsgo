@@ -1101,6 +1101,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .up-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:460px;overflow:auto}
 .up-mid{text-align:center}.up-ring{width:210px;height:210px}.up-pct{font-size:30px;font-weight:600;margin:-122px 0 86px}
 .up-res{min-height:24px;margin-top:10px}.up-pick{margin:8px 0;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mk-tag{align-self:flex-start;font-size:10px;letter-spacing:.04em;color:var(--tc,#ff9d3d);border:1px solid currentColor;border-radius:3px;padding:1px 5px}
+.up-tools{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.up-tgs{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.up-tg{display:flex;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--rc,#555);border-radius:6px;padding:6px 8px}
+.up-tg img{width:56px;height:36px;object-fit:contain}.up-tg .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.up-ring .up-arc{transition:stroke .35s}.up-ring.rw .up-arc{stroke:#3ddc84}.up-ring.rl .up-arc{stroke:#55555e}
+.up-ring.rw{filter:drop-shadow(0 0 10px rgba(61,220,132,.4))}
+.up-hist{margin-top:12px;font-size:11px;color:var(--muted);text-align:left;display:flex;flex-direction:column;gap:3px}.up-hist b.w{color:#3ddc84}
+.up-resbox{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);text-align:center}
+.up-got{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px;text-align:left}
+.up-arrow{color:var(--muted);margin:6px 0;font-size:18px}
 @media(max-width:900px){.up-grid{grid-template-columns:1fr}.mk-buy{margin-left:0}}
 
 /* ===== Eventos: modo automático ===== */
@@ -3573,8 +3584,9 @@ const MK = { TOKEN_POINTS:100, WIN:3, LOSS:-5, KILL:0.01, SELL:0.8, EDGE:0.05,
 const MK_WEARS = [['Nova de Fábrica',0,.07],['Pouco Usada',.07,.15],['Testada em Campo',.15,.38],['Bem Desgastada',.38,.45],['Veterana de Guerra',.45,1]];
 const MK_XS = [0,.07,.15,.38,.45,1], MK_YS = [1.6,1,.82,.6,.5,.38];
 let skinDB = null, skinMap = {}, skinLoading = false, skinErr = false;
-let wallet = { tokens:0, spent:0, inv:[], claimed:[] };
-let mk = { tab:'loja', q:'', cat:'', rar:'', sort:'asc', n:48, up:[], tq:'', tid:null, tw:2, spin:false, res:null };
+let wallet = { tokens:0, spent:0, inv:[], claimed:[], lossStreak:0, hist:[] };
+let mk = { tab:'loja', q:'', cat:'', rar:'', kind:'', sort:'asc', n:48, up:[], tgs:[], tq:'', tcat:'', tk:'', tm:0, ts:'asc', ang:0, spin:false, res:null,
+  ch:{ u:null, tid:null, q:'', cat:'', n:36, res:null } };
 const mkE = v => escapeUntrustedText(v == null ? '' : v);
 const mkFmt = n => (Math.round(n*100)/100).toLocaleString('pt-BR');
 const MK_IMG_HOSTS = ['https://raw.githubusercontent.com/','https://steamcdn-a.akamaihd.net/','https://community.cloudflare.steamstatic.com/','https://community.akamai.steamstatic.com/'];
@@ -3583,28 +3595,81 @@ function mkRand(){ const a = new Uint32Array(1); crypto.getRandomValues(a); retu
 function mkHash(s){ let h = 2166136261; for(let i=0;i<s.length;i++){ h = Math.imul(h ^ s.charCodeAt(i), 16777619); } return h >>> 0; }
 function mkSeeded(seed){ return function(){ seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14) >>> 0)/4294967296; }; }
 
+// ---- souvenirs, patterns raros (Blue Gem, Ruby, Sapphire...) ----
+const MK_SV_EV = { 'Katowice 2014':6, 'Cologne 2014':4.2, 'DreamHack 2014':4, 'Cluj-Napoca 2015':2.6, 'Cologne 2015':2.3, 'Atlanta 2017':1.9, 'Boston 2018':1.8, 'Berlin 2019':1.8, 'Paris 2023':1.7, 'Copenhagen 2024':1.6, 'Shanghai 2024':1.6, 'Austin 2025':1.5 };
+const MK_SV_NAMES = Object.keys(MK_SV_EV), MK_SV_TOP = ['Katowice 2014','Cologne 2014','DreamHack 2014'];
+const MK_TAGCOL = { 'Blue Gem':'#3b82f6', 'Blue Gem T2':'#60a5fa', 'Ruby':'#ef4444', 'Sapphire':'#2563eb', 'Black Pearl':'#a78bfa', 'Emerald':'#10b981', 'Fire & Ice':'#f97316', 'Full Fade 100%':'#f472b6' };
+// m = [multiplicador arma, multiplicador faca]
+const MK_RULES = [
+  { re:/Case Hardened|Heat Treated/, noGlove:true, tiers:[
+    { n:'Blue Gem',    m:[60,6], seeds:[661,670,321,955,387,442,179] },
+    { n:'Blue Gem T2', m:[28,3], seeds:[151,168,463,760,617,269,868] } ] },
+  { re:/Marble Fade/, noGlove:true, tiers:[ { n:'Fire & Ice', m:[6,6], seeds:[412,16,73,147,328,763] } ] },
+  { re:/\| Fade$/, noGlove:true, tiers:[ { n:'Full Fade 100%', m:[2.2,2.8], seeds:[412,16,73,147] } ] }
+];
+const mkKn = f => n => n.indexOf('★ ') === 0 && n.split(' | ')[1] === f && !/Gloves|Wraps/.test(n);
+const MK_SPEC = [
+  { pick:n => n === 'AK-47 | Case Hardened' || n === 'Five-SeveN | Case Hardened', tags:['Blue Gem','Blue Gem T2'], k:2 },
+  { pick:mkKn('Case Hardened'), tags:['Blue Gem','Blue Gem T2'], k:1 },
+  { pick:mkKn('Doppler'), tags:['Ruby','Sapphire','Black Pearl'], k:1 },
+  { pick:mkKn('Gamma Doppler'), tags:['Emerald'], k:1 },
+  { pick:mkKn('Marble Fade'), tags:['Fire & Ice'], k:1 },
+  { pick:mkKn('Fade'), tags:['Full Fade 100%'], k:1 }
+];
+const MK_NS = {};
+function mkNeutralSeed(name){ if(MK_NS[name]) return MK_NS[name]; let sd = 1; while(sd < 400 && mkPat(name, sd).m !== 1) sd++; return (MK_NS[name] = sd); }
+function mkKindOk(s, k){ return !k || (k === 'rare' && !!s.rare) || (k === 'sv' && !!s.svEv) || (k === 'st' && s.st && !s.svEv); }
+function mkTagHTML(s){
+  if(s.sp) return `<span class="mk-tag" style="--tc:${mkE(s.col)}">${mkE(s.sp.tag)} #${s.sp.seed}</span>`;
+  if(s.svEv) return `<span class="mk-tag">Souvenir · ${mkE(s.svEv)}</span>`;
+  return '';
+}
+function mkSouvenirCatalog(list){
+  const out = [];
+  list.forEach(s => {
+    if(!s.sv || s.sp) return;
+    const ev = MK_SV_NAMES[mkHash(s.id + 'sv') % MK_SV_NAMES.length];
+    out.push(Object.assign({}, s, { id:s.id + '_sv', name:'Souvenir ' + s.name, st:false, sv:false, svEv:ev, rare:null }));
+    if(s.name === 'AWP | Dragon Lore') MK_SV_TOP.forEach((e, i) => { if(e !== ev) out.push(Object.assign({}, s, { id:s.id + '_svx' + i, name:'Souvenir ' + s.name, st:false, sv:false, svEv:e, rare:'Souvenir ' + e })); });
+  });
+  return out;
+}
+function mkSpecialCatalog(list){
+  const out = [];
+  MK_SPEC.forEach(r => list.forEach(s => {
+    if(s.sp || s.svEv || !r.pick(s.name)) return;
+    r.tags.forEach(tag => {
+      let found = 0;
+      for(let sd = 1; sd <= 1000 && found < r.k; sd++){
+        if(mkPat(s.name, sd).n === tag){ found++; out.push(Object.assign({}, s, { id:s.id + '_sp' + sd, st:false, sv:false, sp:{ seed:sd, tag }, rare:tag, col:MK_TAGCOL[tag] || s.col })); }
+      }
+    });
+  }));
+  return out;
+}
+
 // ---- catálogo offline: skins de TODAS as armas (complementa/substitui a API online) ----
 // código de raridade: c=Consumer i=Industrial m=Mil-Spec r=Restricted l=Classified v=Covert e=Extraordinary x=Contraband
 const MK_RC = { c:['Consumer Grade','#b0c3d9'], i:['Industrial Grade','#5e98d9'], m:['Mil-Spec Grade','#4b69ff'], r:['Restricted','#8847ff'], l:['Classified','#d32ee6'], v:['Covert','#eb4b4b'], e:['Extraordinary','#eb4b4b'], x:['Contraband','#e4ae39'] };
 const MK_FL = { 'Asiimov':[.18,1], 'Fade':[0,.08], 'Doppler':[0,.08], 'Gamma Doppler':[0,.08], 'Marble Fade':[0,.08], 'Tiger Tooth':[0,.08], 'Slaughter':[0,.08], 'Dragon Lore':[0,.7], 'Medusa':[0,.7], 'Gungnir':[0,.7], 'Howl':[0,.4], 'Fire Serpent':[0,.7] };
 const MK_LOCAL = [
- ['Rifles','AK-47','Redline:l|Vulcan:v|Asiimov:v|Fire Serpent:v|Neon Revolution:v|Bloodsport:v|Fuel Injector:v|Wasteland Rebel:v|Case Hardened:r|Jaguar:v|Hydroponic:v|The Empress:v|Frontside Misty:l|Point Disarray:l|Elite Build:m|Safari Mesh:c|Slate:m|Blue Laminate:r|Orbit Mk01:l|Neon Rider:v|Aquamarine Revenge:v|Head Shot:l|Legion of Anubis:l|Nightwish:l|Cartel:l|Phantom Disruptor:l'],
+ ['Rifles','AK-47','Crane Flight:l|Redline:l|Vulcan:v|Asiimov:v|Fire Serpent:v|Neon Revolution:v|Bloodsport:v|Fuel Injector:v|Wasteland Rebel:v|Case Hardened:r|Jaguar:v|Hydroponic:v|The Empress:v|Frontside Misty:l|Point Disarray:l|Elite Build:m|Safari Mesh:c|Slate:m|Blue Laminate:r|Orbit Mk01:l|Neon Rider:v|Aquamarine Revenge:v|Head Shot:l|Legion of Anubis:l|Nightwish:l|Cartel:l|Phantom Disruptor:l'],
  ['Rifles','M4A4','Howl:x|Asiimov:v|Desolate Space:l|Neo-Noir:l|The Emperor:v|Buzz Kill:l|Hellfire:v|Poseidon:v|Cyber Security:l|Evil Daimyo:l|Griffin:l|Royal Paladin:l|Dragon King:l|Magnesium:m|Tooth Fairy:l|Radiation Hazard:r|Zirka:m'],
  ['Rifles','M4A1-S','Hyper Beast:v|Cyrex:l|Printstream:v|Golden Coil:v|Knight:v|Atomic Alloy:r|Chantico\'s Fire:v|Decimator:v|Guardian:r|Master Piece:v|Mecha Industries:l|Nightmare:l|Blue Phosphor:l|Control Panel:l|Basilisk:r|Hot Rod:l|Leaded Glass:l|Dark Water:r|Flashback:r|Player Two:l|Welcome to the Jungle:v|Imminent Danger:l'],
  ['Rifles','Galil AR','Chatterbox:l|Cerberus:l|Eco:r|Sugar Rush:r|Kami:r|Rocket Pop:r|Stone Cold:m|Orange DDPAT:m|Tuxedo:m'],
  ['Rifles','FAMAS','Roll Cage:l|Afterimage:l|Mecha Industries:l|Djinn:r|Neural Net:r|Sergeant:r|Survivor Z:r|Hexane:m'],
  ['Rifles','AUG','Akihabara Accept:v|Bengal Tiger:l|Hot Rod:l|Syd Mead:l|Stymphalian:l|Torque:r|Wings:l|Aristocrat:r|Chameleon:r|Random Access:m'],
  ['Rifles','SG 553','Cyrex:l|Integrale:r|Danger Close:l|Bulldozer:r|Tiger Moth:r|Ultraviolet:r|Pulse:m'],
- ['Sniper Rifles','AWP','Dragon Lore:v|Medusa:v|Gungnir:v|Asiimov:v|Hyper Beast:v|Lightning Strike:l|Neo-Noir:l|Containment Breach:v|Wildfire:l|Fade:v|Redline:r|Electric Hive:l|Man-o\'-war:r|Graphite:l|Oni Taiji:v|Boom:v|Elite Build:r|Atheris:m|Worm God:m|Safari Mesh:c|Phobos:m|Corticera:l|Mortis:l|Desert Hydra:v|Exoskeleton:m|Sun in Leo:m|Capillary:r'],
+ ['Sniper Rifles','AWP','Queen\'s Gambit:v|Dragon Lore:v|Medusa:v|Gungnir:v|Asiimov:v|Hyper Beast:v|Lightning Strike:l|Neo-Noir:l|Containment Breach:v|Wildfire:l|Fade:v|Redline:r|Electric Hive:l|Man-o\'-war:r|Graphite:l|Oni Taiji:v|Boom:v|Elite Build:r|Atheris:m|Worm God:m|Safari Mesh:c|Phobos:m|Corticera:l|Mortis:l|Desert Hydra:v|Exoskeleton:m|Sun in Leo:m|Capillary:r'],
  ['Sniper Rifles','SSG 08','Blood in the Water:v|Dragonfire:l|Big Iron:l|Death\'s Head:l|Abyss:r|Detour:r|Ghost Crusader:l|Dark Water:r|Tropical Storm:m'],
  ['Sniper Rifles','SCAR-20','Cyrex:l|Cardiac:r|Splash Jam:r|Bloodsport:l|Powercore:r|Contractor:c|Sand Mesh:c|Storm:m'],
  ['Sniper Rifles','G3SG1','The Executioner:l|Flux:r|Chronos:l|Orange Kimono:l|Demeter:r|Stinger:r|Safari Mesh:c|Arctic Camo:c'],
- ['Pistols','Glock-18','Fade:l|Water Elemental:l|Bunsen Burner:r|Twilight Galaxy:l|Neo-Noir:l|Vogue:l|Gamma Doppler:l|Wasteland Rebel:l|Moonrise:r|Royal Legion:r|Dragon Tattoo:l|Off World:l|Candy Apple:m|Steel Disruption:r|Catacombs:r|Weasel:r|Sand Dune:c|Groundwater:c|Night:m|Reactor:r'],
+ ['Pistols','Glock-18','Fully Tuned:v|Fade:l|Water Elemental:l|Bunsen Burner:r|Twilight Galaxy:l|Neo-Noir:l|Vogue:l|Gamma Doppler:l|Wasteland Rebel:l|Moonrise:r|Royal Legion:r|Dragon Tattoo:l|Off World:l|Candy Apple:m|Steel Disruption:r|Catacombs:r|Weasel:r|Sand Dune:c|Groundwater:c|Night:m|Reactor:r'],
  ['Pistols','USP-S','Kill Confirmed:v|Neo-Noir:v|Orion:l|Printstream:v|Caiman:l|Cortex:l|Guardian:r|Dark Water:r|Serum:r|Overgrowth:l|Torque:r|Stainless:r|Night Ops:m|Forest Leaves:c'],
  ['Pistols','P2000','Fire Elemental:l|Ocean Foam:l|Corticera:r|Amber Fade:r|Imperial Dragon:l|Ivory:m|Scorpion:r|Pulse:r|Red FragCam:m|Granite Marbleized:c|Grassland:c'],
  ['Pistols','P250','Asiimov:l|See Ya Later:l|Nevermore:r|Muertos:r|Whiteout:r|Cartel:r|Franklin:r|Supernova:r|Sand Dune:c'],
  ['Pistols','Desert Eagle','Blaze:l|Printstream:v|Code Red:v|Kumicho Dragon:l|Hypnotic:r|Conspiracy:l|Cobalt Disruption:l|Oxide Blaze:m|Mecha Industries:l|Light Rail:r|Directive:r|Ocean Drive:l|Night:m|Crimson Web:l'],
- ['Pistols','Five-SeveN','Hyper Beast:v|Monkey Business:r|Case Hardened:r|Fowl Play:r|Copper Galaxy:l|Angry Mob:l|Triumvirate:l|Retrobution:l|Kami:m|Candy Apple:m|Nightshade:m|Orange Peel:c|Forest Night:c'],
+ ['Pistols','Five-SeveN','Dark Polymer:l|Hyper Beast:v|Monkey Business:r|Case Hardened:r|Fowl Play:r|Copper Galaxy:l|Angry Mob:l|Triumvirate:l|Retrobution:l|Kami:m|Candy Apple:m|Nightshade:m|Orange Peel:c|Forest Night:c'],
  ['Pistols','Tec-9','Fuel Injector:l|Isaac:r|Nuclear Threat:l|Avalanche:r|Re-Entry:l|Toxic:m|Bamboozle:r'],
  ['Pistols','CZ75-Auto','Victoria:l|Xiphos:r|The Fuschia Is Now:r|Pole Position:r|Tuxedo:m|Yellow Jacket:m|Poison Dart:r|Chalice:r|Emerald:l'],
  ['Pistols','Dual Berettas','Cartel:r|Dualing Dragons:r|Hemoglobin:r|Black Limba:m|Urban Shock:r|Royal Consorts:l|Marina:r'],
@@ -3622,12 +3687,12 @@ const MK_LOCAL = [
  ['Shotguns','Sawed-Off','The Kraken:l|Wasteland Princess:l|Origami:r|Yorick:r|Highwayman:l|Limelight:r|Serenity:m|Orange DDPAT:m|Forest DDPAT:c'],
  ['Machineguns','M249','Nebula Crusader:l|Emerald Poison Dart:m|Magma:r|System Lock:r|Spectre:r|Impact Drill:m|Gator Mesh:c'],
  ['Machineguns','Negev','Power Loader:l|Man-o\'-war:r|Loudmouth:r|Bratatat:r|Terrain:m|Dazzle:m|Desert-Strike:r|Anodized Navy:m'],
- ['Gloves','★ Sport Gloves','Pandora\'s Box:e|Vice:e|Superconductor:e|Hedge Maze:e|Amphibious:e|Arid:e'],
- ['Gloves','★ Specialist Gloves','Crimson Kimono:e|Fade:e|Emerald Web:e|Foundation:e|Mogul:e|Forest DDPAT:e'],
- ['Gloves','★ Driver Gloves','King Snake:e|Crimson Weave:e|Lunar Weave:e|Convoy:e|Overtake:e|Diamondback:e'],
- ['Gloves','★ Hand Wraps','Cobalt Skulls:e|Slaughter:e|Badlands:e|Leather:e|Spruce DDPAT:e|Duct Tape:e'],
- ['Gloves','★ Moto Gloves','Spearmint:e|Cool Mint:e|Boom!:e|Eclipse:e|POW!:e|Polygon:e'],
- ['Gloves','★ Bloodhound Gloves','Bronzed:e|Charred:e|Guerrilla:e|Snakebite:e'],
+ ['Gloves','★ Sport Gloves','Pandora\'s Box:e|Vice:e|Superconductor:e|Hedge Maze:e|Amphibious:e|Arid:e|Nocts:e|Bronze Morph:e|Big Game:e|Scarlet Shamagh:e|Slingshot:e|Omega:e|Blaze:e|Violet Beadwork:e|Ultra Violent:e|Sunburst:e'],
+ ['Gloves','★ Specialist Gloves','Crimson Kimono:e|Fade:e|Emerald Web:e|Foundation:e|Mogul:e|Forest DDPAT:e|Crimson Web:e|Buckshot:e|Lt. Commander:e|Marble Fade:e|Tiger Strike:e|Field Agent:e'],
+ ['Gloves','★ Driver Gloves','King Snake:e|Crimson Weave:e|Lunar Weave:e|Convoy:e|Overtake:e|Diamondback:e|Racing Green:e|Black Tie:e|Snow Leopard:e|Queen Jaguar:e|Rezan the Red:e|Imperial Plaid:e'],
+ ['Gloves','★ Hand Wraps','Cobalt Skulls:e|Slaughter:e|Badlands:e|Leather:e|Spruce DDPAT:e|Duct Tape:e|Constrictor:e|Giraffe:e|Desert Shamagh:e|Overprint:e|CAUTION!:e'],
+ ['Gloves','★ Moto Gloves','Spearmint:e|Cool Mint:e|Boom!:e|Eclipse:e|POW!:e|Polygon:e|Transport:e|Turtle:e|Finish Line:e|Blood Pressure:e|3rd Commando Company:e|Smoke Out:e'],
+ ['Gloves','★ Bloodhound Gloves','Bronzed:e|Charred:e|Guerrilla:e|Snakebite:e|Black Tie:e'],
  ['Gloves','★ Hydra Gloves','Emerald:e|Case Hardened:e|Rattler:e|Mangrove:e'],
  ['Gloves','★ Broken Fang Gloves','Jade:e|Yellow-banded:e|Needle Point:e|Unhinged:e']
 ];
@@ -3637,12 +3702,12 @@ function mkNorm(n){ return String(n).toLowerCase().replace(/\s+/g, ' ').trim(); 
 function mkLocalCatalog(){
   const out = [], push = (cat, name, code) => {
     const rc = MK_RC[code] || MK_RC.m, fl = MK_FL[name.split(' | ')[1] || ''] || [0,1];
-    const s = { id:'loc_' + mkHash(name).toString(36), name, img:'', cat, rar:rc[0], col:rc[1], min:fl[0], max:fl[1], st: cat !== 'Gloves' };
+    const gl = cat === 'Gloves', s = { id:'loc_' + mkHash(name).toString(36), name, img:'', cat, rar:rc[0], col:rc[1], min:gl ? .06 : fl[0], max:gl ? .8 : fl[1], st: !gl, sv: !gl && cat !== 'Knives' && 'cim'.indexOf(code) >= 0 || name === 'AWP | Dragon Lore' };
     s.base = mkBase({ name, rarity:{ name:rc[0] }, category:{ name:cat } });
     out.push(s);
   };
   MK_LOCAL.forEach(([cat, weapon, list]) => list.split('|').forEach(t => { const i = t.lastIndexOf(':'); push(cat, weapon + ' | ' + t.slice(0, i), t.slice(i+1)); }));
-  MK_KNIVES_A.forEach(k => ['Fade','Doppler','Marble Fade','Tiger Tooth','Slaughter','Crimson Web'].forEach(f => push('Knives', '★ ' + k + ' | ' + f, 'v')));
+  MK_KNIVES_A.forEach(k => ['Fade','Doppler','Gamma Doppler','Marble Fade','Tiger Tooth','Slaughter','Crimson Web','Case Hardened','Ultraviolet','Night','Damascus Steel','Rust Coat','Black Laminate','Autotronic','Lore','Freehand'].forEach(f => push('Knives', '★ ' + k + ' | ' + f, 'v')));
   MK_KNIVES_B.forEach(k => { push('Knives', '★ ' + k, 'v'); ['Stained','Blue Steel','Safari Mesh','Forest DDPAT'].forEach(f => push('Knives', '★ ' + k + ' | ' + f, 'v')); });
   return out;
 }
@@ -3688,7 +3753,7 @@ function mkPoints(){
 function mkAvail(){ return Math.max(0, Math.round((mkPoints() - wallet.spent)*100)/100); }
 async function mkLoadWallet(){
   const w = await loadShared('brcsgo:wallet:' + authUser.uid);
-  wallet = (w && !Array.isArray(w) && typeof w === 'object') ? { tokens:+w.tokens||0, spent:+w.spent||0, inv:Array.isArray(w.inv) ? w.inv : [], claimed:Array.isArray(w.claimed) ? w.claimed : [] } : { tokens:0, spent:0, inv:[], claimed:[] };
+  wallet = (w && !Array.isArray(w) && typeof w === 'object') ? { tokens:+w.tokens||0, spent:+w.spent||0, inv:Array.isArray(w.inv) ? w.inv : [], claimed:Array.isArray(w.claimed) ? w.claimed : [], lossStreak:+w.lossStreak||0, hist:Array.isArray(w.hist) ? w.hist.slice(0,20) : [] } : { tokens:0, spent:0, inv:[], claimed:[], lossStreak:0, hist:[] };
 }
 async function mkSave(){ await saveShared('brcsgo:wallet:' + authUser.uid, wallet); }
 
@@ -3716,14 +3781,15 @@ async function mkEnsureDB(){
       id: String(s.id), name: s.name, img: mkImg(s.image),
       cat: (s.category && s.category.name) || 'Outros', rar: (s.rarity && s.rarity.name) || '',
       col: (s.rarity && s.rarity.color) || '#888', min: s.min_float != null ? +s.min_float : 0, max: s.max_float != null ? +s.max_float : 1,
-      st: !!s.stattrak, base: mkBase(s)
+      st: !!s.stattrak, sv: !!s.souvenir, base: mkBase(s)
     }));
   }catch(e){ console.error('Skins (API):', e); mkOffline = true; }
   try{
     const seen = new Set(api.map(s => mkNorm(s.name)));
-    skinDB = api.concat(mkLocalCatalog().filter(s => !seen.has(mkNorm(s.name))));
+    const baseList = api.concat(mkLocalCatalog().filter(s => !seen.has(mkNorm(s.name))));
+    skinDB = baseList.concat(mkSouvenirCatalog(baseList), mkSpecialCatalog(baseList));
     skinMap = {};
-    skinDB.forEach(s => { s.low = mkPrice(s.base, s.name, s.max, 0, false); skinMap[s.id] = s; });
+    skinDB.forEach(s => { s.low = mkPrice(s.base, s.name, s.max, s.sp ? s.sp.seed : mkNeutralSeed(s.name), false, s.svEv); skinMap[s.id] = s; });
   }catch(e){ console.error('Skins:', e); skinErr = true; }
   skinLoading = false;
   if(activeTab === 'mercado' || activeTab === 'inventario') renderTab();
@@ -3735,30 +3801,55 @@ function mkWearMult(f){
   return MK_YS[MK_YS.length-1];
 }
 function mkWearName(f){ for(const w of MK_WEARS) if(f <= w[2]) return w[0]; return MK_WEARS[4][0]; }
+function mkDoppler(name, seed){
+  const gamma = /Gamma/.test(name), h = ((seed * 2654435761) >>> 0) % 1000 / 10;
+  if(h < 0.9) return gamma ? { n:'Emerald', m:10 } : { n:'Ruby', m:12 };
+  if(!gamma && h < 1.8) return { n:'Sapphire', m:14 };
+  if(!gamma && h < 2.7) return { n:'Black Pearl', m:9 };
+  if(h < 27) return { n:'Phase 1', m:1 };
+  if(h < 52) return { n:'Phase 2', m:1.1 };
+  if(h < 77) return { n:'Phase 3', m:1.2 };
+  return { n:'Phase 4', m:1.3 };
+}
 function mkPat(name, seed){
-  const sens = /Case Hardened|Heat Treated|Fade|Doppler|Crimson Web|Slaughter|Tiger Tooth|Lore|Gamma|Autotronic|Freehand/i.test(name);
-  if(/Case Hardened|Heat Treated/i.test(name) && [661,670,321,955,387,179,151,168].indexOf(seed) >= 0) return { n:'Blue Gem', m:9 };
+  const glove = /Gloves|Hand Wraps/.test(name), knife = name.charAt(0) === '★' && !glove;
+  if(/Doppler/.test(name) && !glove){ const d = mkDoppler(name, seed); return knife ? d : { n:d.n, m:1 + (d.m - 1) * 0.2 }; }
+  for(const r of MK_RULES){
+    if(!r.re.test(name) || (r.noGlove && glove)) continue;
+    for(const t of r.tiers) if(t.seeds.indexOf(seed) >= 0) return { n:t.n, m:t.m[knife ? 1 : 0] };
+  }
+  const sens = /Case Hardened|Heat Treated|Fade|Crimson Web|Slaughter|Tiger Tooth|Lore|Gamma|Autotronic|Freehand/i.test(name);
   const h = ((seed * 2654435761) >>> 0) % 1000 / 10;
+  if(glove){
+    if(h < 2)  return { n:'Pattern top', m:2.6 };
+    if(h < 14) return { n:'Bom pattern', m:1.4 };
+    if(h > 90) return { n:'Pattern fraco', m:0.9 };
+    return { n:'Padrão', m:1 };
+  }
   if(h < 1.5) return { n:'Pattern raro', m: sens ? 3.2 : 1.7 };
   if(h < 12)  return { n:'Bom pattern', m: sens ? 1.8 : 1.25 };
   if(h > 92)  return { n:'Pattern fraco', m: sens ? 0.8 : 0.92 };
   return { n:'Padrão', m:1 };
 }
-function mkPrice(base, name, f, seed, st){
-  return Math.max(1, Math.round(base * mkWearMult(f) * mkPat(name, seed).m * (st ? 1.6 : 1)));
+function mkPrice(base, name, f, seed, st, sv){
+  return Math.max(1, Math.round(base * mkWearMult(f) * mkPat(name, seed).m * (st ? 1.6 : 1) * (sv ? (MK_SV_EV[sv] || 2) : 1)));
 }
-function mkItemVal(it){ return mkPrice(it.b, it.n, it.f, it.sd, it.st); }
+function mkItemVal(it){ return mkPrice(it.b, it.n, it.f, it.sd, it.st, it.sv); }
 function mkListings(s){
   const out = [];
+  if(s.sp){
+    [0, .12, .3, .6, 1].forEach(k => { const f = s.min + (s.max - s.min) * k; out.push({ f, sd:s.sp.seed, st:false, sv:s.svEv || '', price: mkPrice(s.base, s.name, f, s.sp.seed, false, s.svEv) }); });
+    return out;
+  }
   for(let i=0;i<8;i++){
     const r = mkSeeded(mkHash(s.id + ':' + i));
     const f = Math.min(s.max, s.min + (s.max - s.min) * Math.pow(i/7, 1.4) * (0.9 + r()*0.1));
-    const sd = 1 + Math.floor(r()*1000), st = s.st && i % 3 === 0;
-    out.push({ f, sd, st, price: mkPrice(s.base, s.name, f, sd, st) });
+    const sd = 1 + Math.floor(r()*1000), st = s.st && !s.svEv && i % 3 === 0;
+    out.push({ f, sd, st, sv:s.svEv || '', price: mkPrice(s.base, s.name, f, sd, st, s.svEv) });
   }
   return out;
 }
-function mkNewItem(s, f, sd, st){ return { u:'i_' + Date.now() + '_' + Math.floor(Math.random()*1e6), id:s.id, n:s.name, img:s.img, col:s.col, cat:s.cat, b:s.base, f, sd, st }; }
+function mkNewItem(s, f, sd, st){ return { u:'i_' + Date.now() + '_' + Math.floor(Math.random()*1e6), id:s.id, n:s.name, img:s.img, col:s.col, cat:s.cat, b:s.base, f, sd, st, sv:s.svEv || '' }; }
 
 // ---- telas ----
 function mkBar(){
@@ -3769,29 +3860,31 @@ function mkSkinGrid(){
   if(skinErr) return `<div class="panel"><p>Não foi possível carregar o catálogo de skins.</p><button class="secondary small" id="mkRetry" type="button">Tentar de novo</button></div>`;
   if(!skinDB) return `<div class="panel"><p>Carregando todas as skins do CS2…</p></div>`;
   const q = mk.q.trim().toLowerCase();
-  let list = skinDB.filter(s => (!q || s.name.toLowerCase().indexOf(q) >= 0) && (!mk.cat || s.cat === mk.cat) && (!mk.rar || s.rar === mk.rar));
+  let list = skinDB.filter(s => (!q || s.name.toLowerCase().indexOf(q) >= 0) && (!mk.cat || s.cat === mk.cat) && (!mk.rar || s.rar === mk.rar) && mkKindOk(s, mk.kind));
   list.sort((a,b) => mk.sort === 'asc' ? a.low - b.low : b.low - a.low);
   const cats = Array.from(new Set(skinDB.map(s => s.cat))).sort(), rars = Array.from(new Set(skinDB.map(s => s.rar))).filter(Boolean).sort();
   const opt = (arr, cur, lab) => arr.map(v => `<option value="${mkE(v)}" ${cur === v ? 'selected' : ''}>${mkE(lab ? lab(v) : v)}</option>`).join('');
   const known = MK_CATS.map(c => c[0]).filter(c => cats.indexOf(c) >= 0), chipCats = known.concat(cats.filter(c => known.indexOf(c) < 0));
   const chips = `<div class="mk-chips"><button type="button" data-mkchip="" class="${!mk.cat ? 'on' : ''}">Todas</button>${chipCats.map(c => `<button type="button" data-mkchip="${mkE(c)}" class="${mk.cat === c ? 'on' : ''}">${mkE(mkCatLabel(c))}</button>`).join('')}</div>`;
-  return `${mkOffline ? '<div class="mk-count">Catálogo online indisponível — exibindo o catálogo offline (sem fotos oficiais).</div>' : ''}${chips}<div class="mk-filters"><input id="mkQ" placeholder="Buscar skin (ex: AK-47 Vulcan)" value="${mkE(mk.q)}">
+  const kinds = `<div class="mk-chips">${[['','Tudo'],['rare','Raros'],['sv','Souvenir'],['st','StatTrak™']].map(k => `<button type="button" data-mkkind="${k[0]}" class="${mk.kind === k[0] ? 'on' : ''}">${k[1]}</button>`).join('')}</div>`;
+  return `${mkOffline ? '<div class="mk-count">Catálogo online indisponível — exibindo o catálogo offline (sem fotos oficiais).</div>' : ''}${chips}${kinds}<div class="mk-filters"><input id="mkQ" placeholder="Buscar skin (ex: AK-47 Vulcan, Blue Gem, Karambit)" value="${mkE(mk.q)}">
     <select id="mkCat"><option value="">Todas as armas</option>${opt(cats, mk.cat, mkCatLabel)}</select>
     <select id="mkRar"><option value="">Toda raridade</option>${opt(rars, mk.rar)}</select>
     <select id="mkSort"><option value="asc" ${mk.sort==='asc'?'selected':''}>Menor preço</option><option value="desc" ${mk.sort==='desc'?'selected':''}>Maior preço</option></select></div>
     <div class="mk-count">${list.length} skins</div>
-    <div class="mk-grid">${list.slice(0, mk.n).map(s => `<button class="mk-card" data-skin="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}">${mkImgTag(s.img, s.name, s.cat, s.col)}<span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('')}</div>
+    <div class="mk-grid">${list.slice(0, mk.n).map(s => `<button class="mk-card" data-skin="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}">${mkImgTag(s.img, s.name, s.cat, s.col)}<span class="mk-n">${mkE(s.name)}</span>${mkTagHTML(s)}<span class="mk-p">${s.sp ? '' : 'a partir de '}<b>${mkFmt(s.low)}</b> T</span></button>`).join('')}</div>
     ${list.length > mk.n ? '<div style="text-align:center;margin-top:14px"><button class="secondary" id="mkMore" type="button">Carregar mais</button></div>' : ''}`;
 }
 function mercadoHTML(){
+  const tabs = [['loja','Loja'],['upgrader','Upgrader'],['changer','Skin Changer']];
   return `<div class="panel mk-wrap">${mkBar()}
-    <div class="mk-sub"><button class="${mk.tab==='loja'?'on':''}" data-mktab="loja" type="button">Loja</button><button class="${mk.tab==='upgrader'?'on':''}" data-mktab="upgrader" type="button">Upgrader</button></div>
-    ${mk.tab === 'loja' ? mkSkinGrid() : upgraderHTML()}</div>`;
+    <div class="mk-sub">${tabs.map(t => `<button class="${mk.tab===t[0]?'on':''}" data-mktab="${t[0]}" type="button">${t[1]}</button>`).join('')}</div>
+    ${mk.tab === 'loja' ? mkSkinGrid() : mk.tab === 'changer' ? changerHTML() : upgraderHTML()}</div>`;
 }
 function mkItemCard(it, extra, cls){
   const p = mkPat(it.n, it.sd);
   return `<div class="mk-item ${cls||''}" style="--rc:${mkE(it.col)}" ${extra||''}>${mkImgTag(it.img, it.n, it.cat, it.col)}<span class="mk-n">${mkE(it.n)}${it.st ? ' <em>ST™</em>' : ''}</span>
-    <span class="mk-meta">${mkWearName(it.f)} · ${it.f.toFixed(4)}</span><span class="mk-meta">Pattern #${it.sd} · ${p.n}</span><span class="mk-p"><b>${mkFmt(mkItemVal(it))}</b> T</span></div>`;
+    <span class="mk-meta">${mkWearName(it.f)} · ${it.f.toFixed(4)}</span><span class="mk-meta">Pattern #${it.sd} · ${p.n}</span>${it.sv ? `<span class="mk-meta">Souvenir · ${mkE(it.sv)}</span>` : ''}<span class="mk-p"><b>${mkFmt(mkItemVal(it))}</b> T</span></div>`;
 }
 function inventarioHTML(){
   const inv = wallet.inv.slice().sort((a,b) => mkItemVal(b) - mkItemVal(a));
@@ -3800,38 +3893,107 @@ function inventarioHTML(){
   return `<div class="panel mk-wrap">${mkBar()}<div class="mk-count">${inv.length} skins · valor total ${mkFmt(total)} Tokens</div>
     ${inv.length ? Object.keys(groups).sort().map(c => `<h4 class="mk-h">${mkE(c)}</h4><div class="mk-grid">${groups[c].map(i => mkItemCard(i, '', '') .replace('</div>', `<button class="secondary small" data-sell="${mkE(i.u)}" type="button">Vender por ${mkFmt(mkItemVal(i)*MK.SELL)} T</button></div>`)).join('')}</div>`).join('') : '<p class="mk-empty">Seu inventário está vazio. Compre Tokens e escolha skins na aba Mercado.</p>'}</div>`;
 }
-function mkTarget(){ return skinMap[mk.tid] || null; }
-function mkTargetVal(s){ const wb = MK_WEARS[mk.tw]; const lo = Math.max(s.min, wb[1]), hi = Math.min(s.max, wb[2]); return mkPrice(s.base, s.name, (lo+hi)/2, 0, false); }
+const MK_MAXT = 6;
+function mkBestWear(s){ const i = MK_WEARS.findIndex(w => s.max >= w[1] && s.min <= w[2]); return i < 0 ? 0 : i; }
+function mkTargetVal(s, w){
+  const wb = MK_WEARS[w] || MK_WEARS[0], lo = Math.max(s.min, wb[1]), hi = Math.min(s.max, wb[2]), f = hi >= lo ? (lo + hi) / 2 : s.min;
+  return mkPrice(s.base, s.name, f, s.sp ? s.sp.seed : mkNeutralSeed(s.name), false, s.svEv);
+}
+function mkPity(){ return Math.min(0.05, (wallet.lossStreak || 0) * 0.005); }
 function mkUpState(){
   const stake = wallet.inv.filter(i => mk.up.indexOf(i.u) >= 0), sv = stake.reduce((a,i) => a + mkItemVal(i), 0);
-  const t = mkTarget(), tv = t ? mkTargetVal(t) : 0;
-  const chance = (t && tv > sv && sv > 0) ? Math.min(0.75, Math.max(0.01, sv/tv * (1 - MK.EDGE))) : 0;
-  return { stake, sv, t, tv, chance };
+  const tgs = mk.tgs.map(x => { const s = skinMap[x.id]; return s ? { s, w:x.w, v:mkTargetVal(s, x.w) } : null; }).filter(Boolean);
+  const tv = tgs.reduce((a,t) => a + t.v, 0), pity = mkPity();
+  const base = (tgs.length && tv > sv && sv > 0) ? sv / tv * (1 - MK.EDGE) : 0;
+  const chance = base ? Math.min(0.75, Math.max(0.01, base + pity)) : 0;
+  return { stake, sv, tgs, tv, base, pity, chance };
 }
 function upgraderHTML(){
   if(!skinDB) return mkSkinGrid();
-  const u = mkUpState(), circ = 2*Math.PI*88;
-  const q = mk.tq.trim().toLowerCase();
-  let tl = skinDB.filter(s => s.base * mkWearMult(s.min) > u.sv && (!q || s.name.toLowerCase().indexOf(q) >= 0));
-  tl.sort((a,b) => a.low - b.low); tl = tl.slice(0, 24);
-  const wopts = u.t ? MK_WEARS.map((w,i) => (u.t.max >= w[1] && u.t.min <= w[2]) ? `<option value="${i}" ${mk.tw===i?'selected':''}>${w[0]}</option>` : '').join('') : '';
+  const u = mkUpState(), circ = 2*Math.PI*88, q = mk.tq.trim().toLowerCase(), sel = new Set(mk.tgs.map(x => x.id));
+  let tl = skinDB.filter(s => !sel.has(s.id) && (!q || s.name.toLowerCase().indexOf(q) >= 0) && (!mk.tcat || s.cat === mk.tcat) && mkKindOk(s, mk.tk)).map(s => ({ s, v:mkTargetVal(s, mkBestWear(s)) }));
+  if(u.sv > 0){ if(mk.tm) tl = tl.filter(x => x.v >= u.sv * mk.tm * 0.6 && x.v <= u.sv * mk.tm * 1.6); else tl = tl.filter(x => x.v >= u.sv * 0.3); }
+  tl.sort((a,b) => mk.ts === 'asc' ? a.v - b.v : b.v - a.v);
+  const found = tl.length; tl = tl.slice(0, 30);
+  const cats = Array.from(new Set(skinDB.map(s => s.cat))).sort();
+  const inv = wallet.inv.slice().sort((a,b) => mkItemVal(b) - mkItemVal(a));
+  const chip = (attr, val, cur, lab) => `<button type="button" ${attr}="${val}" class="${String(cur) === String(val) ? 'on' : ''}">${lab}</button>`;
+  const wins = (wallet.hist||[]).filter(h => h.win).length, tot = (wallet.hist||[]).length, streak = wallet.lossStreak || 0;
+  const ticks = Array.from({length:30}, (_, i) => `<line x1="100" y1="2" x2="100" y2="7" stroke="#3a3a42" stroke-width="2" transform="rotate(${i*12} 100 100)"/>`).join('');
   return `<div class="up-grid">
-    <div><h4 class="mk-h">1 · Escolha o que apostar</h4><div class="up-list">${wallet.inv.length ? wallet.inv.map(i => mkItemCard(i, `data-upitem="${mkE(i.u)}"`, mk.up.indexOf(i.u) >= 0 ? 'sel' : '')).join('') : '<p class="mk-empty">Sem skins no inventário.</p>'}</div></div>
-    <div class="up-mid"><svg viewBox="0 0 200 200" class="up-ring"><circle cx="100" cy="100" r="88" fill="none" stroke="#26262c" stroke-width="10"/>
-      <circle cx="100" cy="100" r="88" fill="none" stroke="var(--red)" stroke-width="10" stroke-dasharray="${u.chance*circ} ${circ}" transform="rotate(-90 100 100)"/>
-      <g id="upPtr" style="transform-origin:100px 100px"><line x1="100" y1="6" x2="100" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g></svg>
-      <div class="up-pct">${(u.chance*100).toFixed(2)}%</div><div class="mk-meta">${u.t && u.sv ? 'Aposta ' + mkFmt(u.sv) + ' T → ' + mkFmt(u.tv) + ' T (x' + (u.tv/u.sv).toFixed(2) + ')' : 'Escolha apostas e um alvo'}</div>
+    <div><h4 class="mk-h">1 · Aposta</h4>
+      <div class="up-tools"><button class="secondary small" data-upall type="button">Tudo</button><button class="secondary small" data-upclr type="button">Limpar</button><span class="mk-meta">${u.stake.length} selecionada(s) · ${mkFmt(u.sv)} T</span></div>
+      <div class="up-list">${inv.length ? inv.map(i => mkItemCard(i, `data-upitem="${mkE(i.u)}"`, mk.up.indexOf(i.u) >= 0 ? 'sel' : '')).join('') : '<p class="mk-empty">Sem skins no inventário.</p>'}</div></div>
+    <div class="up-mid"><svg viewBox="0 0 200 200" class="up-ring ${mk.res ? (mk.res.win ? 'rw' : 'rl') : ''}"><circle cx="100" cy="100" r="88" fill="none" stroke="#26262c" stroke-width="10"/>${ticks}
+      <circle class="up-arc" cx="100" cy="100" r="88" fill="none" stroke="var(--red)" stroke-width="10" stroke-dasharray="${u.chance*circ} ${circ}" transform="rotate(-90 100 100)"/>
+      <g id="upPtr" style="transform-origin:100px 100px;transform:rotate(${mk.ang||0}deg)"><line x1="100" y1="6" x2="100" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g></svg>
+      <div class="up-pct">${(u.chance*100).toFixed(2)}%</div>
+      <div class="mk-meta">${u.tgs.length && u.sv ? (u.tv > u.sv ? 'Aposta ' + mkFmt(u.sv) + ' T → ' + u.tgs.length + (u.tgs.length > 1 ? ' alvos ' : ' alvo ') + mkFmt(u.tv) + ' T (x' + (u.tv/u.sv).toFixed(2) + ')' : 'Os alvos precisam valer mais que a aposta') : 'Escolha apostas e alvos'}</div>
+      ${streak ? `<div class="mk-meta">Sequência de ${streak} derrota(s) · bônus +${(u.pity*100).toFixed(1)}%</div>` : ''}
       <button class="primary" id="upGo" type="button" ${u.chance && !mk.spin ? '' : 'disabled'}>Upgrade</button>
-      <div class="up-res" id="upRes">${mk.res ? (mk.res.win ? `<b class="win">Você ganhou ${mkE(mk.res.name)}!</b>` : '<b class="loss">Não foi dessa vez.</b>') : ''}</div></div>
-    <div><h4 class="mk-h">2 · Escolha o alvo</h4><input id="upQ" placeholder="Buscar alvo" value="${mkE(mk.tq)}">
-      ${u.t ? `<div class="up-pick">${mkE(u.t.name)} <select id="upW">${wopts}</select></div>` : ''}
-      <div class="up-list">${tl.map(s => `<button class="mk-card ${mk.tid===s.id?'sel':''}" data-target="${mkE(s.id)}" type="button" style="--rc:${mkE(s.col)}">${mkImgTag(s.img, s.name, s.cat, s.col)}<span class="mk-n">${mkE(s.name)}</span><span class="mk-p">a partir de <b>${mkFmt(s.low)}</b> T</span></button>`).join('') || '<p class="mk-empty">Nenhum alvo mais valioso que a aposta.</p>'}</div></div></div>`;
+      ${tot ? `<div class="up-hist"><div>${wins}/${tot} vitórias recentes</div>${wallet.hist.slice(0,5).map(h => `<div><b class="${h.win ? 'w' : 'l'}">${h.win ? '✓' : '✗'}</b> ${mkFmt(h.sv)} → ${mkFmt(h.tv)} T · ${(h.ch*100).toFixed(1)}%</div>`).join('')}</div>` : ''}</div>
+    <div><h4 class="mk-h">2 · Alvos (até ${MK_MAXT}) — ganhando, você leva todos</h4>
+      ${u.tgs.length ? `<div class="up-tgs">${u.tgs.map((t, i) => `<div class="up-tg" style="--rc:${mkE(t.s.col)}">${mkImgTag(t.s.img, t.s.name, t.s.cat, t.s.col)}<div class="grow"><div class="mk-n">${mkE(t.s.name)}</div>${mkTagHTML(t.s)}<div class="mk-meta"><select data-tgw="${i}">${MK_WEARS.map((w, j) => (t.s.max >= w[1] && t.s.min <= w[2]) ? `<option value="${j}" ${t.w === j ? 'selected' : ''}>${w[0]}</option>` : '').join('')}</select> · <b>${mkFmt(t.v)}</b> T</div></div><button class="secondary small" data-tgx="${i}" type="button" aria-label="Remover">×</button></div>`).join('')}</div>` : ''}
+      <div class="mk-chips">${[[0,'Todos'],[2,'x2'],[3,'x3'],[5,'x5'],[10,'x10'],[25,'x25'],[100,'x100']].map(m => chip('data-upm', m[0], mk.tm, m[1])).join('')}</div>
+      <div class="mk-chips">${[['','Tudo'],['rare','Raros'],['sv','Souvenir'],['st','StatTrak™']].map(k => chip('data-upk', k[0], mk.tk, k[1])).join('')}</div>
+      <div class="mk-filters"><input id="upQ" placeholder="Buscar alvo (ex: Blue Gem, Karambit)" value="${mkE(mk.tq)}">
+        <select id="upC"><option value="">Todas</option>${cats.map(c => `<option value="${mkE(c)}" ${mk.tcat === c ? 'selected' : ''}>${mkE(mkCatLabel(c))}</option>`).join('')}</select>
+        <select id="upS"><option value="asc" ${mk.ts==='asc'?'selected':''}>Menor valor</option><option value="desc" ${mk.ts==='desc'?'selected':''}>Maior valor</option></select></div>
+      <div class="mk-count">${found} alvo(s)${found > 30 ? ' · mostrando 30' : ''}</div>
+      <div class="up-list">${tl.map(x => `<button class="mk-card" data-target="${mkE(x.s.id)}" type="button" style="--rc:${mkE(x.s.col)}">${mkImgTag(x.s.img, x.s.name, x.s.cat, x.s.col)}<span class="mk-n">${mkE(x.s.name)}</span>${mkTagHTML(x.s)}<span class="mk-p"><b>${mkFmt(x.v)}</b> T</span></button>`).join('') || '<p class="mk-empty">Nenhum alvo nesse filtro.</p>'}</div></div></div>
+    ${mk.res ? `<div class="up-resbox">${mk.res.win ? `<b class="win">Você ganhou ${mk.res.won.length} skin(s)!</b><div class="up-got">${mk.res.won.map(i => mkItemCard(i, '', '')).join('')}</div>` : `<b class="loss">Não foi dessa vez.</b><div class="mk-meta">Perdeu: ${mk.res.lost.map(mkE).join(', ')}</div>`}</div>` : ''}`;
+}
+
+// ---- Skin Changer: troca uma skin por outra de MESMO valor (float ajustado), sem taxa ----
+function mkSolve(s, V, it){
+  const st = !!it.st; if(st && (!s.st || s.svEv || s.sp)) return null;
+  const sd = s.sp ? s.sp.seed : mkNeutralSeed(s.name), pm = mkPat(s.name, sd).m, svm = s.svEv ? (MK_SV_EV[s.svEv] || 2) : 1;
+  const k = s.base * pm * (st ? 1.6 : 1) * svm; if(!(k > 0)) return null;
+  const need = V / k;
+  if(need > mkWearMult(s.min) * 1.01 || need < mkWearMult(s.max) * 0.99) return null;
+  let lo = s.min, hi = s.max;
+  for(let i=0;i<40;i++){ const mid = (lo + hi) / 2; if(mkWearMult(mid) > need) lo = mid; else hi = mid; }
+  const f = (lo + hi) / 2, v = mkPrice(s.base, s.name, f, sd, st, s.svEv);
+  return Math.abs(v - V) <= Math.max(1, V * 0.003) ? { f, sd, v, st } : null;
+}
+function changerHTML(){
+  if(!skinDB) return mkSkinGrid();
+  const c = mk.ch, inv = wallet.inv.slice().sort((a,b) => mkItemVal(b) - mkItemVal(a));
+  const it = wallet.inv.find(i => i.u === c.u) || null, V = it ? mkItemVal(it) : 0;
+  let cands = [];
+  if(it){ const q = c.q.trim().toLowerCase(); skinDB.forEach(s => { if(s.id === it.id) return; if(q && s.name.toLowerCase().indexOf(q) < 0) return; if(c.cat && s.cat !== c.cat) return; const r = mkSolve(s, V, it); if(r) cands.push({ s, r }); }); cands.sort((a,b) => a.s.name.localeCompare(b.s.name)); }
+  const found = cands.length; cands = cands.slice(0, c.n);
+  const tg = it && c.tid ? skinMap[c.tid] : null, tr = tg ? mkSolve(tg, V, it) : null;
+  const cats = Array.from(new Set(skinDB.map(s => s.cat))).sort();
+  return `<div class="up-grid">
+    <div><h4 class="mk-h">1 · Sua skin</h4><div class="up-list">${inv.length ? inv.map(i => mkItemCard(i, `data-chitem="${mkE(i.u)}"`, c.u === i.u ? 'sel' : '')).join('') : '<p class="mk-empty">Sem skins no inventário.</p>'}</div></div>
+    <div class="up-mid"><div class="mk-meta" style="margin-bottom:12px">Troque por outra skin de mesmo valor.<br>Sem taxa e sem risco.</div>
+      ${it ? `<div class="mk-meta">Sua skin</div><div class="mk-n">${mkE(it.n)}</div><div class="mk-p"><b>${mkFmt(V)}</b> T</div>` : '<div class="mk-empty">Escolha uma skin do inventário</div>'}
+      ${tg && tr ? `<div class="up-arrow">↓</div><div class="mk-meta">Nova skin</div><div class="mk-n">${mkE(tg.name)}</div>${mkTagHTML(tg)}<div class="mk-meta">${mkWearName(tr.f)} · ${tr.f.toFixed(4)}</div><div class="mk-p"><b>${mkFmt(tr.v)}</b> T${tr.v !== V ? ' (' + (tr.v > V ? '+' : '') + (tr.v - V) + ')' : ''}</div>` : ''}
+      <button class="primary" id="chGo" type="button" style="margin-top:14px" ${tg && tr ? '' : 'disabled'}>Trocar skin</button>
+      ${c.res ? `<div class="mk-meta" style="margin-top:14px">Você recebeu</div><div class="up-got" style="grid-template-columns:1fr">${mkItemCard(c.res, '', '')}</div>` : ''}</div>
+    <div><h4 class="mk-h">2 · Escolha a skin nova</h4>
+      <div class="mk-filters"><input id="chQ" placeholder="Buscar skin" value="${mkE(c.q)}"><select id="chC"><option value="">Todas</option>${cats.map(x => `<option value="${mkE(x)}" ${c.cat === x ? 'selected' : ''}>${mkE(mkCatLabel(x))}</option>`).join('')}</select></div>
+      ${it ? `<div class="mk-count">${found} skin(s) com o mesmo valor${it.st ? ' (StatTrak™)' : ''}</div>` : ''}
+      <div class="up-list">${cands.map(x => `<button class="mk-card ${c.tid === x.s.id ? 'sel' : ''}" data-chtarget="${mkE(x.s.id)}" type="button" style="--rc:${mkE(x.s.col)}">${mkImgTag(x.s.img, x.s.name, x.s.cat, x.s.col)}<span class="mk-n">${mkE(x.s.name)}</span>${mkTagHTML(x.s)}<span class="mk-meta">${mkWearName(x.r.f)} · ${x.r.f.toFixed(4)}</span><span class="mk-p"><b>${mkFmt(x.r.v)}</b> T</span></button>`).join('') || `<p class="mk-empty">${it ? 'Nenhuma skin com esse valor.' : 'Escolha uma skin primeiro.'}</p>`}</div>
+      ${found > c.n ? '<div style="text-align:center;margin-top:12px"><button class="secondary small" id="chMore" type="button">Carregar mais</button></div>' : ''}</div></div>`;
+}
+async function mkChange(){
+  const c = mk.ch, it = wallet.inv.find(i => i.u === c.u), s = skinMap[c.tid]; if(!it || !s) return;
+  const r = mkSolve(s, mkItemVal(it), it); if(!r){ showToast('Essa troca não está mais disponível.'); return; }
+  const n = mkNewItem(s, r.f, r.sd, r.st);
+  wallet.inv = wallet.inv.filter(i => i.u !== it.u); wallet.inv.push(n);
+  await mkSave();
+  mk.ch = { u:null, tid:null, q:'', cat:'', n:36, res:n };
+  showToast(it.n + ' foi trocada por ' + n.n + '!');
+  if(window.SFX) window.SFX.play('confirm');
+  renderTab();
 }
 function mkOpenSkin(id){
   const s = skinMap[id]; if(!s) return;
   const old = document.getElementById('mkModal'); if(old) old.remove();
   const m = document.createElement('div'); m.id = 'mkModal'; m.className = 'mk-modal';
-  m.innerHTML = `<div class="mk-dlg" style="--rc:${mkE(s.col)}"><button class="mk-x" type="button" aria-label="Fechar">×</button>${mkImgTag(s.img, s.name, s.cat, s.col)}<h3>${mkE(s.name)}</h3><div class="mk-meta">${mkE(s.rar)} · ${mkE(s.cat)}</div>
+  m.innerHTML = `<div class="mk-dlg" style="--rc:${mkE(s.col)}"><button class="mk-x" type="button" aria-label="Fechar">×</button>${mkImgTag(s.img, s.name, s.cat, s.col)}<h3>${mkE(s.name)}</h3><div class="mk-meta">${mkE(s.rar)} · ${mkE(s.cat)}${s.svEv ? ' · Souvenir ' + mkE(s.svEv) : ''}${s.sp ? ' · ' + mkE(s.sp.tag) : ''}</div>
     <table class="mk-tbl"><tr><th>Desgaste</th><th>Float</th><th>Pattern</th><th>Tokens</th><th></th></tr>${mkListings(s).map((l,i) => { const p = mkPat(s.name, l.sd); return `<tr><td>${mkWearName(l.f)}${l.st ? ' <em>ST™</em>' : ''}</td><td>${l.f.toFixed(4)}</td><td>#${l.sd} · ${p.n}</td><td><b>${mkFmt(l.price)}</b></td><td><button class="primary small" data-buy="${i}" type="button">Comprar</button></td></tr>`; }).join('')}</table></div>`;
   document.body.appendChild(m);
   const close = () => m.remove();
@@ -3865,17 +4027,27 @@ function mkSpinTicks(total){
 async function mkUpgrade(){
   const u = mkUpState(); if(mk.spin || !u.chance) return;
   mk.spin = true; mk.res = null;
-  const roll = mkRand(), win = roll < u.chance;
+  const roll = mkRand(), win = roll < u.chance, lost = u.stake.map(i => i.n), won = [];
   wallet.inv = wallet.inv.filter(i => mk.up.indexOf(i.u) < 0);
-  let name = '';
-  if(win){
-    const wb = MK_WEARS[mk.tw], lo = Math.max(u.t.min, wb[1]), hi = Math.min(u.t.max, wb[2]);
-    const it = mkNewItem(u.t, lo + (hi-lo)*mkRand(), 1 + Math.floor(mkRand()*1000), false); wallet.inv.push(it); name = u.t.name;
-  }
+  if(win) u.tgs.forEach(t => {
+    const wb = MK_WEARS[t.w], lo = Math.max(t.s.min, wb[1]), hi = Math.min(t.s.max, wb[2]);
+    const f = hi >= lo ? lo + (hi - lo) * mkRand() : t.s.min, sd = t.s.sp ? t.s.sp.seed : 1 + Math.floor(mkRand()*1000);
+    const it = mkNewItem(t.s, f, sd, false); wallet.inv.push(it); won.push(it);
+  });
+  wallet.lossStreak = win ? 0 : (wallet.lossStreak || 0) + 1;
+  wallet.hist = [{ win, sv:u.sv, tv:u.tv, ch:u.chance, n:u.tgs.length, t:Date.now() }].concat(wallet.hist || []).slice(0, 20);
   await mkSave();
   const ptr = document.getElementById('upPtr'), btn = document.getElementById('upGo'); if(btn) btn.disabled = true;
-  if(ptr){ ptr.style.transition = 'transform 4.2s cubic-bezier(.12,.7,.1,1)'; requestAnimationFrame(() => requestAnimationFrame(() => { ptr.style.transform = 'rotate(' + (360*6 + roll*360) + 'deg)'; mkSpinTicks(360*6 + roll*360); })); }
-  setTimeout(() => { mk.spin = false; mk.up = []; mk.res = { win, name }; renderTab(); if(window.SFX) window.SFX.play(win ? 'upWin' : 'upLose'); }, 4500);
+  if(ptr){
+    ptr.style.transition = 'none'; ptr.style.transform = 'rotate(0deg)'; void ptr.getBoundingClientRect();
+    ptr.style.transition = 'transform 4.2s cubic-bezier(.12,.7,.1,1)';
+    requestAnimationFrame(() => requestAnimationFrame(() => { ptr.style.transform = 'rotate(' + (360*6 + roll*360) + 'deg)'; mkSpinTicks(360*6 + roll*360); }));
+  }
+  setTimeout(() => {
+    mk.spin = false; mk.up = []; if(win) mk.tgs = [];
+    mk.res = { win, won, lost }; mk.ang = roll*360; renderTab();
+    if(window.SFX) window.SFX.play(win ? 'upWin' : 'upLose');
+  }, 4500);
 }
 function attachMarketEvents(){
   const root = document.getElementById('tabContent'); if(!root) return;
@@ -3903,11 +4075,31 @@ function attachMarketEvents(){
     wallet.tokens = Math.round((wallet.tokens + mkItemVal(it)*MK.SELL)*100)/100;
     wallet.inv = wallet.inv.filter(i => i.u !== it.u); await mkSave(); showToast('Skin vendida.'); renderTab();
   });
-  on('[data-upitem]', 'click', e => { if(mk.spin) return; const u = e.currentTarget.dataset.upitem, i = mk.up.indexOf(u); if(i >= 0) mk.up.splice(i,1); else mk.up.push(u); mk.res = null; renderTab(); });
-  on('[data-target]', 'click', e => { if(mk.spin) return; mk.tid = e.currentTarget.dataset.target; const t = mkTarget(); mk.tw = MK_WEARS.findIndex((w,i) => t.max >= w[1] && t.min <= w[2]); mk.res = null; renderTab(); });
+  const upReset = () => { mk.res = null; mk.ang = 0; };
+  on('[data-mkkind]', 'click', e => { mk.kind = e.currentTarget.dataset.mkkind; mk.n = 48; renderTab(); });
+  on('[data-upitem]', 'click', e => { if(mk.spin) return; const u = e.currentTarget.dataset.upitem, i = mk.up.indexOf(u); if(i >= 0) mk.up.splice(i,1); else mk.up.push(u); upReset(); renderTab(); });
+  on('[data-upall]', 'click', () => { if(mk.spin) return; mk.up = wallet.inv.map(i => i.u); upReset(); renderTab(); });
+  on('[data-upclr]', 'click', () => { if(mk.spin) return; mk.up = []; upReset(); renderTab(); });
+  on('[data-target]', 'click', e => {
+    if(mk.spin) return; const id = e.currentTarget.dataset.target, s = skinMap[id]; if(!s) return;
+    if(mk.tgs.length >= MK_MAXT){ showToast('Máximo de ' + MK_MAXT + ' alvos.'); return; }
+    if(!mk.tgs.some(x => x.id === id)) mk.tgs.push({ id, w:mkBestWear(s) });
+    upReset(); renderTab();
+  });
+  on('[data-tgx]', 'click', e => { if(mk.spin) return; mk.tgs.splice(+e.currentTarget.dataset.tgx, 1); upReset(); renderTab(); });
+  on('[data-tgw]', 'change', e => { if(mk.spin) return; const t = mk.tgs[+e.target.dataset.tgw]; if(t) t.w = +e.target.value; upReset(); renderTab(); });
+  on('[data-upm]', 'click', e => { mk.tm = +e.currentTarget.dataset.upm || 0; renderTab(); });
+  on('[data-upk]', 'click', e => { mk.tk = e.currentTarget.dataset.upk; renderTab(); });
   on('#upQ', 'input', e => { mk.tq = e.target.value; renderTab(); mkRefocus('upQ'); });
-  on('#upW', 'change', e => { mk.tw = +e.target.value; renderTab(); });
+  on('#upC', 'change', e => { mk.tcat = e.target.value; renderTab(); });
+  on('#upS', 'change', e => { mk.ts = e.target.value; renderTab(); });
   on('#upGo', 'click', mkUpgrade);
+  on('[data-chitem]', 'click', e => { mk.ch.u = e.currentTarget.dataset.chitem; mk.ch.tid = null; mk.ch.res = null; mk.ch.n = 36; renderTab(); });
+  on('[data-chtarget]', 'click', e => { mk.ch.tid = e.currentTarget.dataset.chtarget; renderTab(); });
+  on('#chQ', 'input', e => { mk.ch.q = e.target.value; mk.ch.n = 36; renderTab(); mkRefocus('chQ'); });
+  on('#chC', 'change', e => { mk.ch.cat = e.target.value; mk.ch.n = 36; renderTab(); });
+  on('#chMore', 'click', () => { mk.ch.n += 36; renderTab(); });
+  on('#chGo', 'click', mkChange);
 }
 
 async function init(){
