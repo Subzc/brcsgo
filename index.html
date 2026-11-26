@@ -2616,6 +2616,43 @@ function autoDecideMatch(stage, m){
   return before !== m.winner;
 }
 
+// ---- simulação: o sistema define os pontos que faltam; pontos já digitados são mantidos e somados ----
+function simulateStage(ev, stage){
+  const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  let simulated = 0, kept = 0;
+  stage.matches.forEach(m => {
+    if(m.a==='__BYE__' || m.b==='__BYE__' || m.a==='__TBD__' || m.b==='__TBD__') return;
+    const hasA = m.scoreA != null && !isNaN(m.scoreA), hasB = m.scoreB != null && !isNaN(m.scoreB);
+    if(hasA && hasB && m.scoreA !== m.scoreB){ autoDecideMatch(stage, m); kept++; return; }   // placar completo digitado: só mantém
+    if(hasA && hasB && stage.type === 'group'){ m.winner = 'd'; kept++; return; }              // empate válido na fase de grupos
+    // quem vence: manual (se já escolhido) ou sorteio ponderado pelo seed (seed menor = favorito)
+    let w = (m.winner === 'a' || m.winner === 'b') ? m.winner : null;
+    if(!w){
+      const sa = Number(teamSeed(ev, m.a)) || 0, sb = Number(teamSeed(ev, m.b)) || 0;
+      const pA = (sa && sb) ? sb/(sa+sb) : 0.5;
+      w = Math.random() < pA ? 'a' : 'b';
+      if(hasA && hasB){ /* empate no mata-mata: só desempata */ }
+      else if(hasA && m.scoreA === 0) w = 'b';
+      else if(hasB && m.scoreB === 0) w = 'a';
+    }
+    if(!(hasA && hasB)){
+      // completa só o lado que falta, respeitando os pontos já digitados
+      const knownA = hasA ? m.scoreA : null, knownB = hasB ? m.scoreB : null;
+      if(w === 'a'){
+        if(knownA != null){ m.scoreB = knownB != null ? knownB : rnd(0, Math.max(knownA-1,0)); }
+        else { m.scoreB = knownB != null ? knownB : rnd(3,11); m.scoreA = knownB != null ? knownB + rnd(1,5) : 13; }
+      } else {
+        if(knownB != null){ m.scoreA = knownA != null ? knownA : rnd(0, Math.max(knownB-1,0)); }
+        else { m.scoreA = knownA != null ? knownA : rnd(3,11); m.scoreB = knownA != null ? knownA + rnd(1,5) : 13; }
+      }
+      if(m.scoreA === m.scoreB){ if(w==='a') m.scoreA++; else m.scoreB++; }
+      if(hasA || hasB) kept++;
+    }
+    m.winner = w; simulated++;
+  });
+  return {simulated, kept};
+}
+
 function stageIsComplete(stage){
   if(stage.type === 'elim'){
     return stage.matches.every(m => m.winner || m.a==='__BYE__' || m.b==='__BYE__');
@@ -2829,7 +2866,7 @@ function eventDetailHTML(ev){
     </div>
     <div class="panel">
       <div class="stage-nav">${stageNav}</div>
-      ${isMod ? `<div class="auto-bar"><label class="auto-toggle"><input type="checkbox" id="evAutoToggle" ${evAutoOn(ev) ? 'checked' : ''}><span>⚡ Deixar o sistema definir quem pontuou — só digite os pontos de cada time</span></label>${evAutoOn(ev) && stage ? '<button class="secondary small" id="btnAutoAll" type="button">Calcular todos pelos pontos</button>' : ''}</div>` : ''}
+      ${isMod ? `<div class="auto-bar"><label class="auto-toggle"><input type="checkbox" id="evAutoToggle" ${evAutoOn(ev) ? 'checked' : ''}><span>⚡ Deixar o sistema definir quem pontuou — só digite os pontos de cada time</span></label><span style="display:flex;gap:8px;flex-wrap:wrap">${evAutoOn(ev) && stage ? '<button class="secondary small" id="btnAutoAll" type="button">Calcular todos pelos pontos</button>' : ''}${stage && !stage.completed ? '<button class="primary small" id="btnSimAll" type="button">🎲 Sistema calcula todos os times</button>' : ''}</span></div>` : ''}
       ${stageBody}
       ${isMod && stage && stageComplete && !isLastStage ? `<div style="margin-top:16px;"><button class="primary" id="btnAdvanceStage" data-stage-idx="${eventDetailStage}">Avançar para ${stages[eventDetailStage+1].label} →</button></div>` : ''}
       ${isMod && stage && stageComplete && isLastStage && ev.status !== 'finished' ? `<div style="margin-top:16px;"><button class="primary" id="btnFinishEvent">Encerrar campeonato 🏆</button></div>` : ''}
@@ -3113,6 +3150,18 @@ function attachEventosEvents(){
     if(n && ev.status === 'upcoming') ev.status = 'live';
     await saveShared('brcsgo:events', events);
     showToast(n + ' partida(s) definida(s) pelos pontos' + (ties ? ' · ' + ties + ' empate(s) no mata-mata para desempatar' : '') + '.');
+    renderTab();
+  });
+
+  const simAll = document.getElementById('btnSimAll');
+  if(simAll) simAll.addEventListener('click', async () => {
+    const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+    const stage = ev.stages[eventDetailStage]; if(!stage) return;
+    if(!confirm('O sistema vai definir os pontos de todas as partidas desta fase que ainda não têm placar. Os pontos já digitados são mantidos. Continuar?')) return;
+    const r = simulateStage(ev, stage);
+    if(ev.status === 'upcoming') ev.status = 'live';
+    await saveShared('brcsgo:events', events);
+    showToast(r.simulated + ' partida(s) calculada(s) pelo sistema' + (r.kept ? ' · ' + r.kept + ' com pontos já digitados mantidos' : '') + '.');
     renderTab();
   });
 
