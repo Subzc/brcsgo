@@ -1075,6 +1075,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .lang-switch button.active{background:var(--orange);color:#fff}
 @media (max-width:820px){.lang-switch{bottom:88px;right:10px}}
 
+/* ===== Eventos: modo automático ===== */
+.auto-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(229,38,43,.35);border-radius:8px;background:rgba(229,38,43,.06)}
+.auto-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px}
+.auto-toggle input{width:auto;accent-color:#e5262b}
+.auto-hint{font-size:11px;letter-spacing:.06em;color:var(--muted);align-self:center}
+.auto-hint.warn{color:#ffb020}
 /* ===== Cutscene Nível 10 ===== */
 .cs10{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Rajdhani',sans-serif;--c:#EEEEEE;opacity:0;transition:opacity .9s ease;overflow:hidden;
   background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--c) 20%,#000) 0,#050506 62%,#000 100%)}
@@ -2597,6 +2603,19 @@ function teamSeed(ev, tid){
   return t ? t.seed : '';
 }
 
+// ---- modo automático: o sistema decide o vencedor só pelos pontos digitados ----
+function evAutoOn(ev){ return !ev || ev.autoWinner !== false; }   // ligado por padrão
+function autoDecideMatch(stage, m){
+  // devolve true se o vencedor mudou
+  const before = m.winner;
+  if(m.a==='__BYE__' || m.b==='__BYE__' || m.a==='__TBD__' || m.b==='__TBD__') return false;
+  if(m.scoreA == null || m.scoreB == null || isNaN(m.scoreA) || isNaN(m.scoreB)){ m.winner = null; }
+  else if(m.scoreA > m.scoreB) m.winner = 'a';
+  else if(m.scoreB > m.scoreA) m.winner = 'b';
+  else m.winner = stage.type === 'group' ? 'd' : null;   // empate: pontos da fase de grupos aceitam empate; mata-mata precisa de desempate
+  return before !== m.winner;
+}
+
 function stageIsComplete(stage){
   if(stage.type === 'elim'){
     return stage.matches.every(m => m.winner || m.a==='__BYE__' || m.b==='__BYE__');
@@ -2810,6 +2829,7 @@ function eventDetailHTML(ev){
     </div>
     <div class="panel">
       <div class="stage-nav">${stageNav}</div>
+      ${isMod ? `<div class="auto-bar"><label class="auto-toggle"><input type="checkbox" id="evAutoToggle" ${evAutoOn(ev) ? 'checked' : ''}><span>⚡ Deixar o sistema definir quem pontuou — só digite os pontos de cada time</span></label>${evAutoOn(ev) && stage ? '<button class="secondary small" id="btnAutoAll" type="button">Calcular todos pelos pontos</button>' : ''}</div>` : ''}
       ${stageBody}
       ${isMod && stage && stageComplete && !isLastStage ? `<div style="margin-top:16px;"><button class="primary" id="btnAdvanceStage" data-stage-idx="${eventDetailStage}">Avançar para ${stages[eventDetailStage+1].label} →</button></div>` : ''}
       ${isMod && stage && stageComplete && isLastStage && ev.status !== 'finished' ? `<div style="margin-top:16px;"><button class="primary" id="btnFinishEvent">Encerrar campeonato 🏆</button></div>` : ''}
@@ -2836,12 +2856,17 @@ function renderElimMatch(ev, stage, m, isMod){
           ? `<input class="score-inp" data-mid="${m.id}" data-side="b" type="number" min="0" value="${m.scoreB??''}" placeholder="0">`
           : `<div class="bm-score">${m.scoreB??'-'}</div>`}
       </div>
-      ${isMod && m.a!=='__BYE__' && m.b!=='__BYE__' && m.a!=='__TBD__' && m.b!=='__TBD__' ? `
+      ${isMod && m.a!=='__BYE__' && m.b!=='__BYE__' && m.a!=='__TBD__' && m.b!=='__TBD__' ? (() => {
+        const auto = evAutoOn(ev), tie = m.scoreA != null && m.scoreA === m.scoreB;
+        const manual = !auto || tie;
+        return `
         <div class="bm-actions">
-          <button class="ok small" data-set-winner="${m.id}" data-side="a">Vence A</button>
-          <button class="ok small" data-set-winner="${m.id}" data-side="b">Vence B</button>
+          ${auto && !tie ? `<span class="auto-hint">⚡ ${m.winner ? 'Definido pelos pontos' : 'Digite os pontos dos dois times'}</span>` : ''}
+          ${auto && tie ? `<span class="auto-hint warn">Empate — escolha quem avança:</span>` : ''}
+          ${manual ? `<button class="ok small" data-set-winner="${m.id}" data-side="a">Vence A</button>
+          <button class="ok small" data-set-winner="${m.id}" data-side="b">Vence B</button>` : ''}
           ${m.winner ? `<button class="secondary small" data-clear-winner="${m.id}">Limpar</button>` : ''}
-        </div>` : ''}
+        </div>`; })() : ''}
     </div>
   `;
 }
@@ -2860,9 +2885,11 @@ function renderGroupMatch(ev, stage, m, isMod){
           <input class="score-inp" data-mid="${m.id}" data-side="a" type="number" min="0" value="${m.scoreA??''}" placeholder="A">
           <span class="mid">×</span>
           <input class="score-inp" data-mid="${m.id}" data-side="b" type="number" min="0" value="${m.scoreB??''}" placeholder="B">
-          <button class="ok small" data-set-winner="${m.id}" data-side="a">A</button>
+          ${evAutoOn(ev)
+            ? `<span class="auto-hint">${m.winner ? (m.winner==='d' ? '⚡ Empate' : '⚡ Vence ' + (m.winner==='a' ? 'A' : 'B')) : '⚡ automático'}</span>`
+            : `<button class="ok small" data-set-winner="${m.id}" data-side="a">A</button>
           <button class="ok small" data-set-winner="${m.id}" data-side="b">B</button>
-          <button class="secondary small" data-set-winner="${m.id}" data-side="d">Empate</button>
+          <button class="secondary small" data-set-winner="${m.id}" data-side="d">Empate</button>`}
         </div>
       ` : ''}
     </div>
@@ -3054,8 +3081,39 @@ function attachEventosEvents(){
       const m = stage.matches.find(x => x.id === inp.dataset.mid); if(!m) return;
       const v = inp.value === '' ? null : parseInt(inp.value);
       if(inp.dataset.side === 'a') m.scoreA = v; else m.scoreB = v;
+      let changed = false;
+      if(evAutoOn(ev)){
+        changed = autoDecideMatch(stage, m);
+        if(m.winner && ev.status === 'upcoming') ev.status = 'live';
+        if(m.scoreA != null && m.scoreA === m.scoreB && stage.type !== 'group') showToast('Empate no mata-mata — escolha quem avança.');
+      }
       await saveShared('brcsgo:events', events);
+      if(changed || (evAutoOn(ev) && stage.type !== 'group' && m.scoreA != null && m.scoreA === m.scoreB)) renderTab();   // só redesenha quando algo mudou (não tira o foco à toa)
     });
+  });
+
+  // modo automático: ligar/desligar e calcular tudo
+  const autoTgl = document.getElementById('evAutoToggle');
+  if(autoTgl) autoTgl.addEventListener('change', async () => {
+    const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+    ev.autoWinner = autoTgl.checked;
+    await saveShared('brcsgo:events', events);
+    renderTab();
+  });
+  const autoAll = document.getElementById('btnAutoAll');
+  if(autoAll) autoAll.addEventListener('click', async () => {
+    const ev = events.find(e => e.id === selectedEventId); if(!ev) return;
+    const stage = ev.stages[eventDetailStage]; if(!stage) return;
+    let n = 0, ties = 0;
+    stage.matches.forEach(m => {
+      if(m.scoreA == null || m.scoreB == null) return;
+      if(m.winner && stage.type === 'elim' && m.scoreA === m.scoreB) return;   // desempate manual já feito
+      autoDecideMatch(stage, m); if(m.winner) n++; else ties++;
+    });
+    if(n && ev.status === 'upcoming') ev.status = 'live';
+    await saveShared('brcsgo:events', events);
+    showToast(n + ' partida(s) definida(s) pelos pontos' + (ties ? ' · ' + ties + ' empate(s) no mata-mata para desempatar' : '') + '.');
+    renderTab();
   });
 
   // set-winner buttons
@@ -4337,6 +4395,10 @@ init();
 
   // ---- gatilho: detecta a subida para o Nível 10 do jogador logado ----
   var readyAt = 0;
+  // memória da sessão + localStorage: mesmo que o navegador não consiga gravar, a cutscene não repete
+  var memSeen = {};
+  function getSeen(k){ if(memSeen[k] !== undefined) return memSeen[k]; var v = null; try{ v = localStorage.getItem(k); }catch(e){} return v; }
+  function setSeen(k,v){ memSeen[k] = String(v); try{ localStorage.setItem(k, String(v)); }catch(e){} }
   function check(){
     try{
       if(active || typeof authUser === 'undefined' || !authUser || !currentPlayerId || !players.length || !matches.length) { readyAt = 0; return; }
@@ -4347,17 +4409,17 @@ init();
         if(active || !MODES[mode].hasPatente) return;
         var st = computeModeStats(p.id, mode), t0 = getTier(st.elo);
         var lvl = st.calibrating ? 0 : (t0.challenger ? 11 : t0.level);       // 11 = Challenger
-        var key = 'brcsgo:lvlseen:'+authUser.uid+':'+mode, seen = null;
-        try{ seen = localStorage.getItem(key); }catch(e){}
-        try{ localStorage.setItem(key, String(lvl)); }catch(e){}
+        var key = 'brcsgo:lvlseen:'+authUser.uid+':'+mode, seen = getSeen(key);
+        var doneKey = 'brcsgo:cs10done:'+authUser.uid+':'+mode;
+        // o nível "visto" só sobe, nunca desce: assim a subida 9 → 10 é detectada uma única vez
+        setSeen(key, seen === null ? lvl : Math.max(Number(seen), lvl));
         // TOP dentro do Challenger (1000 → 500 → ... → 1)
         var topInfo = null;
         if(lvl === 11){
           var pm = challengerPositions(mode), pos = pm.get(p.id) || 0, tb = topBucket(pos);
           topInfo = {pos: pos, top: tb};
-          var tkey = 'brcsgo:topseen:'+authUser.uid+':'+mode, tseen = null;
-          try{ tseen = localStorage.getItem(tkey); }catch(e){}
-          try{ localStorage.setItem(tkey, String(tb || 99999)); }catch(e){}
+          var tkey = 'brcsgo:topseen:'+authUser.uid+':'+mode, tseen = getSeen(tkey);
+          setSeen(tkey, tseen === null ? (tb || 99999) : Math.min(Number(tseen), tb || 99999));
           if(seen !== null && Number(seen) === 11 && tseen !== null && tb && tb < Number(tseen)){
             topPopup({top: tb, pos: pos, mode: MODES[mode].label});
             return;
@@ -4365,7 +4427,8 @@ init();
         }
         if(seen !== null && Number(seen) < 11 && lvl === 11){
           play({mode: MODES[mode].label, name: p.name, elo: st.elo, region: p.region || '', challenger: true, from10: Number(seen) === 10});
-        } else if(seen !== null && Number(seen) < 10 && lvl === 10){
+        } else if(seen !== null && Number(seen) < 10 && lvl === 10 && !getSeen(doneKey)){
+          setSeen(doneKey, '1');   // marca ANTES de tocar: nunca mais repete
           play({mode: MODES[mode].label, name: p.name, elo: st.elo, region: p.region || '', challenger: false});
         } else if(seen !== null && lvl > Number(seen) && lvl < 10){
           levelUpPopup({level: lvl, elo: st.elo, mode: MODES[mode].label});   // subiu de nível (inclui sair da calibragem)
