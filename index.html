@@ -1413,6 +1413,18 @@ tr.is-challenger td.pos{color:var(--orange-2);font-weight:700}
   .mc-turn,.mc-result,.mc-card.just-banned .mc-x,.mc-think i{animation:none!important}
   .mc-bg-l{transition:none}
 }
+
+  /* ===== Contas Steam (perfil) ===== */
+  .steam-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .steam-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.025)}
+  .steam-row .steam-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .steam-row .steam-id{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;word-break:break-all}
+  .steam-row a{font-size:12px;color:var(--orange-2,#ff6b6e);text-decoration:none}
+  .steam-row a:hover{text-decoration:underline}
+  .steam-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .steam-msg{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:13px;border:1px solid var(--line)}
+  .steam-msg.ok{border-color:rgba(80,200,120,.5);color:#8be3a8}
+  .steam-msg.err{border-color:rgba(229,38,43,.55);color:#ff8f92}
 </style>
 </head>
 <body>
@@ -2312,6 +2324,101 @@ function updateFormForMode(modeKey){
 function regionBlockHTML(p){
   return `<div class="region-row ${p.region ? '' : 'missing'}"><label for="regionSelect">Região em que você joga</label><select id="regionSelect"><option value="">Selecionar região…</option>${REGIONS.map(r => `<option value="${r}" ${p.region === r ? 'selected' : ''}>${regionLabel(r)}</option>`).join('')}</select>${p.region ? '' : '<span class="empty-note">Defina sua região para entrar no ranking regional e disputar o Challenger.</span>'}</div>`;
 }
+// ====================================================================
+//  CONTAS STEAM — vinculação via Worker (POST /steam/start, GET /steam/list)
+//  O Worker recebe o ID token do Firebase em "Authorization: Bearer <token>".
+//  Nenhum segredo fica aqui: só o token da sessão do próprio usuário.
+// ====================================================================
+const STEAM_WORKER = 'https://brcsgoia.ttyfit518.workers.dev';
+let steamLinks = { uid: null, loaded: false, loading: false, busy: false, ids: [], error: '', msg: '' };
+
+async function steamAuthHeader(){
+  if(!authUser) throw new Error('Faça login no BRCS2 primeiro.');
+  const token = await authUser.getIdToken();
+  return { 'Authorization': 'Bearer ' + token };
+}
+function steamRefreshPanel(){
+  const el = document.getElementById('steamPanel');
+  if(el) el.outerHTML = steamPanelHTML();
+}
+async function steamLoad(){
+  if(steamLinks.loading) return;
+  steamLinks.loading = true; steamLinks.error = '';
+  steamRefreshPanel();
+  try{
+    const r = await fetch(STEAM_WORKER + '/steam/list', { method: 'GET', headers: await steamAuthHeader() });
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok) throw new Error(d.error || 'Falha ao carregar as contas Steam.');
+    steamLinks.ids = Array.isArray(d.steamIds) ? d.steamIds.map(String).filter(x => /^\d{17}$/.test(x)) : [];
+  }catch(e){
+    steamLinks.error = e && e.message ? e.message : 'Falha ao carregar as contas Steam.';
+  }
+  steamLinks.loaded = true; steamLinks.loading = false;
+  steamRefreshPanel();
+}
+async function steamStart(){
+  if(steamLinks.busy) return;
+  steamLinks.busy = true; steamLinks.error = ''; steamLinks.msg = '';
+  steamRefreshPanel();
+  try{
+    const r = await fetch(STEAM_WORKER + '/steam/start', { method: 'POST', headers: await steamAuthHeader() });
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok || !d.url) throw new Error(d.error || 'Não foi possível iniciar a vinculação.');
+    const u = new URL(d.url);
+    if(u.origin !== 'https://steamcommunity.com' || u.pathname !== '/openid/login') throw new Error('Resposta inesperada do servidor de vinculação.');
+    window.location.href = u.href; // login oficial da Steam (OpenID)
+    return;
+  }catch(e){
+    steamLinks.error = e && e.message ? e.message : 'Não foi possível iniciar a vinculação.';
+  }
+  steamLinks.busy = false;
+  steamRefreshPanel();
+}
+// Volta da Steam: o Worker redireciona para /?steam_link=success
+function steamHandleReturn(){
+  try{
+    const s = new URLSearchParams(location.search).get('steam_link');
+    if(!s) return;
+    history.replaceState(null, '', location.pathname + location.hash);
+    activeTab = 'perfil';
+    steamLinks.loaded = false;
+    if(s === 'success') steamLinks.msg = 'Conta Steam vinculada com sucesso!';
+    else steamLinks.error = 'Não foi possível vincular a conta Steam.';
+  }catch(e){}
+}
+function steamPanelHTML(){
+  const uid = authUser ? authUser.uid : null;
+  if(steamLinks.uid !== uid) steamLinks = { uid, loaded: false, loading: false, busy: false, ids: [], error: '', msg: '' };
+  if(uid && !steamLinks.loaded && !steamLinks.loading) setTimeout(steamLoad, 0);
+  const rows = steamLinks.ids.map(id => `
+    <div class="steam-row">
+      <div><div class="steam-label">SteamID</div><div class="steam-id">${id}</div></div>
+      <a href="https://steamcommunity.com/profiles/${id}" target="_blank" rel="noopener noreferrer">Ver perfil na Steam ↗</a>
+    </div>`).join('');
+  const list = steamLinks.loading && !steamLinks.ids.length ? '<p class="empty-note">Carregando contas…</p>'
+    : steamLinks.ids.length ? `<div class="steam-list">${rows}</div>`
+    : steamLinks.loaded && !steamLinks.error ? '<p class="empty-note">Nenhuma conta Steam vinculada ainda.</p>' : '';
+  return `
+    <div class="panel accent-muted" id="steamPanel">
+      <h2>Contas Steam <span class="sub">${steamLinks.ids.length} vinculada(s)</span></h2>
+      <p class="empty-note">Vincule uma ou mais contas Steam ao seu perfil. Cada conta Steam só pode pertencer a um usuário do BRCS2.</p>
+      ${list}
+      ${steamLinks.msg ? `<div class="steam-msg ok">${escapeUntrustedText(steamLinks.msg)}</div>` : ''}
+      ${steamLinks.error ? `<div class="steam-msg err">${escapeUntrustedText(steamLinks.error)}</div>` : ''}
+      <div class="steam-actions">
+        <button type="button" class="primary" data-steam-act="link" ${steamLinks.busy ? 'disabled' : ''}>${steamLinks.busy ? 'Abrindo Steam…' : 'Vincular Steam'}</button>
+        <button type="button" class="secondary small" data-steam-act="refresh" ${steamLinks.loading ? 'disabled' : ''}>Atualizar lista</button>
+      </div>
+    </div>`;
+}
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest && ev.target.closest('[data-steam-act]');
+  if(!b) return;
+  if(b.dataset.steamAct === 'link') steamStart();
+  else if(b.dataset.steamAct === 'refresh'){ steamLinks.msg = ''; steamLoad(); }
+});
+window.addEventListener('pageshow', (e) => { if(e.persisted && steamLinks.busy){ steamLinks.busy = false; steamRefreshPanel(); } });
+
 function perfilHTML(){
   const p = players.find(p => p.id === currentPlayerId);
   if(!p) return `<div class="panel accent-muted"><p class="empty-note">Selecione ou crie um jogador acima para ver o perfil.</p></div>`;
@@ -2424,6 +2531,7 @@ function perfilHTML(){
       <div class="stat-cards">${cards.join('')}</div>
     </div>
     ${claimBlock}
+    ${steamPanelHTML()}
   `;
 }
 
@@ -4469,6 +4577,7 @@ async function init(){
     currentPlayerId = user.uid;
     try{ await mkLoadWallet(); await claimEventTokens(events); }catch(e){ console.error(e); }
     if(activeTab === 'moderacao' && userProfile.role !== 'moderator') activeTab = 'ranking';
+    steamHandleReturn();
     render();
     startChat();
   });
