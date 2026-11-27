@@ -1114,6 +1114,41 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);
 .up-arrow{color:var(--muted);margin:6px 0;font-size:18px}
 @media(max-width:900px){.up-grid{grid-template-columns:1fr}.mk-buy{margin-left:0}}
 
+/* ===== Crates (aba) ===== */
+.cr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:6px}
+.cr-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 10px 14px;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-top:2px solid var(--c1,#555);border-radius:8px;color:var(--white);cursor:pointer;text-align:center;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s}
+.cr-card:hover{border-color:var(--c1,#888);transform:translateY(-2px);box-shadow:0 10px 26px -14px var(--c1,#000)}
+.cr-card .cr-art{width:100%;max-width:190px;height:auto;transition:transform .25s}
+.cr-card:hover .cr-art{transform:translateY(-4px) rotate(-1.5deg) scale(1.03)}
+.cr-nm{font-size:13px;font-weight:600;letter-spacing:.02em}
+.cr-kind{align-self:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line-strong);border-radius:999px;padding:2px 8px}
+.cr-pr{font-size:11px;color:var(--muted)}.cr-pr b{color:var(--white);font-size:15px}
+.cr-hero{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin:14px 0 6px}
+.cr-hero-art{flex:0 0 280px;max-width:100%}.cr-hero-art .cr-art{width:100%;height:auto;filter:drop-shadow(0 12px 22px rgba(0,0,0,.5))}
+.cr-hero-info{flex:1;min-width:260px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.cr-hero-info h3{margin:0;font-size:24px;font-weight:600}
+.cr-hero-info .cr-kind{align-self:flex-start}
+.cr-odds{max-width:380px;margin-top:2px}.cr-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
+.cr-buyrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.cr-buyrow small{font-size:11px;color:var(--muted);max-width:290px}
+.cr-it{cursor:default}.cr-it img{height:78px}
+.cr-stage{position:relative;overflow:hidden;margin:18px 0;padding:14px 0;background:var(--panel2);border:1px solid var(--line-strong);border-radius:8px}
+.cr-stage::before,.cr-stage::after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
+.cr-stage::before{left:0;background:linear-gradient(90deg,var(--panel2),transparent)}.cr-stage::after{right:0;background:linear-gradient(270deg,var(--panel2),transparent)}
+.cr-mark{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--red);box-shadow:0 0 14px var(--red);z-index:3}
+.cr-mark::before,.cr-mark::after{content:"";position:absolute;left:-7px;border:8px solid transparent}
+.cr-mark::before{top:0;border-top-color:var(--red)}.cr-mark::after{bottom:0;border-bottom-color:var(--red)}
+.cr-track{position:relative;display:flex;gap:8px;will-change:transform}
+.cr-sc{flex:0 0 132px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 10px;background:var(--panel3);border:1px solid var(--line);border-bottom:3px solid var(--rc,#555);border-radius:6px;text-align:center}
+.cr-sc img{width:100%;height:70px;object-fit:contain}.cr-sc small{font-size:10px;color:var(--muted)}.cr-sc b{font-size:12px;font-weight:600;line-height:1.2}
+.cr-res{margin:18px 0;padding:18px;text-align:center;background:var(--panel2);border:1px solid var(--rc,#888);border-radius:10px;box-shadow:0 0 44px -12px var(--rc,#888);animation:crPop .5s cubic-bezier(.2,.9,.3,1.2)}
+.cr-res-h{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}.cr-res-h b{color:var(--rc)}
+.cr-res-item{max-width:240px;margin:0 auto;cursor:default}.cr-res-item img{height:118px}
+.cr-flag{display:inline-block;margin:10px 4px 0;font-size:12px;color:#ffd86b;border:1px solid currentColor;border-radius:999px;padding:3px 12px}.cr-flag.st{color:#ff9d3d}
+.cr-res-b{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.cr-hist{display:flex;gap:6px;flex-wrap:wrap}.cr-hist span{font-size:11px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--rc,#555);border-radius:4px;padding:4px 8px}.cr-hist b{color:var(--white);font-weight:500}
+@keyframes crPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+@media(max-width:600px){.cr-hero-art{flex-basis:100%}.cr-sc{flex-basis:112px}.cr-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+
 /* ===== Eventos: modo automático ===== */
 .auto-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(229,38,43,.35);border-radius:8px;background:rgba(229,38,43,.06)}
 .auto-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px}
@@ -1650,6 +1685,7 @@ let rankRegion = 'all';
 const MAPS = ["Dust II","Mirage","Inferno","Nuke","Overpass","Ancient","Anubis","Vertigo","Train","Cache","Cobblestone"];
 
 const ICONS = {
+  crates: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M3 9v8l9 5 9-5V9"/><path d="M12 14v8"/></svg>',
   mercado: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16l-1.5 12h-13L4 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>',
   inventario: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V5h8v3M3 13h18"/></svg>',
   registrar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>',
@@ -2073,6 +2109,7 @@ function render(){
       <button class="tab-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}Eventos ${(function(){const n=events.filter(ev=>!seenEventIds.includes(ev.id)&&ev.status!=='finished').length;return n>0?`<span class="pill">${n}</span>`:'';})()}</button>
       <button class="tab-btn ${activeTab==='mapchooser'?'active':''}" data-tab="mapchooser">${ICONS.mapchooser}Map Chooser</button>
       <button class="tab-btn ${activeTab==='mercado'?'active':''}" data-tab="mercado">${ICONS.mercado}Mercado</button>
+      <button class="tab-btn ${activeTab==='crates'?'active':''}" data-tab="crates">${ICONS.crates}Crates</button>
       <button class="tab-btn ${activeTab==='inventario'?'active':''}" data-tab="inventario">${ICONS.inventario}Inventário</button>
       <button class="tab-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}Chat <span class="pill chat-pill" ${chatUnread>0?'':'hidden'}>${chatUnread>0?chatUnread:''}</span></button>
       ${isMod ? `<button class="tab-btn ${activeTab==='moderacao'?'active':''}" data-tab="moderacao">${ICONS.moderacao}Moderação ${pendingCount>0?`<span class="pill">${pendingCount}</span>`:''}</button>` : ''}
@@ -2129,6 +2166,7 @@ function render(){
       <button class="dock-btn ${activeTab==='eventos'?'active':''}" data-tab="eventos">${ICONS.eventos}<span>Eventos</span></button>
       <button class="dock-btn ${activeTab==='mapchooser'?'active':''}" data-tab="mapchooser">${ICONS.mapchooser}<span>Mapas</span></button>
       <button class="dock-btn ${activeTab==='mercado'?'active':''}" data-tab="mercado">${ICONS.mercado}<span>Mercado</span></button>
+      <button class="dock-btn ${activeTab==='crates'?'active':''}" data-tab="crates">${ICONS.crates}<span>Crates</span></button>
       <button class="dock-btn ${activeTab==='inventario'?'active':''}" data-tab="inventario">${ICONS.inventario}<span>Inventário</span></button>
       <button class="dock-btn ${activeTab==='chat'?'active':''}" data-tab="chat">${ICONS.chat}<span>Chat</span></button>
     </nav>
@@ -2163,11 +2201,13 @@ function renderTab(){
   else if(activeTab === 'mapchooser') el.innerHTML = mapChooserHTML();
   else if(activeTab === 'mercado') el.innerHTML = mercadoHTML();
   else if(activeTab === 'inventario') el.innerHTML = inventarioHTML();
+  else if(activeTab === 'crates') el.innerHTML = cratesHTML();
   attachTabEvents();
   attachShareEvents();
   if(activeTab === 'chat') attachChatEvents();
   if(activeTab === 'mapchooser') attachMapChooserEvents();
-  if(activeTab === 'mercado' || activeTab === 'inventario'){ attachMarketEvents(); mkSyncPrizes(); }
+  if(activeTab === 'mercado' || activeTab === 'inventario' || activeTab === 'crates'){ attachMarketEvents(); mkSyncPrizes(); }
+  if(activeTab === 'crates'){ attachCratesEvents(); if(cr.spin && cr.strip && cr.fx == null) crAnimate(); }
   document.querySelectorAll('[data-region]').forEach(chip => chip.addEventListener('click', () => { rankRegion = chip.dataset.region; renderTab(); }));
   const regionSel = document.getElementById('regionSelect');
   if(regionSel) regionSel.addEventListener('change', async () => {
@@ -3792,7 +3832,7 @@ async function mkEnsureDB(){
     skinDB.forEach(s => { s.low = mkPrice(s.base, s.name, s.max, s.sp ? s.sp.seed : mkNeutralSeed(s.name), false, s.svEv); skinMap[s.id] = s; });
   }catch(e){ console.error('Skins:', e); skinErr = true; }
   skinLoading = false;
-  if(activeTab === 'mercado' || activeTab === 'inventario') renderTab();
+  if(activeTab === 'mercado' || activeTab === 'inventario' || activeTab === 'crates') renderTab();
 }
 
 // ---- preço em Tokens: desgaste + pattern + StatTrak ----
@@ -4051,7 +4091,7 @@ async function mkUpgrade(){
 }
 function attachMarketEvents(){
   const root = document.getElementById('tabContent'); if(!root) return;
-  if(activeTab === 'mercado' || activeTab === 'inventario') mkEnsureDB();
+  if(activeTab === 'mercado' || activeTab === 'inventario' || activeTab === 'crates') mkEnsureDB();
   const on = (sel, ev, fn) => root.querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn));
   on('#mkBuyTok', 'click', async () => {
     const q = Math.floor(+document.getElementById('mkQty').value);
@@ -4100,6 +4140,287 @@ function attachMarketEvents(){
   on('#chC', 'change', e => { mk.ch.cat = e.target.value; mk.ch.n = 36; renderTab(); });
   on('#chMore', 'click', () => { mk.ch.n += 36; renderTab(); });
   on('#chGo', 'click', mkChange);
+}
+
+// ====================================================================
+//  CRATES · caixas de skins abertas com Tokens (aba própria)
+// ====================================================================
+const CR_ODDS_W = [79.92, 15.98, 3.2, 0.9], CR_ODDS_K = [55, 28, 13, 4];
+const CR_TN_W = ['Mil-Spec', 'Restricted', 'Classified', 'Covert'], CR_TC_W = ['#4b69ff', '#8847ff', '#d32ee6', '#eb4b4b'];
+const CR_TN_K = ['Básica', 'Clássica', 'Premium', 'Lendária'], CR_TC_K = ['#b9a46a', '#e4ae39', '#f5c24a', '#ffe08a'];
+const CR_KIND = { knife:'Somente facas', weapon:'Somente armas', theme:'Temática' };
+const CR_KIND_H = { knife:'Caixas de facas', weapon:'Caixas de armas', theme:'Caixas temáticas' };
+const CR_WIN = 42, CR_LEN = 54, CR_D = 5.8, CR_EDGE = 1.08, CR_ST = 0.1;
+const CR_RAR = { c:'Consumer Grade', i:'Industrial Grade', m:'Mil-Spec Grade', r:'Restricted', l:'Classified', v:'Covert' };
+
+// ---- catálogo de caixas ----
+// knife: t = 4 níveis (básica → lendária) "Tipo|Acabamento"; weapon/theme: list = "Arma|Skin:código" (o nível vem da raridade da skin)
+const CR_DEFS = [
+ { id:'crimson', kind:'knife', n:'Crimson Edge Knife Case', s:'CRIMSON EDGE', sil:'briefcase', pat:'web', em:'drop', c:['#3a050e','#c4122b','#ffb3a6'],
+   d:'Lâminas vermelho-sangue: Slaughter, Crimson Web, Fade, Marble Fade e Doppler em vários tipos de faca.',
+   t:['Gut Knife|Slaughter;Flip Knife|Crimson Web;Bayonet|Crimson Web;Navaja Knife|Slaughter',
+      'Huntsman Knife|Slaughter;Falchion Knife|Crimson Web;Bowie Knife|Slaughter;Shadow Daggers|Crimson Web',
+      'M9 Bayonet|Crimson Web;Talon Knife|Slaughter;Stiletto Knife|Marble Fade;Flip Knife|Fade',
+      'Karambit|Slaughter;Butterfly Knife|Crimson Web;Karambit|Doppler;M9 Bayonet|Marble Fade'] },
+ { id:'coldsteel', kind:'knife', n:'Cold Steel Knife Case', s:'COLD STEEL', sil:'canister', pat:'diamonds', em:'shield', c:['#0b1a2e','#2f6fb5','#c4e6ff'],
+   d:'Aço frio e azulado: Blue Steel, Damascus Steel, Stained, Ultraviolet e até Case Hardened com chance de Blue Gem.',
+   t:['Gut Knife|Stained;Bayonet|Blue Steel;Flip Knife|Stained;Navaja Knife|Blue Steel',
+      'Huntsman Knife|Blue Steel;Falchion Knife|Stained;Bowie Knife|Damascus Steel;Skeleton Knife|Stained',
+      'M9 Bayonet|Blue Steel;Talon Knife|Ultraviolet;Stiletto Knife|Damascus Steel;Flip Knife|Case Hardened',
+      'Karambit|Damascus Steel;Butterfly Knife|Blue Steel;Karambit|Case Hardened;Butterfly Knife|Ultraviolet'] },
+ { id:'frontier', kind:'knife', n:'Wild Frontier Knife Case', s:'WILD FRONTIER', sil:'chest', pat:'camo', em:'pine', c:['#2a1b0e','#7a5230','#ecd29a'],
+   d:'Facas de sobrevivência e caça: Survival, Paracord, Nomad, Ursus, Bowie e Huntsman em acabamentos selvagens.',
+   t:['Survival Knife|Safari Mesh;Survival Knife|Forest DDPAT;Paracord Knife|Safari Mesh;Nomad Knife|Forest DDPAT',
+      'Paracord Knife|Stained;Nomad Knife|Stained;Ursus Knife|Forest DDPAT;Bowie Knife|Safari Mesh',
+      'Ursus Knife|Rust Coat;Huntsman Knife|Tiger Tooth;Nomad Knife|Blue Steel;Bowie Knife|Rust Coat',
+      'Ursus Knife|Tiger Tooth;Huntsman Knife|Gamma Doppler;Bowie Knife|Marble Fade;Ursus Knife|Fade'] },
+ { id:'midnight', kind:'knife', n:'Midnight Blades Knife Case', s:'MIDNIGHT BLADES', sil:'crate', pat:'dots', em:'moon', c:['#07060f','#3b2a7a','#cfc0ff'],
+   d:'Lâminas das sombras: Night, Black Laminate e Autotronic, incluindo Shadow Daggers e Stiletto.',
+   t:['Gut Knife|Night;Bayonet|Night;Flip Knife|Black Laminate;Navaja Knife|Night',
+      'Huntsman Knife|Night;Falchion Knife|Black Laminate;Bowie Knife|Black Laminate;Ursus Knife|Night',
+      'M9 Bayonet|Night;Talon Knife|Black Laminate;Shadow Daggers|Night;Stiletto Knife|Autotronic',
+      'Karambit|Night;Butterfly Knife|Night;Karambit|Autotronic;M9 Bayonet|Autotronic'] },
+ { id:'spectrum', kind:'knife', n:'Spectrum Knife Case', s:'SPECTRUM', sil:'hex', pat:'rays', em:'prism', c:['#1a0d33','#8a3ffc','#ffe36e'],
+   d:'Todas as cores do arco-íris: Doppler (com Ruby, Sapphire e Black Pearl), Gamma Doppler, Tiger Tooth, Fade e Marble Fade.',
+   t:['Flip Knife|Tiger Tooth;Gut Knife|Gamma Doppler;Bayonet|Doppler;Navaja Knife|Tiger Tooth',
+      'Huntsman Knife|Doppler;Falchion Knife|Gamma Doppler;Bowie Knife|Tiger Tooth;Ursus Knife|Marble Fade',
+      'M9 Bayonet|Gamma Doppler;Talon Knife|Fade;Stiletto Knife|Doppler;Flip Knife|Case Hardened',
+      'Karambit|Fade;Karambit|Gamma Doppler;Butterfly Knife|Doppler;Karambit|Marble Fade'] },
+
+ { id:'marksman', kind:'weapon', n:'Marksman Case', s:'MARKSMAN', sil:'briefcase', pat:'grid', em:'crosshair', c:['#0b1510','#2f5d3a','#bff5c9'],
+   d:'Só snipers: AWP, SSG 08, SCAR-20 e G3SG1, do básico ao Dragon Lore.',
+   list:`SSG 08|Tropical Storm:m;SCAR-20|Storm:m;G3SG1|Arctic Camo:c;SCAR-20|Contractor:c;AWP|Phobos:m;AWP|Worm God:m;AWP|Redline:r;SSG 08|Detour:r;SCAR-20|Cardiac:r;G3SG1|Demeter:r;AWP|Man-o'-war:r;AWP|Lightning Strike:l;AWP|Neo-Noir:l;SCAR-20|Cyrex:l;SSG 08|Big Iron:l;G3SG1|The Executioner:l;AWP|Asiimov:v;AWP|Hyper Beast:v;AWP|Containment Breach:v;AWP|Dragon Lore:v;SSG 08|Blood in the Water:v` },
+ { id:'sidearm', kind:'weapon', n:'Sidearm Case', s:'SIDEARM', sil:'crate', pat:'stripes', em:'pistol', c:['#161618','#55575e','#f2d06b'],
+   d:'Só pistolas: Glock-18, USP-S, Desert Eagle, P250, Five-SeveN, CZ75, Tec-9, R8 e mais.',
+   list:`Glock-18|Sand Dune:c;P250|Sand Dune:c;P2000|Granite Marbleized:c;Desert Eagle|Night:m;USP-S|Night Ops:m;Five-SeveN|Kami:m;Tec-9|Toxic:m;CZ75-Auto|Tuxedo:m;Glock-18|Bunsen Burner:r;USP-S|Guardian:r;P250|Nevermore:r;Desert Eagle|Light Rail:r;Dual Berettas|Cartel:r;Glock-18|Vogue:l;P250|Asiimov:l;Five-SeveN|Angry Mob:l;CZ75-Auto|Victoria:l;Desert Eagle|Blaze:l;R8 Revolver|Fade:l;Glock-18|Fade:l;USP-S|Kill Confirmed:v;Desert Eagle|Printstream:v;Five-SeveN|Hyper Beast:v;Desert Eagle|Code Red:v` },
+ { id:'assault', kind:'weapon', n:'Assault Case', s:'ASSAULT', sil:'canister', pat:'camo', em:'rifle', c:['#1b2310','#5b6b2f','#dde68f'],
+   d:'Só rifles: AK-47, M4A4, M4A1-S, AUG, SG 553, Galil AR e FAMAS.',
+   list:`AK-47|Safari Mesh:c;Galil AR|Stone Cold:m;AK-47|Elite Build:m;AK-47|Slate:m;M4A4|Magnesium:m;FAMAS|Hexane:m;SG 553|Pulse:m;AK-47|Redline:r;AK-47|Blue Laminate:r;M4A1-S|Atomic Alloy:r;M4A1-S|Guardian:r;AUG|Torque:r;Galil AR|Eco:r;FAMAS|Djinn:r;M4A4|Desolate Space:l;M4A1-S|Cyrex:l;SG 553|Cyrex:l;Galil AR|Chatterbox:l;FAMAS|Roll Cage:l;AK-47|Vulcan:v;AK-47|Asiimov:v;AK-47|Bloodsport:v;AK-47|Fuel Injector:v;M4A4|The Emperor:v;M4A1-S|Printstream:v;AUG|Akihabara Accept:v;M4A1-S|Golden Coil:v` },
+ { id:'closeq', kind:'weapon', n:'Close Quarters Case', s:'CLOSE QUARTERS', sil:'hex', pat:'stripes', em:'smg', c:['#2a1204','#c8651b','#ffd9a3'],
+   d:'Só SMGs e escopetas: MP9, MAC-10, MP7, UMP-45, P90, Bizon, Nova, XM1014, MAG-7 e Sawed-Off.',
+   list:`MP9|Sand Dashed:c;P90|Scorched:c;Sawed-Off|Forest DDPAT:c;Nova|Polar Mesh:m;MP7|Anodized Navy:m;MP9|Storm:m;MP5-SD|Gauss:m;UMP-45|Carbon Fiber:m;MAC-10|Heat:r;MP9|Rose Iron:r;MP7|Skulls:r;UMP-45|Momentum:r;P90|Module:r;XM1014|Heaven Guard:r;MAG-7|Bulldozer:r;Sawed-Off|Origami:r;PP-Bizon|Fuel Rod:r;MAC-10|Neon Rider:l;MP9|Hot Rod:l;MP7|Bloodsport:l;UMP-45|Primal Saber:l;P90|Asiimov:l;P90|Death by Kitty:l;Nova|Hyper Beast:l;XM1014|Tranquility:l;MAG-7|Praetorian:l;Sawed-Off|The Kraken:l;PP-Bizon|Judgement of Anubis:l;P90|Emerald Dragon:v` },
+
+ { id:'wildfire', kind:'theme', n:'Wildfire Case', s:'WILDFIRE', sil:'crate', pat:'flames', em:'flame', c:['#1c0602','#e8420f','#ffd36b'],
+   d:'Só skins de fogo: chamas, brasas, queimadores e dragões flamejantes.',
+   list:`XM1014|Blaze Orange:m;Desert Eagle|Oxide Blaze:m;MAC-10|Heat:r;MAG-7|Heat:r;Galil AR|Firefight:r;XM1014|Teclu Burner:r;Glock-18|Bunsen Burner:r;M249|Magma:r;UMP-45|Blaze:l;P2000|Fire Elemental:l;SSG 08|Dragonfire:l;Desert Eagle|Blaze:l;AWP|Wildfire:l;AUG|Hot Rod:l;M4A1-S|Chantico's Fire:v;M4A4|Hellfire:v;AK-47|Fire Serpent:v` },
+ { id:'ocean', kind:'theme', n:'Ocean Depths Case', s:'OCEAN DEPTHS', sil:'canister', pat:'waves', em:'trident', c:['#02131f','#0b6e99','#8be9ff'],
+   d:'Só skins do fundo do mar: águas escuras, espuma, peixes, krakens e Poseidon.',
+   list:`P250|Wave Spray:c;Nova|Koi:m;M4A1-S|Dark Water:r;USP-S|Dark Water:r;SSG 08|Dark Water:r;Negev|Man-o'-war:r;AWP|Man-o'-war:r;MP7|Ocean Foam:l;P2000|Ocean Foam:l;Glock-18|Water Elemental:l;Desert Eagle|Ocean Drive:l;Sawed-Off|The Kraken:l;M4A4|Poseidon:v;AK-47|Aquamarine Revenge:v` },
+ { id:'mythic', kind:'theme', n:'Mythic Beasts Case', s:'MYTHIC BEASTS', sil:'chest', pat:'scales', em:'eye', c:['#0b1a12','#2e8b57','#f3d36b'],
+   d:'Só criaturas lendárias: dragões, Medusa, Kraken, Basilisco, Grifo, Oni e Gungnir.',
+   list:`FAMAS|Djinn:r;M4A1-S|Basilisk:r;Dual Berettas|Dualing Dragons:r;Glock-18|Dragon Tattoo:l;SSG 08|Dragonfire:l;P2000|Imperial Dragon:l;M4A4|Dragon King:l;M4A4|Griffin:l;Desert Eagle|Kumicho Dragon:l;Sawed-Off|The Kraken:l;AWP|Oni Taiji:v;P90|Emerald Dragon:v;M4A4|Poseidon:v;AWP|Medusa:v;AWP|Gungnir:v;AWP|Dragon Lore:v` },
+ { id:'neon', kind:'theme', n:'Neon Circuit Case', s:'NEON CIRCUIT', sil:'hex', pat:'grid', em:'bolt', c:['#0a0420','#c800ff','#4df6ff'],
+   d:'Só skins cyberpunk: neon, circuitos, robôs e futuro distópico.',
+   list:`SG 553|Pulse:m;MP5-SD|Co-Processor:m;AUG|Random Access:m;P2000|Pulse:r;MAC-10|Ultraviolet:r;Desert Eagle|Light Rail:r;FAMAS|Mecha Industries:l;Desert Eagle|Mecha Industries:l;M4A1-S|Control Panel:l;M4A4|Cyber Security:l;MAC-10|Neon Rider:l;Glock-18|Neo-Noir:l;USP-S|Cortex:l;M4A1-S|Mecha Industries:l;M4A4|Neo-Noir:l;AWP|Neo-Noir:l;AK-47|Neon Rider:v;AK-47|Neon Revolution:v;USP-S|Neo-Noir:v;M4A1-S|Hyper Beast:v` },
+ { id:'jungle', kind:'theme', n:'Wild Jungle Case', s:'WILD JUNGLE', sil:'crate', pat:'leaves', em:'leaf', c:['#07200f','#2f9a3f','#c9f58a'],
+   d:'Só skins de selva: tigres, jaguar, cobras, escorpião, sapos venenosos e vegetação.',
+   list:`AWP|Safari Mesh:c;MP7|Forest DDPAT:c;Sawed-Off|Forest DDPAT:c;SSG 08|Tropical Storm:m;MAC-10|Malachite:m;M249|Emerald Poison Dart:m;AWP|Atheris:m;Glock-18|Weasel:r;Nova|Bloomstick:r;SG 553|Tiger Moth:r;CZ75-Auto|Poison Dart:r;XM1014|Red Python:r;AUG|Chameleon:r;Five-SeveN|Monkey Business:r;P2000|Scorpion:r;Nova|Gila:l;AUG|Bengal Tiger:l;USP-S|Overgrowth:l;AK-47|Jaguar:v;AK-47|Hydroponic:v` },
+ { id:'syndicate', kind:'theme', n:'Syndicate Case', s:'SYNDICATE', sil:'briefcase', pat:'pin', em:'spade', c:['#09090b','#2b2b33','#d9b44a'],
+   d:'Só skins de máfia e submundo: cartéis, ternos, tatuagens de Yakuza e golpes sujos.',
+   list:`Galil AR|Tuxedo:m;CZ75-Auto|Tuxedo:m;Dual Berettas|Black Limba:m;Dual Berettas|Cartel:r;P250|Cartel:r;P250|Franklin:r;P2000|Scorpion:r;Dual Berettas|Hemoglobin:r;Sawed-Off|Highwayman:l;Desert Eagle|Conspiracy:l;Desert Eagle|Crimson Web:l;Five-SeveN|Triumvirate:l;Glock-18|Vogue:l;AK-47|Cartel:l;AK-47|Head Shot:l;Desert Eagle|Kumicho Dragon:l;USP-S|Kill Confirmed:v` },
+ { id:'royal', kind:'theme', n:'Royal Court Case', s:'ROYAL COURT', sil:'chest', pat:'diamonds', em:'crown', c:['#1b0a33','#6a2bd1','#ffd86b'],
+   d:'Só skins da realeza: reis, rainhas, imperadores, cavaleiros e ouro.',
+   list:`Sawed-Off|Yorick:r;Glock-18|Royal Legion:r;AUG|Aristocrat:r;Dual Berettas|Royal Consorts:l;M4A4|Royal Paladin:l;CZ75-Auto|Victoria:l;MAG-7|Praetorian:l;M4A1-S|Knight:v;AK-47|The Empress:v;M4A4|The Emperor:v;M4A1-S|Golden Coil:v;AWP|Queen's Gambit:v;AK-47|Gold Arabesque:v` }
+];
+
+// ---- resolução das skins (usa o catálogo do Mercado; sem foto/preço da API cai num item local) ----
+const CR_CAT = {}; MK_LOCAL.forEach(r => { CR_CAT[r[1]] = r[0]; });
+let crIdxDB = null, crIdx = {};
+function crFind(name){
+  if(!skinDB) return null;
+  if(crIdxDB !== skinDB){ crIdx = {}; skinDB.forEach(s => { if(s.sp || s.svEv) return; const k = mkNorm(s.name); if(!crIdx[k]) crIdx[k] = s; }); crIdxDB = skinDB; }
+  return crIdx[mkNorm(name)] || null;
+}
+function crPseudo(name, weapon, code){
+  const knife = name.charAt(0) === '★', cat = knife ? 'Knives' : (CR_CAT[weapon] || 'Rifles'), rc = MK_RC[code] || MK_RC.m, fl = MK_FL[name.split(' | ')[1] || ''] || [0, 1];
+  return { id:'cr_' + mkHash(name).toString(36), name, img:'', cat, rar:rc[0], col:knife ? '#e4ae39' : rc[1], min:fl[0], max:fl[1], st:true, sv:false, base:mkBase({ name, rarity:{ name:rc[0] }, category:{ name:cat } }) };
+}
+function crTierOf(rar){ const n = String(rar || '').toLowerCase(); if(/covert|extraordinary|contraband/.test(n)) return 3; if(n.indexOf('classified') >= 0) return 2; if(n.indexOf('restricted') >= 0) return 1; return 0; }
+function crResolve(def, forced){
+  let d = def.trim(), code = forced != null ? 'v' : 'm';
+  const ci = d.lastIndexOf(':'); if(ci > 0){ code = d.slice(ci + 1); d = d.slice(0, ci); }
+  const parts = d.split('|'), weapon = parts[0].trim(), fin = (parts[1] || '').trim();
+  const name = forced != null ? '★ ' + weapon + (fin ? ' | ' + fin : '') : weapon + ' | ' + fin;
+  const s0 = crFind(name), s = s0 || crPseudo(name, weapon, code);
+  return { name, s, tier: forced != null ? forced : crTierOf(s.rar) };
+}
+function crWearAvg(s){ let a = 0; const N = 12; for(let i = 0; i < N; i++) a += mkWearMult(s.min + (s.max - s.min) * (i + .5) / N); return a / N; }
+const CR_PE = {};
+function crPatAvg(name){ if(CR_PE[name] != null) return CR_PE[name]; let a = 0, n = 0; for(let sd = 1; sd <= 1000; sd += 3){ a += mkPat(name, sd).m; n++; } return (CR_PE[name] = a / n); }
+function crItemEV(it){ const s = it.s; return s.base * crWearAvg(s) * crPatAvg(it.name) * (s.st ? 1 + CR_ST * 0.6 : 1); }
+function crBuild(d){
+  const knife = d.kind === 'knife', tiers = [[], [], [], []];
+  if(knife) d.t.forEach((str, i) => str.split(';').forEach(x => { if(x.trim()) tiers[i].push(crResolve(x, i)); }));
+  else d.list.split(';').forEach(x => { if(x.trim()){ const it = crResolve(x); tiers[it.tier].push(it); } });
+  const W = knife ? CR_ODDS_K : CR_ODDS_W, act = tiers.map((a, i) => a.length ? W[i] : 0), tot = act.reduce((a, b) => a + b, 0), p = act.map(w => w / tot);
+  let ev = 0; tiers.forEach((a, i) => { if(a.length) ev += p[i] * a.reduce((s, it) => s + crItemEV(it), 0) / a.length; });
+  const price = Math.max(1, Math.round(ev * CR_EDGE));
+  return Object.assign({}, d, { tiers, p, ev, price, rtp: ev / price, count: tiers.reduce((a, t) => a + t.length, 0) });
+}
+let crCache = null, crCacheDB = 0;
+function crAll(){ if(!crCache || crCacheDB !== (skinDB || 0)){ crCache = CR_DEFS.map(crBuild); crCacheDB = skinDB || 0; } return crCache; }
+function crGet(id){ return crAll().find(d => d.id === id) || null; }
+const crTC = (d, i) => (d.kind === 'knife' ? CR_TC_K : CR_TC_W)[i];
+const crTN = (d, i) => (d.kind === 'knife' ? CR_TN_K : CR_TN_W)[i];
+
+// ---- sorteio ----
+function crPickTier(d){ const r = mkRand(); let a = 0; for(let i = 0; i < 4; i++){ a += d.p[i]; if(r < a && d.tiers[i].length) return i; } for(let i = 3; i >= 0; i--) if(d.tiers[i].length) return i; return 0; }
+function crDraw(d){ const t = crPickTier(d), arr = d.tiers[t]; return { it:arr[Math.floor(mkRand() * arr.length)], t }; }
+function crRoll(d){ const x = crDraw(d), s = x.it.s; return { it:x.it, t:x.t, f:s.min + (s.max - s.min) * mkRand(), sd:1 + Math.floor(mkRand() * 1000), st:!!s.st && mkRand() < CR_ST }; }
+function crStrip(d, r){ const a = []; for(let i = 0; i < CR_LEN; i++) a.push(i === CR_WIN ? { it:r.it, t:r.t } : crDraw(d)); return a; }
+
+// ---- arte das caixas (SVG único por caixa) ----
+let crUid = 0;
+const CR_SIL = {
+ crate:{ ex:106, ey:116, es:.95, px:58, py:150, pw:96, ph:22,
+  clip:'<rect x="40" y="82" width="132" height="96"/><polygon points="172,82 206,60 206,156 172,178"/><polygon points="40,82 74,60 206,60 172,82"/>',
+  body:u => `<polygon points="40,82 74,60 206,60 172,82" fill="url(#${u}b)"/><polygon points="40,82 74,60 206,60 172,82" fill="#fff" opacity=".2"/><polygon points="172,82 206,60 206,156 172,178" fill="url(#${u}b)"/><polygon points="172,82 206,60 206,156 172,178" fill="#000" opacity=".4"/><rect x="40" y="82" width="132" height="96" fill="url(#${u}b)"/>`,
+  hw:(a, b, c) => `<path d="M40 114H172M40 146H172" stroke="#000" stroke-opacity=".35" stroke-width="2.5"/><rect x="40" y="82" width="12" height="96" fill="${c}" opacity=".28"/><rect x="160" y="82" width="12" height="96" fill="${c}" opacity=".28"/><path d="M40 82 74 60M172 82 206 60" stroke="${c}" stroke-opacity=".6" stroke-width="2"/><rect x="40" y="82" width="132" height="96" fill="none" stroke="${c}" stroke-opacity=".5" stroke-width="2"/><g fill="${c}"><circle cx="46" cy="88" r="2.4"/><circle cx="166" cy="88" r="2.4"/><circle cx="46" cy="172" r="2.4"/><circle cx="166" cy="172" r="2.4"/></g>` },
+ briefcase:{ ex:120, ey:98, es:.78, px:72, py:136, pw:96, ph:24,
+  clip:'<rect x="34" y="76" width="172" height="108" rx="12"/>',
+  body:u => `<path d="M98 76V66a9 9 0 0 1 9-9h26a9 9 0 0 1 9 9v10" fill="none" stroke="#000" stroke-opacity=".6" stroke-width="9"/><rect x="34" y="76" width="172" height="108" rx="12" fill="url(#${u}b)"/>`,
+  hw:(a, b, c) => `<path d="M98 76V66a9 9 0 0 1 9-9h26a9 9 0 0 1 9 9v10" fill="none" stroke="${c}" stroke-opacity=".85" stroke-width="3"/><path d="M34 120H206" stroke="#000" stroke-opacity=".4" stroke-width="3"/><rect x="34" y="76" width="172" height="108" rx="12" fill="none" stroke="${c}" stroke-opacity=".55" stroke-width="2"/><g fill="${c}" stroke="#000" stroke-opacity=".5"><rect x="58" y="112" width="18" height="16" rx="3"/><rect x="164" y="112" width="18" height="16" rx="3"/></g>` },
+ chest:{ ex:120, ey:84, es:.72, px:62, py:142, pw:116, ph:24,
+  clip:'<rect x="40" y="108" width="160" height="74" rx="6"/><path d="M40 108Q40 54 120 54Q200 54 200 108Z"/>',
+  body:u => `<rect x="40" y="108" width="160" height="74" rx="6" fill="url(#${u}b)"/><path d="M40 108Q40 54 120 54Q200 54 200 108Z" fill="url(#${u}b)"/><path d="M40 108Q40 54 120 54Q200 54 200 108Z" fill="#fff" opacity=".12"/>`,
+  hw:(a, b, c, u) => `<g clip-path="url(#${u}c)"><path d="M40 108H200" stroke="#000" stroke-opacity=".5" stroke-width="4"/><g fill="${c}" opacity=".35"><rect x="64" y="50" width="12" height="134"/><rect x="164" y="50" width="12" height="134"/></g></g><path d="M40 108Q40 54 120 54Q200 54 200 108" fill="none" stroke="${c}" stroke-opacity=".7" stroke-width="2.5"/><rect x="40" y="108" width="160" height="74" rx="6" fill="none" stroke="${c}" stroke-opacity=".55" stroke-width="2"/><rect x="108" y="100" width="24" height="26" rx="4" fill="${c}" stroke="#000" stroke-opacity=".6" stroke-width="2"/><circle cx="120" cy="111" r="3.2" fill="#000" opacity=".7"/><rect x="118.4" y="112" width="3.2" height="8" fill="#000" opacity=".7"/>` },
+ canister:{ ex:120, ey:106, es:.95, px:76, py:146, pw:88, ph:22,
+  clip:'<path d="M62 62V174A58 14 0 0 0 178 174V62Z"/><ellipse cx="120" cy="62" rx="58" ry="14"/>',
+  body:u => `<path d="M62 62V174A58 14 0 0 0 178 174V62Z" fill="url(#${u}b)"/><ellipse cx="120" cy="62" rx="58" ry="14" fill="url(#${u}b)"/><ellipse cx="120" cy="62" rx="58" ry="14" fill="#fff" opacity=".28"/>`,
+  hw:(a, b, c) => `<path d="M62 88A58 14 0 0 0 178 88M62 136A58 14 0 0 0 178 136" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="4"/><path d="M62 86A58 14 0 0 0 178 86M62 134A58 14 0 0 0 178 134" fill="none" stroke="${c}" stroke-opacity=".55" stroke-width="1.6"/><ellipse cx="120" cy="62" rx="40" ry="8" fill="none" stroke="${c}" stroke-opacity=".7" stroke-width="2"/><circle cx="120" cy="60" r="6" fill="${c}" stroke="#000" stroke-opacity=".5"/><path d="M62 62V174A58 14 0 0 0 178 174V62" fill="none" stroke="${c}" stroke-opacity=".5" stroke-width="2"/>` },
+ hex:{ ex:120, ey:102, es:1, px:68, py:148, pw:104, ph:22,
+  clip:'<polygon points="120,40 192,78 192,152 120,190 48,152 48,78"/>',
+  body:u => `<polygon points="120,40 192,78 192,152 120,190 48,152 48,78" fill="url(#${u}b)"/><polygon points="120,40 192,78 120,112 48,78" fill="#fff" opacity=".18"/><polygon points="192,78 192,152 120,190 120,112" fill="#000" opacity=".3"/>`,
+  hw:(a, b, c) => `<polygon points="120,40 192,78 192,152 120,190 48,152 48,78" fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round"/><path d="M48 78 120 112 192 78M120 112V190" stroke="${c}" stroke-opacity=".6" stroke-width="2" fill="none"/><polygon points="120,52 182,84 182,148 120,180 58,148 58,84" fill="none" stroke="${c}" stroke-opacity=".3"/>` }
+};
+const CR_PAT = {
+ web:(a, b, c) => { let s = ''; for(let i = 0; i < 14; i++){ const an = i * Math.PI / 7; s += `<path d="M120 112L${(120 + Math.cos(an) * 150).toFixed(1)} ${(112 + Math.sin(an) * 150).toFixed(1)}"/>`; } for(let r = 20; r <= 120; r += 25) s += `<circle cx="120" cy="112" r="${r}"/>`; return `<g stroke="${c}" stroke-width="1.6" fill="none" opacity=".55">${s}</g>`; },
+ stripes:(a, b, c) => { let s = ''; for(let x = -120; x < 260; x += 26) s += `<path d="M${x} 230L${x + 120} 40"/>`; return `<g stroke="${c}" stroke-width="9" fill="none" opacity=".3">${s}</g>`; },
+ diamonds:(a, b, c) => { let s = ''; for(let x = -240; x < 240; x += 26) s += `<path d="M${x} 0L${x + 240} 240M${x + 240} 0L${x} 240"/>`; return `<g stroke="${c}" stroke-width="1.4" fill="none" opacity=".4">${s}</g>`; },
+ camo:(a, b, c) => { const B = [[60, 96, 26, 14, -20], [120, 150, 34, 16, 15], [170, 104, 24, 12, 40], [80, 162, 22, 12, 60], [150, 72, 28, 14, -30], [108, 112, 20, 10, 0], [194, 152, 22, 12, -40], [44, 140, 18, 9, 25]]; return B.map((e, i) => `<ellipse cx="${e[0]}" cy="${e[1]}" rx="${e[2]}" ry="${e[3]}" transform="rotate(${e[4]} ${e[0]} ${e[1]})" fill="${i % 2 ? a : c}" opacity="${i % 2 ? .55 : .3}"/>`).join(''); },
+ dots:(a, b, c) => { let s = ''; for(let x = 22; x < 230; x += 16) for(let y = 52; y < 196; y += 16) s += `<circle cx="${x + ((y / 16) % 2 ? 8 : 0)}" cy="${y}" r="1.9"/>`; return `<g fill="${c}" opacity=".5">${s}</g>`; },
+ rays:(a, b, c) => { let s = ''; for(let i = 0; i < 18; i += 2){ const a1 = i * Math.PI / 9, a2 = (i + 1) * Math.PI / 9; s += `<path d="M120 116L${(120 + Math.cos(a1) * 180).toFixed(1)} ${(116 + Math.sin(a1) * 180).toFixed(1)}L${(120 + Math.cos(a2) * 180).toFixed(1)} ${(116 + Math.sin(a2) * 180).toFixed(1)}Z"/>`; } return `<g fill="${c}" opacity=".28">${s}</g>`; },
+ grid:(a, b, c) => { let s = ''; for(let i = 0; i <= 240; i += 14) s += `<path d="M${i} 0V230M0 ${i}H240"/>`; return `<g stroke="${c}" stroke-width="1" fill="none" opacity=".4">${s}</g>`; },
+ scales:(a, b, c) => { let s = ''; for(let y = 62, r = 0; y < 200; y += 12, r++) for(let x = 26 + (r % 2 ? 9 : 0); x < 230; x += 18) s += `<path d="M${x - 9} ${y}a9 9 0 0 0 18 0"/>`; return `<g stroke="${c}" stroke-width="1.4" fill="none" opacity=".5">${s}</g>`; },
+ flames:(a, b, c) => { let s = ''; for(let i = 0; i < 9; i++){ const x = 30 + i * 22, h = 30 + (i % 3) * 14; s += `<path d="M${x} 190Q${x - 10} ${190 - h * .5} ${x} ${190 - h}Q${x + 3} ${190 - h * .55} ${x + 11} ${190 - h * .7}Q${x + 17} ${190 - h * .3} ${x + 12} 190Z"/>`; } return `<g fill="${c}" opacity=".42">${s}</g>`; },
+ waves:(a, b, c) => { let s = ''; for(let y = 70; y < 200; y += 17) s += `<path d="M-10 ${y}q15 -10 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0"/>`; return `<g stroke="${c}" stroke-width="2" fill="none" opacity=".4">${s}</g>`; },
+ leaves:(a, b, c) => { const L = [[56, 100, -30], [96, 160, 40], [150, 96, 20], [190, 150, -50], [124, 74, 70], [70, 170, 10], [176, 80, -10], [110, 128, 90]]; return L.map((e, i) => `<ellipse cx="${e[0]}" cy="${e[1]}" rx="15" ry="6.5" transform="rotate(${e[2]} ${e[0]} ${e[1]})" fill="${i % 2 ? c : a}" opacity=".4"/>`).join(''); },
+ pin:(a, b, c) => { let s = ''; for(let x = 6; x < 240; x += 11) s += `<path d="M${x} 40V200"/>`; return `<g stroke="${c}" stroke-width="2" fill="none" opacity=".25">${s}</g>`; }
+};
+const CR_EMB = {
+ flame:(f) => `<path d="M0-30C6-16 22-10 22 6 22 20 12 28 0 28-12 28-22 20-22 6-22-2-16-8-10-14-8-6-4-4 0-4-2-14-2-22 0-30Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2"/><path d="M0 4C5 10 10 14 10 20 10 25 5 28 0 28-5 28-10 25-10 20-10 14-4 10 0 4Z" fill="#fff" opacity=".8"/>`,
+ drop:(f) => `<path d="M0-30C14-8 22 2 22 12 22 24 12 30 0 30-12 30-22 24-22 12-22 2-14-8 0-30Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2"/><path d="M-10 8C-10 15-6 20 0 22" stroke="#fff" stroke-opacity=".75" stroke-width="3.5" fill="none" stroke-linecap="round"/>`,
+ shield:(f, d) => `<path d="M0-30 24-20V4C24 18 12 26 0 32-12 26-24 18-24 4V-20Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2"/><path d="M0-18V22M-14-4H14" stroke="${d}" stroke-width="5" stroke-linecap="round"/>`,
+ pine:(f) => `<polygon points="0,-32 14,-10 6,-10 18,8 8,8 8,24 -8,24 -8,8 -18,8 -6,-10 -14,-10" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2" stroke-linejoin="round"/>`,
+ moon:(f) => `<g transform="translate(8 0)"><path d="M6-28A28 28 0 0 0 6 28A40 40 0 0 1 6-28Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2"/></g><circle cx="16" cy="-12" r="3.2" fill="${f}"/><circle cx="24" cy="8" r="2.2" fill="${f}"/><circle cx="10" cy="20" r="1.8" fill="${f}"/>`,
+ prism:(f) => `<polygon points="0,-28 26,22 -26,22" fill="none" stroke="${f}" stroke-width="4" stroke-linejoin="round"/><path d="M-34 8L-8 2" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M8 2L34-10" stroke="#ff4d4d" stroke-width="3"/><path d="M9 7L36 0" stroke="#ffd84d" stroke-width="3"/><path d="M10 12L36 12" stroke="#4dff88" stroke-width="3"/><path d="M11 17L34 24" stroke="#4da6ff" stroke-width="3"/>`,
+ crosshair:(f) => `<circle r="18" fill="none" stroke="${f}" stroke-width="4"/><circle r="3.5" fill="${f}"/><path d="M0-32V-10M0 10V32M-32 0H-10M10 0H32" stroke="${f}" stroke-width="4" stroke-linecap="round"/>`,
+ pistol:(f) => `<g fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2" stroke-linejoin="round"><path d="M-30-12H22V-1H10L8 8H0L-4 26H-20L-14-1H-30Z"/><rect x="22" y="-10" width="8" height="6"/></g>`,
+ rifle:(f) => `<g fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="1.6" stroke-linejoin="round"><rect x="-32" y="-8" width="46" height="10"/><rect x="14" y="-6" width="20" height="4"/><path d="M-32-10H-22L-26 8H-36Z"/><path d="M-10 2H0L2 20H-8Z"/><path d="M-20 2H-12V14H-20Z"/><rect x="-14" y="-14" width="22" height="6"/></g>`,
+ smg:(f) => `<g fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"><rect x="-26" y="-8" width="44" height="12"/><rect x="18" y="-5" width="14" height="4"/><path d="M-6 4H4L6 26H-4Z"/><path d="M-20 4H-14V16H-20Z"/><rect x="-32" y="-6" width="8" height="8"/></g>`,
+ trident:(f) => `<path d="M0-30V30M-16-22V-6C-16 4 -8 8 0 8 8 8 16 4 16-6V-22" fill="none" stroke="${f}" stroke-width="5" stroke-linecap="round"/><path d="M-22-22-16-34-10-22ZM-6-30 0-42 6-30ZM10-22 16-34 22-22Z" fill="${f}"/>`,
+ eye:(f) => `<path d="M-30 0Q0-28 30 0Q0 28-30 0Z" fill="${f}" stroke="#000" stroke-opacity=".6" stroke-width="2"/><circle r="12" fill="#ff8a1c"/><ellipse rx="3.4" ry="12" fill="#000"/>`,
+ bolt:(f) => `<polygon points="6,-30 -16,4 -2,4 -8,30 18,-8 2,-8" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2" stroke-linejoin="round"/>`,
+ leaf:(f) => `<path d="M-22 22C-22-10 0-30 24-26 26 0 8 24-22 22Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2"/><path d="M-22 22L10-12" stroke="#000" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>`,
+ spade:(f) => `<path d="M0-30C20-8 28 4 18 14 12 20 4 16 2 10 3 20 6 26 10 30H-10C-6 26-3 20-2 10-4 16-12 20-18 14-28 4-20-8 0-30Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2" stroke-linejoin="round"/>`,
+ crown:(f) => `<path d="M-26 20-30-14-14 2 0-22 14 2 30-14 26 20Z" fill="${f}" stroke="#000" stroke-opacity=".5" stroke-width="2" stroke-linejoin="round"/><rect x="-26" y="23" width="52" height="7" rx="2" fill="${f}" stroke="#000" stroke-opacity=".5"/><circle cx="-30" cy="-16" r="3.4" fill="${f}"/><circle cx="0" cy="-24" r="3.4" fill="${f}"/><circle cx="30" cy="-16" r="3.4" fill="${f}"/>`
+};
+function crArt(d){
+  const u = 'cr' + (++crUid), c0 = d.c[0], c1 = d.c[1], c2 = d.c[2], S = CR_SIL[d.sil], nm = mkE(d.s), tl = Math.min(S.pw - 14, d.s.length * 9.4);
+  return `<svg class="cr-art" viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${mkE(d.n)}"><defs><linearGradient id="${u}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c0}"/></linearGradient><radialGradient id="${u}g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${c1}" stop-opacity=".6"/><stop offset="1" stop-color="${c1}" stop-opacity="0"/></radialGradient><clipPath id="${u}c">${S.clip}</clipPath></defs>
+<ellipse cx="120" cy="198" rx="88" ry="9" fill="#000" opacity=".5"/><circle cx="120" cy="112" r="104" fill="url(#${u}g)"/>
+${S.body(u)}<g clip-path="url(#${u}c)">${CR_PAT[d.pat](c0, c1, c2)}<path d="M10 0L110 0 30 230-70 230Z" fill="#fff" opacity=".07"/></g>${S.hw(c0, c1, c2, u)}
+<g transform="translate(${S.ex} ${S.ey}) scale(${S.es})">${CR_EMB[d.em](c2, c0)}</g>
+<rect x="${S.px}" y="${S.py}" width="${S.pw}" height="${S.ph}" rx="3" fill="#000" fill-opacity=".66" stroke="${c2}" stroke-opacity=".85"/><text x="${S.px + S.pw / 2}" y="${S.py + S.ph / 2 + 4.5}" text-anchor="middle" font-family="Rajdhani,Inter,Arial,sans-serif" font-weight="700" font-size="13" letter-spacing="1.2" fill="#fff" textLength="${tl}" lengthAdjust="spacingAndGlyphs">${nm}</text></svg>`;
+}
+
+// ---- estado e telas ----
+let cr = { f:'all', sel:null, spin:false, strip:null, fx:null, cur:null, res:null, hist:[], tm:null };
+function crWearRange(s){ const a = mkWearName(s.min), b = mkWearName(s.max); return a === b ? a : a + ' → ' + b; }
+function crShortName(it){ const p = it.name.split(' | '); return [p[0], p[1] || 'Vanilla']; }
+function crSc(d, x){ const s = x.it.s, p = crShortName(x.it); return `<div class="cr-sc" style="--rc:${crTC(d, x.t)}">${mkImgTag(s.img, x.it.name, s.cat, crTC(d, x.t))}<small>${mkE(p[0])}</small><b>${mkE(p[1])}</b></div>`; }
+function crCard(d){
+  return `<button type="button" class="cr-card" data-crate="${mkE(d.id)}" style="--c1:${d.c[1]};--c2:${d.c[2]}">${crArt(d)}<span class="cr-nm">${mkE(d.n)}</span><span class="cr-kind">${CR_KIND[d.kind]}</span><span class="cr-pr"><b>${mkFmt(d.price)}</b> T · ${d.count} skins</span></button>`;
+}
+function crListHTML(){
+  const all = crAll(), kinds = [['all', 'Todas'], ['knife', 'Facas'], ['weapon', 'Armas'], ['theme', 'Temáticas']];
+  const chips = `<div class="mk-chips">${kinds.map(k => `<button type="button" data-crf="${k[0]}" class="${cr.f === k[0] ? 'on' : ''}">${k[1]}</button>`).join('')}</div>`;
+  const groups = ['knife', 'weapon', 'theme'].filter(k => cr.f === 'all' || cr.f === k).map(k => `<h4 class="mk-h">${CR_KIND_H[k]}</h4><div class="cr-grid">${all.filter(d => d.kind === k).map(crCard).join('')}</div>`).join('');
+  return `${chips}<div class="mk-count">${all.length} caixas · o preço de cada caixa segue o valor das skins que ela pode dropar</div>${groups}`;
+}
+function crItemCard(d, it, i){
+  const s = it.s;
+  return `<div class="mk-item cr-it" style="--rc:${crTC(d, i)}">${mkImgTag(s.img, it.name, s.cat, crTC(d, i))}<span class="mk-n">${mkE(it.name)}</span><span class="mk-meta">${mkE(crWearRange(s))}</span><span class="mk-p">valor médio <b>${mkFmt(Math.round(crItemEV(it)))}</b> T</span></div>`;
+}
+function crResHTML(r){
+  const it = r.inv, p = mkPat(it.n, it.sd), d = r.d, val = mkItemVal(it), can = wallet.tokens >= d.price;
+  return `<div class="cr-res" style="--rc:${mkE(crTC(d, r.t))}"><div class="cr-res-h">Você abriu: <b>${mkE(crTN(d, r.t))}</b></div>${mkItemCard(it, '', 'cr-res-item')}
+    ${p.m > 1.5 ? `<div class="cr-flag">✦ ${mkE(p.n)} — pattern valorizado!</div>` : ''}${it.st ? '<div class="cr-flag st">StatTrak™</div>' : ''}
+    <div class="cr-res-b"><button class="primary" type="button" data-cropen ${can ? '' : 'disabled'}>Abrir de novo · ${mkFmt(d.price)} T</button><button class="secondary" type="button" id="crSell">Vender por ${mkFmt(val * MK.SELL)} T</button><button class="secondary" type="button" id="crInv">Ver no Inventário</button></div></div>`;
+}
+function crDetailHTML(d){
+  const can = wallet.tokens >= d.price, busy = cr.spin;
+  const odds = d.tiers.map((a, i) => a.length ? `<tr><td><i class="cr-dot" style="background:${crTC(d, i)}"></i>${crTN(d, i)}</td><td>${(d.p[i] * 100).toFixed(2)}%</td><td>${a.length}</td></tr>` : '').join('');
+  const cont = [3, 2, 1, 0].filter(i => d.tiers[i].length).map(i => `<h4 class="mk-h" style="color:${crTC(d, i)}">${crTN(d, i)} · ${(d.p[i] * 100).toFixed(2)}%</h4><div class="mk-grid">${d.tiers[i].map(it => crItemCard(d, it, i)).join('')}</div>`).join('');
+  const stage = busy && cr.strip ? `<div class="cr-stage" id="crView"><div class="cr-mark"></div><div class="cr-track" id="crTrack" style="${cr.fx != null ? 'transform:translateX(-' + cr.fx + 'px)' : ''}">${cr.strip.map(x => crSc(d, x)).join('')}</div></div>` : '';
+  const res = !busy && cr.res && cr.res.d.id === d.id ? crResHTML(cr.res) : '';
+  const hist = cr.hist.length ? `<h4 class="mk-h">Últimas aberturas</h4><div class="cr-hist">${cr.hist.map(h => `<span style="--rc:${mkE(h.inv.col)}"><b>${mkE(h.inv.n)}</b> ${mkE(mkWearName(h.inv.f))} · ${mkFmt(mkItemVal(h.inv))} T</span>`).join('')}</div>` : '';
+  return `<button class="secondary small" type="button" id="crBack" ${busy ? 'disabled' : ''}>← Todas as caixas</button>
+  <div class="cr-hero"><div class="cr-hero-art">${crArt(d)}</div><div class="cr-hero-info"><span class="cr-kind">${CR_KIND[d.kind]}</span><h3>${mkE(d.n)}</h3><p class="mk-meta">${mkE(d.d)}</p>
+    <table class="mk-tbl cr-odds"><tr><th>Raridade</th><th>Chance</th><th>Skins</th></tr>${odds}</table>
+    <div class="cr-buyrow"><button class="primary" type="button" data-cropen ${can && !busy ? '' : 'disabled'}>${busy ? 'Abrindo…' : (can ? 'Abrir caixa · ' + mkFmt(d.price) + ' T' : 'Faltam ' + mkFmt(d.price - wallet.tokens) + ' T')}</button><small>Retorno médio ~${Math.round(d.rtp * 100)}% · 10% de chance de StatTrak™ · desgaste (float) e pattern sorteados</small></div></div></div>
+  ${stage}${res}${hist}<h4 class="mk-h">Conteúdo da caixa (${d.count} skins)</h4>${cont}`;
+}
+function cratesHTML(){
+  if(!skinDB && !skinErr) return `<div class="panel mk-wrap">${mkBar()}<p>Carregando catálogo de skins…</p></div>`;
+  const d = cr.sel ? crGet(cr.sel) : null;
+  return `<div class="panel mk-wrap cr-wrap">${mkBar()}${d ? crDetailHTML(d) : crListHTML()}</div>`;
+}
+
+// ---- abrir caixa ----
+function crTicks(X, stride, half){
+  if(!window.SFX || !window.SFX.enabled()) return;
+  const ez = mkBezier(.12, .7, .1, 1); let last = Math.floor(half / stride), lastT = -1;
+  for(let ms = 4; ms <= CR_D * 1000; ms += 4){ const t = ms / 1000, k = Math.floor((X * ez(t / CR_D) + half) / stride); if(k > last){ last = k; if(t - lastT >= 0.03){ window.SFX.play('upTick', t); lastT = t; } } }
+}
+function crAnimate(){
+  const tr = document.getElementById('crTrack'), vw = document.getElementById('crView'); if(!tr || !vw || tr.children.length < 2) return;
+  const c0 = tr.children[0], c1 = tr.children[1], cw = c0.offsetWidth, stride = c1.offsetLeft - c0.offsetLeft, half = vw.clientWidth / 2;
+  const X = Math.round(CR_WIN * stride + cw / 2 - half + (mkRand() - .5) * cw * .8); cr.fx = X;
+  void tr.offsetWidth;
+  tr.style.transition = 'transform ' + CR_D + 's cubic-bezier(.12,.7,.1,1)';
+  requestAnimationFrame(() => requestAnimationFrame(() => { tr.style.transform = 'translateX(' + (-X) + 'px)'; crTicks(X, stride, half); }));
+  clearTimeout(cr.tm); cr.tm = setTimeout(crFinish, CR_D * 1000 + 350);
+}
+function crFinish(){
+  if(!cr.spin || !cr.cur) return;
+  const r = cr.cur; cr.spin = false; cr.fx = null; cr.strip = null; cr.res = r; cr.hist.unshift(r); if(cr.hist.length > 10) cr.hist.pop();
+  if(activeTab === 'crates'){ renderTab(); if(window.SFX) window.SFX.play(r.d.kind === 'knife' || r.t >= 2 ? 'upWin' : 'confirm'); }
+}
+async function crOpen(){
+  const d = cr.sel ? crGet(cr.sel) : null; if(!d || cr.spin) return;
+  if(wallet.tokens < d.price){ showToast('Tokens insuficientes: faltam ' + mkFmt(d.price - wallet.tokens) + ' Tokens.'); return; }
+  cr.spin = true; cr.res = null; cr.fx = null;
+  const r = crRoll(d), inv = mkNewItem(r.it.s, r.f, r.sd, r.st);
+  wallet.tokens = Math.round((wallet.tokens - d.price) * 100) / 100; wallet.inv.push(inv);
+  cr.cur = { d, it:r.it, t:r.t, inv }; cr.strip = crStrip(d, r);
+  try{ await mkSave(); }catch(e){ console.error(e); }
+  renderTab();
+}
+async function crSellRes(){
+  const r = cr.res; if(!r || cr.spin) return; const it = wallet.inv.find(i => i.u === r.inv.u); if(!it){ cr.res = null; renderTab(); return; }
+  wallet.tokens = Math.round((wallet.tokens + mkItemVal(it) * MK.SELL) * 100) / 100; wallet.inv = wallet.inv.filter(i => i.u !== it.u);
+  cr.hist = cr.hist.filter(h => h.inv.u !== it.u); cr.res = null; await mkSave(); showToast('Skin vendida.'); renderTab();
+}
+function attachCratesEvents(){
+  const root = document.getElementById('tabContent'); if(!root) return;
+  const on = (sel, ev, fn) => root.querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn));
+  on('[data-crf]', 'click', e => { cr.f = e.currentTarget.dataset.crf; renderTab(); });
+  on('[data-crate]', 'click', e => { cr.sel = e.currentTarget.dataset.crate; cr.res = null; renderTab(); window.scrollTo(0, 0); });
+  on('#crBack', 'click', () => { if(cr.spin) return; cr.sel = null; cr.res = null; renderTab(); });
+  on('[data-cropen]', 'click', crOpen);
+  on('#crSell', 'click', crSellRes);
+  on('#crInv', 'click', () => { activeTab = 'inventario'; render(); });
 }
 
 async function init(){
